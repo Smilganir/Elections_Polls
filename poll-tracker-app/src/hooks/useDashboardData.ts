@@ -27,6 +27,11 @@ function sheetsPollIntervalMs(): number {
   return Number.isFinite(n) && n >= 30_000 ? n : DEFAULT_POLL_INTERVAL_MS
 }
 
+type RefreshOptions = {
+  /** When true, update data in the background without toggling `loading` (no full-page interruption). */
+  background?: boolean
+}
+
 type DashboardDataState = {
   unpivot: UnpivotRow[]
   events: EventRow[]
@@ -34,7 +39,7 @@ type DashboardDataState = {
   partiesDim: PartyDimRow[]
   loading: boolean
   error: string | null
-  refresh: () => Promise<void>
+  refresh: (options?: RefreshOptions) => Promise<void>
 }
 
 export function useDashboardData(): DashboardDataState {
@@ -45,9 +50,10 @@ export function useDashboardData(): DashboardDataState {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options?: RefreshOptions) => {
+    const showLoading = options?.background !== true
+    if (showLoading) setLoading(true)
     try {
-      setLoading(true)
       const [unpivotData, eventsData, partiesDimData] = await Promise.all([
         fetchSheet('UnpivotData'),
         fetchSheet('Events Dates per Media Outlet'),
@@ -126,7 +132,7 @@ export function useDashboardData(): DashboardDataState {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed loading data')
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }, [])
 
@@ -134,10 +140,10 @@ export function useDashboardData(): DashboardDataState {
     void refresh()
 
     const intervalMs = sheetsPollIntervalMs()
-    const interval = window.setInterval(() => void refresh(), intervalMs)
+    const interval = window.setInterval(() => void refresh({ background: true }), intervalMs)
 
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') void refresh()
+      if (document.visibilityState === 'visible') void refresh({ background: true })
     }
     document.addEventListener('visibilitychange', onVisibility)
 

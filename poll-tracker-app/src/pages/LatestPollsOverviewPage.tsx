@@ -190,6 +190,8 @@ export function LatestPollsOverviewPage() {
   }
 
   const [pollsPerPage, setPollsPerPage] = useState(getDefaultPollsPerPage)
+  /** After the user picks "# of polls" from the select, do not override it on resize until full page load. */
+  const pollsPerPageUserChosenRef = useRef(false)
 
   useEffect(() => {
     setPollsPerPage((p) => (p > 5 ? 5 : p))
@@ -201,8 +203,10 @@ export function LatestPollsOverviewPage() {
 
   useEffect(() => {
     function handleResize() {
-      setPollsPerPage(getDefaultPollsPerPage())
-      setPageIndex(0)
+      if (!pollsPerPageUserChosenRef.current) {
+        setPollsPerPage(getDefaultPollsPerPage())
+        setPageIndex(0)
+      }
       setEventViewportWidth(window.innerWidth)
     }
     setEventViewportWidth(window.innerWidth)
@@ -631,6 +635,7 @@ export function LatestPollsOverviewPage() {
             <select
               value={pollsPerPage}
               onChange={(e) => {
+                pollsPerPageUserChosenRef.current = true
                 setPollsPerPage(Number(e.target.value))
                 setPageIndex(0)
               }}
@@ -946,8 +951,7 @@ export function LatestPollsOverviewPage() {
                           <div
                             className="lpo-bar-end-meta"
                             style={{ left: `${barPct}%` }}
-                          >
-                            <strong
+                          ><strong
                               className="lpo-votes"
                               style={{ color: SEGMENT_COLORS[segment] }}
                             >{votes}</strong>{change ? (
@@ -955,8 +959,7 @@ export function LatestPollsOverviewPage() {
                                 {change.direction === 'up' ? '\u25B2' : '\u25BC'}
                                 {change.value}
                               </span>
-                            ) : null}
-                          </div>
+                            ) : null}</div>
                         </div>
                       </div>
                     {showSparklines && partyHistory && partyHistory.length >= 2 && (
