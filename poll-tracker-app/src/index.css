@@ -4,7 +4,8 @@
   font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: #e8ecf2;
   background: #121820;
-  --lpo-vote-change-gap: 0.2rem;
+  /* Fixed slot between vote figure and ↗↘ (space U+0020 at this font size; width enforces 5px) */
+  --lpo-vote-diff-space-px: 5px;
 }
 
 html[lang='he'] {
@@ -808,10 +809,36 @@ html[lang='he'] .lpo-col-header-text-block {
   gap: 0.25rem;
 }
 
+/* Inline shrink-wrap (not flex): abs-pos flex was stretching to track width and spreading items apart in some browsers */
 .lpo-total-figures {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--lpo-vote-change-gap);
+  display: inline-block;
+  vertical-align: baseline;
+  direction: ltr;
+  white-space: nowrap;
+  line-height: 1;
+  max-width: 100%;
+}
+
+.lpo-total-figures > strong,
+.lpo-total-figures .lpo-change {
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* One space char at 5px; fixed width = exact 5px gutter */
+.lpo-vote-change-spacer {
+  display: inline-block;
+  box-sizing: border-box;
+  width: var(--lpo-vote-diff-space-px);
+  min-width: var(--lpo-vote-diff-space-px);
+  max-width: var(--lpo-vote-diff-space-px);
+  font-size: var(--lpo-vote-diff-space-px);
+  line-height: 1;
+  overflow: hidden;
+  vertical-align: baseline;
+  white-space: nowrap;
+  padding: 0;
+  margin: 0;
 }
 
 .lpo-total.coalition {
@@ -952,25 +979,33 @@ html[lang='he'] .lpo-col-header-text-block {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--lpo-vote-change-gap);
   margin-left: 0.28rem;
   white-space: nowrap;
   z-index: 1;
   pointer-events: none;
 }
 
-.lpo-bar-end-meta {
+.lpo-hbar-end-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: 0;
-  /* Collapse accidental whitespace text nodes between flex children from JSX formatting */
-  font-size: 0;
-  line-height: 0;
+}
+
+/* Shrink-wrapped inline block: avoids stretched abspos flex box pushing ↗/↘ away from the seat figure */
+.lpo-bar-end-meta {
+  display: inline-block;
+  vertical-align: middle;
+  direction: ltr;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .lpo-bar-end-meta .lpo-votes,
 .lpo-bar-end-meta .lpo-change-badge {
+  display: inline;
+  vertical-align: baseline;
+  min-width: 0;
   font-size: 0.68rem;
   line-height: 1;
 }
@@ -1001,6 +1036,13 @@ html[lang='he'] .lpo-col-header-text-block {
 
 .lpo-change-badge.down {
   color: #FB3B6D;
+}
+
+/* Multi-column (non-sparkline): accent stripe — strong, clean column edge */
+.lpo-table:not(.lpo-single-col) .lpo-header-row > .lpo-col-header,
+.lpo-table:not(.lpo-single-col) .lpo-party-row > .lpo-party-cell {
+  border-left: 4px solid #101622;
+  padding-left: 0.48rem;
 }
 
 /* ── Single-column header layout ────── */

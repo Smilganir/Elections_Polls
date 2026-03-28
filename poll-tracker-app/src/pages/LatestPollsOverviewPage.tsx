@@ -322,6 +322,22 @@ export function LatestPollsOverviewPage() {
     return { polls: list, previousVotes: prevVotes }
   }, [unpivot, segmentMap])
 
+  const minPollDateByOutlet = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const p of polls) {
+      const cur = m.get(p.mediaOutlet)
+      if (cur === undefined || p.date.localeCompare(cur) < 0) m.set(p.mediaOutlet, p.date)
+    }
+    return m
+  }, [polls])
+
+  /** False when this column is that outlet's earliest poll — deltas vs `previousVotes` are vs latest, not a real prior. */
+  function hasPriorPollInSeries(poll: PollColumn): boolean {
+    const minD = minPollDateByOutlet.get(poll.mediaOutlet)
+    if (minD === undefined) return false
+    return poll.date.localeCompare(minD) > 0
+  }
+
   const totalPages = Math.max(1, Math.ceil(polls.length / pollsPerPage))
   const safePage = Math.min(pageIndex, totalPages - 1)
   const visiblePolls = polls.slice(
@@ -666,6 +682,7 @@ export function LatestPollsOverviewPage() {
             {!showSparklines && <div className="lpo-party-label-col" />}
             {visiblePolls.map((poll) => {
               const prevDate = getPreviousDate(poll.mediaOutlet)
+              const showDeltaVsPrior = hasPriorPollInSeries(poll)
               const prevCoalition = previousVotes.get(poll.mediaOutlet)
                 ? Array.from(previousVotes.get(poll.mediaOutlet)!.entries())
                     .filter(([p]) => segmentMap.get(p)?.segment === 'Coalition')
@@ -779,7 +796,7 @@ export function LatestPollsOverviewPage() {
                               {dayjs(poll.date).format(locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY')}
                             </strong>
                           </div>
-                          {prevDate && (
+                          {showDeltaVsPrior && prevDate && (
                             <div className="lpo-col-prev-date">
                               {t.previousDate}{' '}
                               {dayjs(prevDate).format(locale === 'he' ? 'DD/MM/YYYY' : 'MMM-DD-YYYY')}
@@ -798,50 +815,22 @@ export function LatestPollsOverviewPage() {
                           <>
                             <span className="lpo-total opposition">
                               <span className="lpo-total-label">{t.opposition}</span>
-                              <span className="lpo-total-figures">
-                                <strong>{poll.oppositionTotal}</strong>
-                                {oppChange !== null && oppChange !== 0 ? (
-                                  <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
-                                    {oppChange > 0 ? '\u25B2' : '\u25BC'}{Math.abs(oppChange)}
-                                  </span>
-                                ) : null}
-                              </span>
+                              <span className="lpo-total-figures"><strong>{poll.oppositionTotal}</strong>{showDeltaVsPrior && oppChange !== null && oppChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>{oppChange > 0 ? '↗' : '↘'}{Math.abs(oppChange)}</span></> : null}</span>
                             </span>
                             <span className="lpo-total coalition">
                               <span className="lpo-total-label">{t.coalition}</span>
-                              <span className="lpo-total-figures">
-                                <strong>{poll.coalitionTotal}</strong>
-                                {coalChange !== null && coalChange !== 0 ? (
-                                  <span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>
-                                    {coalChange > 0 ? '\u25B2' : '\u25BC'}{Math.abs(coalChange)}
-                                  </span>
-                                ) : null}
-                              </span>
+                              <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
                             </span>
                           </>
                         ) : (
                           <>
                             <span className="lpo-total coalition">
                               <span className="lpo-total-label">{t.coalition}</span>
-                              <span className="lpo-total-figures">
-                                <strong>{poll.coalitionTotal}</strong>
-                                {coalChange !== null && coalChange !== 0 ? (
-                                  <span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>
-                                    {coalChange > 0 ? '\u25B2' : '\u25BC'}{Math.abs(coalChange)}
-                                  </span>
-                                ) : null}
-                              </span>
+                              <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
                             </span>
                             <span className="lpo-total opposition">
                               <span className="lpo-total-label">{t.opposition}</span>
-                              <span className="lpo-total-figures">
-                                <strong>{poll.oppositionTotal}</strong>
-                                {oppChange !== null && oppChange !== 0 ? (
-                                  <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
-                                    {oppChange > 0 ? '\u25B2' : '\u25BC'}{Math.abs(oppChange)}
-                                  </span>
-                                ) : null}
-                              </span>
+                              <span className="lpo-total-figures"><strong>{poll.oppositionTotal}</strong>{showDeltaVsPrior && oppChange !== null && oppChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>{oppChange > 0 ? '↗' : '↘'}{Math.abs(oppChange)}</span></> : null}</span>
                             </span>
                           </>
                         )}
@@ -932,7 +921,9 @@ export function LatestPollsOverviewPage() {
                   )
                   const votes = partyData?.votes ?? 0
                   const segment = partyData?.segment ?? partyInfo.segment
-                  const change = getChange(poll.mediaOutlet, partyInfo.party, votes)
+                  const change = hasPriorPollInSeries(poll)
+                    ? getChange(poll.mediaOutlet, partyInfo.party, votes)
+                    : null
 
                   const partyHistory = showSparklines ? sparklineData.history.get(partyInfo.party) : undefined
                   const barPct = maxVotes > 0 ? (votes / maxVotes) * 100 : 0
@@ -951,15 +942,7 @@ export function LatestPollsOverviewPage() {
                           <div
                             className="lpo-bar-end-meta"
                             style={{ left: `${barPct}%` }}
-                          ><strong
-                              className="lpo-votes"
-                              style={{ color: SEGMENT_COLORS[segment] }}
-                            >{votes}</strong>{change ? (
-                              <span className={`lpo-change-badge ${change.direction}`}>
-                                {change.direction === 'up' ? '\u25B2' : '\u25BC'}
-                                {change.value}
-                              </span>
-                            ) : null}</div>
+                          ><strong className="lpo-votes" style={{ color: SEGMENT_COLORS[segment] }}>{votes}</strong>{change ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change-badge ${change.direction}`}>{change.direction === 'up' ? '↗' : '↘'}{change.value}</span></> : null}</div>
                         </div>
                       </div>
                     {showSparklines && partyHistory && partyHistory.length >= 2 && (
