@@ -60,15 +60,26 @@ async function fetchSheetViaSheetsApi(
       headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1e84b6' },
       body: JSON.stringify({
         sessionId: '1e84b6',
-        hypothesisId: 'H1-H5',
+        hypothesisId: 'H1-H2',
+        runId: 'referrer-blocked',
         location: 'sheetsApi.ts:sheets-fetch-error',
         message: 'Sheets API error response',
-        data: { status: response.status, apiReason: String(apiReason).slice(0, 160) },
+        data: {
+          status: response.status,
+          apiReason: String(apiReason).slice(0, 160),
+          pageOrigin: typeof location !== 'undefined' ? location.origin : '',
+        },
         timestamp: Date.now(),
       }),
     }).catch(() => {})
     // #endregion
-    throw new Error(`Google Sheets API failed: ${response.status} ${text}`)
+    const referrerBlocked = text.includes('API_KEY_HTTP_REFERRER_BLOCKED')
+    const originHint =
+      typeof location !== 'undefined' ? `${location.origin}/*` : 'https://YOUR_USERNAME.github.io/*'
+    const hint = referrerBlocked
+      ? ` Add this line under Website restrictions for the same API key, Save, wait up to 5 minutes: ${originHint}`
+      : ''
+    throw new Error(`Google Sheets API failed: ${response.status} ${text}${hint}`)
   }
   // #region agent log
   fetch('http://127.0.0.1:7257/ingest/07264441-9ece-43b4-ade6-685c9d4f5d70', {
