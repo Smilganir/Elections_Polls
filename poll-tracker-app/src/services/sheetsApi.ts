@@ -52,11 +52,29 @@ async function fetchSheetViaDevProxy(tab: string, range: string): Promise<SheetR
   return response.json()
 }
 
+/** Dev/preview: Vite forwards to Google with your Referer so GCP website key restrictions match. */
+async function fetchSheetViaSheetsKeyProxy(
+  tab: string,
+  range: string,
+  spreadsheetId: string,
+): Promise<SheetResponse> {
+  const params = new URLSearchParams({ tab, range, spreadsheetId })
+  const response = await fetch(`/api/sheets-key?${params.toString()}`, {
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Sheet API failed: ${response.status} ${errorText}`)
+  }
+  return response.json()
+}
+
 /**
  * Loads sheet tabs at runtime (live data on GitHub Pages) when
  * `VITE_GOOGLE_SHEETS_API_KEY` (and optionally `VITE_GOOGLE_SHEETS_SPREADSHEET_ID`) are set at build time.
  * If the spreadsheet ID is omitted, the app uses the project default sheet.
- * In dev, falls back to the Vite `/api/sheets` proxy + service account when the API key is unset.
+ * In dev/preview, uses `/api/sheets-key` so the server forwards Referer (fixes GCP referrer keys).
+ * Falls back to `/api/sheets` JWT proxy when the API key is unset in .env.
  */
 export async function fetchSheet(
   tab: string,
@@ -66,12 +84,20 @@ export async function fetchSheet(
     import.meta.env.VITE_GOOGLE_SHEETS_SPREADSHEET_ID?.trim() || DEFAULT_SPREADSHEET_ID
   const apiKey = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY?.trim()
 
-  if (apiKey) {
-    return fetchSheetViaSheetsApi(tab, range, spreadsheetId, apiKey)
+  const isVitePreview =
+    typeof window !== 'undefined' &&
+    import.meta.env.PROD &&
+    window.location.port === '4173'
+
+  if (import.meta.env.DEV || isVitePreview) {
+    if (apiKey) {
+      return fetchSheetViaSheetsKeyProxy(tab, range, spreadsheetId)
+    }
+    return fetchSheetViaDevProxy(tab, range)
   }
 
-  if (import.meta.env.DEV) {
-    return fetchSheetViaDevProxy(tab, range)
+  if (apiKey) {
+    return fetchSheetViaSheetsApi(tab, range, spreadsheetId, apiKey)
   }
 
   throw new Error(
