@@ -757,27 +757,31 @@ export function LatestPollsOverviewPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="lpo-col-media-icon">
-                        <IconWithFallback
-                          src={MEDIA_ICON_MAP[poll.mediaOutlet]}
-                          label={displayMediaOutlet(poll.mediaOutlet)}
-                        />
-                      </div>
-                      <div className="lpo-col-media-name">
-                        {displayMediaOutlet(poll.mediaOutlet)}
-                      </div>
-                      <div className="lpo-col-date">
-                        {t.latestPrefix}{' '}
-                        <strong>
-                          {dayjs(poll.date).format(locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY')}
-                        </strong>
-                      </div>
-                      {prevDate && (
-                        <div className="lpo-col-prev-date">
-                          {t.previousDate}{' '}
-                          {dayjs(prevDate).format(locale === 'he' ? 'DD/MM/YYYY' : 'MMM-DD-YYYY')}
+                      <div className="lpo-col-header-media-row">
+                        <div className="lpo-col-media-icon">
+                          <IconWithFallback
+                            src={MEDIA_ICON_MAP[poll.mediaOutlet]}
+                            label={displayMediaOutlet(poll.mediaOutlet)}
+                          />
                         </div>
-                      )}
+                        <div className="lpo-col-header-text-block">
+                          <div className="lpo-col-media-name">
+                            {displayMediaOutlet(poll.mediaOutlet)}
+                          </div>
+                          <div className="lpo-col-date">
+                            {t.latestPrefix}{' '}
+                            <strong>
+                              {dayjs(poll.date).format(locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY')}
+                            </strong>
+                          </div>
+                          {prevDate && (
+                            <div className="lpo-col-prev-date">
+                              {t.previousDate}{' '}
+                              {dayjs(prevDate).format(locale === 'he' ? 'DD/MM/YYYY' : 'MMM-DD-YYYY')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <div
                         className={
                           visiblePolls.length > 1
