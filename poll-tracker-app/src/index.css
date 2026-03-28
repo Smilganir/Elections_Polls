@@ -958,6 +958,10 @@ html[lang='he'] .lpo-col-header-text-block {
   pointer-events: none;
 }
 
+.lpo-bar-end-meta {
+  gap: 0;
+}
+
 .lpo-bar-end-meta .lpo-votes,
 .lpo-bar-end-meta .lpo-change-badge,
 .lpo-hbar-end-meta .lpo-hbar-value {
