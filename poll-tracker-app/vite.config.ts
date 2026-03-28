@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dotenv from 'dotenv'
@@ -5,7 +8,21 @@ import { google } from 'googleapis'
 import type { IncomingMessage, ServerResponse } from 'http'
 import { URL } from 'url'
 
-dotenv.config()
+/** App root (folder containing this config + .env), regardless of process.cwd(). */
+const appDir = path.dirname(fileURLToPath(import.meta.url))
+const envFilePath = path.join(appDir, '.env')
+
+/** Values from poll-tracker-app/.env only — avoids stale GOOGLE_* in OS environment breaking the proxy. */
+function readLocalEnvFile(): Record<string, string> {
+  try {
+    if (!fs.existsSync(envFilePath)) return {}
+    return dotenv.parse(fs.readFileSync(envFilePath, 'utf-8'))
+  } catch {
+    return {}
+  }
+}
+
+dotenv.config({ path: envFilePath })
 
 function sheetsApiPlugin() {
   return {
@@ -22,9 +39,10 @@ function sheetsApiPlugin() {
           const tab = parsed.searchParams.get('tab') ?? 'UnpivotData'
           const range = parsed.searchParams.get('range') ?? 'A:Z'
 
-          const clientEmail = process.env.GOOGLE_CLIENT_EMAIL
-          const privateKey = (process.env.GOOGLE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n')
-          const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID
+          const fileEnv = readLocalEnvFile()
+          const clientEmail = fileEnv.GOOGLE_CLIENT_EMAIL
+          const privateKey = (fileEnv.GOOGLE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n')
+          const spreadsheetId = fileEnv.GOOGLE_SHEETS_SPREADSHEET_ID
 
           if (!clientEmail || !privateKey || !spreadsheetId) {
             res.writeHead(500, { 'Content-Type': 'application/json' })
@@ -63,6 +81,8 @@ function sheetsApiPlugin() {
 const base = process.env.VITE_BASE?.trim() || '/'
 
 export default defineConfig({
+  root: appDir,
+  envDir: appDir,
   base,
   plugins: [react(), sheetsApiPlugin()],
 })
