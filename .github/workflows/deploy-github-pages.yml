@@ -3,7 +3,8 @@
 # FIRST-TIME SETUP (otherwise deploy job fails with 404 "Failed to create deployment"):
 #   1. Repo → Settings → Pages → Build and deployment → Source: "GitHub Actions" (not "Deploy from a branch").
 #   2. Repo → Settings → Actions → General → Workflow permissions: enable "Read and write permissions".
-#   3. Repo → Settings → Secrets and variables → Actions: add VITE_GOOGLE_SHEETS_SPREADSHEET_ID, VITE_GOOGLE_SHEETS_API_KEY.
+#   3. Repo → Settings → Secrets and variables → Actions: add secret VITE_GOOGLE_SHEETS_API_KEY (required).
+#      Optional secret VITE_GOOGLE_SHEETS_SPREADSHEET_ID if not using the project default sheet.
 #
 # upload-pages-artifact stays @v3 so .nojekyll from public/ is included (v4 omits dotfiles).
 
@@ -34,6 +35,15 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: poll-tracker-app/package-lock.json
+
+      - name: Require VITE_GOOGLE_SHEETS_API_KEY secret
+        env:
+          KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::Add repository secret VITE_GOOGLE_SHEETS_API_KEY under Settings → Secrets and variables → Actions. See poll-tracker-app/.env.example."
+            exit 1
+          fi
 
       - name: Install and build
         working-directory: poll-tracker-app
