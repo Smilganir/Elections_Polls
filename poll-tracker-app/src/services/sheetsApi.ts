@@ -20,59 +20,13 @@ async function fetchSheetViaSheetsApi(
 ): Promise<SheetResponse> {
   const rangePath = encodeURIComponent(a1RangeForApi(tab, range))
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${rangePath}?key=${encodeURIComponent(apiKey)}`
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/07264441-9ece-43b4-ade6-685c9d4f5d70', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1e84b6' },
-    body: JSON.stringify({
-      sessionId: '1e84b6',
-      hypothesisId: 'H1',
-      location: 'sheetsApi.ts:before-sheets-fetch',
-      message: 'Context before Sheets API fetch',
-      data: {
-        href: typeof location !== 'undefined' ? location.href : '',
-        docReferrer: typeof document !== 'undefined' ? document.referrer : '',
-        baseUrl: import.meta.env.BASE_URL,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
-  // Send full page URL as Referer so GCP keys restricted to .../Elections_Polls/* match (default cross-origin is often origin-only).
+  // Send full page URL as Referer so GCP keys restricted to .../Repo/* match when the browser would otherwise send origin-only.
   const response = await fetch(url, {
     cache: 'no-store',
     referrerPolicy: 'unsafe-url',
   })
   if (!response.ok) {
     const text = await response.text()
-    // #region agent log
-    let apiReason = ''
-    try {
-      const j = JSON.parse(text) as {
-        error?: { message?: string; details?: Array<{ reason?: string }> }
-      }
-      apiReason = j.error?.details?.find((d) => d.reason)?.reason ?? j.error?.message ?? ''
-    } catch {
-      /* ignore */
-    }
-    fetch('http://127.0.0.1:7257/ingest/07264441-9ece-43b4-ade6-685c9d4f5d70', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1e84b6' },
-      body: JSON.stringify({
-        sessionId: '1e84b6',
-        hypothesisId: 'H1-H2',
-        runId: 'referrer-blocked',
-        location: 'sheetsApi.ts:sheets-fetch-error',
-        message: 'Sheets API error response',
-        data: {
-          status: response.status,
-          apiReason: String(apiReason).slice(0, 160),
-          pageOrigin: typeof location !== 'undefined' ? location.origin : '',
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     const referrerBlocked = text.includes('API_KEY_HTTP_REFERRER_BLOCKED')
     const originHint =
       typeof location !== 'undefined' ? `${location.origin}/*` : 'https://YOUR_USERNAME.github.io/*'
@@ -81,20 +35,6 @@ async function fetchSheetViaSheetsApi(
       : ''
     throw new Error(`Google Sheets API failed: ${response.status} ${text}${hint}`)
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7257/ingest/07264441-9ece-43b4-ade6-685c9d4f5d70', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1e84b6' },
-    body: JSON.stringify({
-      sessionId: '1e84b6',
-      hypothesisId: 'H5',
-      location: 'sheetsApi.ts:sheets-fetch-ok',
-      message: 'Sheets API success',
-      data: { status: response.status },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
   const data = (await response.json()) as { values?: string[][] }
   const rows = data.values ?? []
   return { tab, range, rows }
