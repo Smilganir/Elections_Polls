@@ -1,0 +1,56 @@
+# Deploy poll-tracker-app to GitHub Pages at https://<user>.github.io/Elections_Polls/
+# Required repo secrets: VITE_GOOGLE_SHEETS_SPREADSHEET_ID, VITE_GOOGLE_SHEETS_API_KEY
+# Settings → Pages → Source: GitHub Actions
+
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: poll-tracker-app/package-lock.json
+
+      - name: Install and build
+        working-directory: poll-tracker-app
+        run: |
+          npm ci
+          npm run build
+        env:
+          # Use the same name as the GitHub repo (e.g. Elections_Polls → /Elections_Polls/)
+          VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
+          VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: poll-tracker-app/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

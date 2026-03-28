@@ -1,0 +1,9 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Python (repo root scripts)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
