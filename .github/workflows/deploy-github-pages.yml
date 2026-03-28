@@ -1,6 +1,11 @@
-# Deploy poll-tracker-app to GitHub Pages at https://<user>.github.io/Elections_Polls/
-# Required repo secrets: VITE_GOOGLE_SHEETS_SPREADSHEET_ID, VITE_GOOGLE_SHEETS_API_KEY
-# Settings → Pages → Source: GitHub Actions
+# Deploy poll-tracker-app to https://<user>.github.io/<repo>/
+#
+# FIRST-TIME SETUP (otherwise deploy job fails with 404 "Failed to create deployment"):
+#   1. Repo → Settings → Pages → Build and deployment → Source: "GitHub Actions" (not "Deploy from a branch").
+#   2. Repo → Settings → Actions → General → Workflow permissions: enable "Read and write permissions".
+#   3. Repo → Settings → Secrets and variables → Actions: add VITE_GOOGLE_SHEETS_SPREADSHEET_ID, VITE_GOOGLE_SHEETS_API_KEY.
+#
+# upload-pages-artifact stays @v3 so .nojekyll from public/ is included (v4 omits dotfiles).
 
 name: Deploy GitHub Pages
 
@@ -46,6 +51,9 @@ jobs:
           path: poll-tracker-app/dist
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -53,4 +61,4 @@ jobs:
     needs: build
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
