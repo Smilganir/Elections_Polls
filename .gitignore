@@ -7,3 +7,6 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Local service account for run_polls.py (never commit)
+google-sheets-service-account.json

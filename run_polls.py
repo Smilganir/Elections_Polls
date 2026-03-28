@@ -1,6 +1,15 @@
 """
 Fetch Israeli election polls from themadad.com, transform, and upload to Google Sheets.
+
+Credentials (pick one):
+  • CI: env GOOGLE_SERVICE_ACCOUNT_JSON = full JSON string (GitHub Actions secret).
+  • Local: place your key file next to this script as google-sheets-service-account.json
+    (gitignored), or set env GOOGLE_SERVICE_ACCOUNT_KEY_FILE to another path.
 """
+import json
+import os
+from pathlib import Path
+
 import pandas as pd
 import requests
 from io import StringIO
@@ -8,9 +17,28 @@ import numpy as np
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
+_SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+
+def _load_credentials():
+    """Service account from GOOGLE_SERVICE_ACCOUNT_JSON (CI) or local JSON file path."""
+    raw = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', '').strip()
+    if raw:
+        info = json.loads(raw)
+        return service_account.Credentials.from_service_account_info(info, scopes=_SCOPES)
+    key_path = os.environ.get('GOOGLE_SERVICE_ACCOUNT_KEY_FILE', '').strip() or KEY_FILE
+    if not os.path.isfile(key_path):
+        raise FileNotFoundError(
+            f'Service account JSON not found at {key_path!r}. '
+            'Add google-sheets-service-account.json next to run_polls.py, set '
+            'GOOGLE_SERVICE_ACCOUNT_KEY_FILE, or GOOGLE_SERVICE_ACCOUNT_JSON (CI).'
+        )
+    return service_account.Credentials.from_service_account_file(key_path, scopes=_SCOPES)
+
 # ======================= CONFIGURATION =========================
+_REPO_DIR = Path(__file__).resolve().parent
 SPREADSHEET_ID = '1RIqzrv_ViVWBqeXkM-rOAvusoXryyRFX5Xmu2S-uEw4'
-KEY_FILE = r'C:\Users\smilg\Downloads\oct-7th-foreign-nationals-224b6b0eacf0.json'
+KEY_FILE = str(_REPO_DIR / 'google-sheets-service-account.json')
 DATA_URL = 'https://themadad.com/allpolls/'
 
 ORIGINAL_SHEET_RANGE = "'Elections Polls Data'!A1"
@@ -52,6 +80,46 @@ def fetch_html(url):
     resp = session.get(url, timeout=30)
     resp.raise_for_status()
     return resp.text
+
+
+def max_poll_id_from_html(html: str) -> int | None:
+    """
+    Same table parse + dedupe rules as process_data(); returns max Poll ID we would upload.
+    Used by CI to detect new polls without uploading.
+    """
+    dataframes = pd.read_html(StringIO(html), encoding='utf-8')
+    data_df = max(dataframes, key=lambda df: len(df.columns)).copy()
+    data_df = data_df.iloc[1:].copy()
+
+    expected_cols = len(HEADERS)
+    if len(data_df.columns) > expected_cols:
+        data_df = data_df.iloc[:, :expected_cols]
+    elif len(data_df.columns) < expected_cols:
+        return None
+
+    data_df.columns = HEADERS
+
+    poll_1_df = pd.DataFrame(POLL_ID_1_DATA)
+    data_df = pd.concat([poll_1_df, data_df], ignore_index=True)
+
+    data_df['Poll ID'] = pd.to_numeric(data_df['Poll ID'], errors='coerce')
+    data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce')
+
+    dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
+    data_df = data_df[~dup].copy()
+
+    data_df = data_df[data_df['Poll ID'] > 1].copy()
+
+    data_df[VALUE_VARS] = data_df[VALUE_VARS].apply(pd.to_numeric, errors='coerce')
+    data_df = data_df.dropna(subset=['Date']).copy()
+    data_df['Poll ID'] = data_df['Poll ID'].fillna(-999).astype(int)
+
+    data_df = data_df.sort_values('Poll ID', ascending=False)
+    data_df = data_df.drop_duplicates(subset=['Date', 'Media Outlet'], keep='first').copy()
+
+    if data_df.empty:
+        return None
+    return int(data_df['Poll ID'].max())
 
 
 def process_data():
@@ -159,8 +227,7 @@ def upload():
 
     print(f"\nProcessed {len(orig)-1} wide rows, {len(unpivot)-1} unpivot rows.")
 
-    creds = service_account.Credentials.from_service_account_file(
-        KEY_FILE, scopes=['https://www.googleapis.com/auth/spreadsheets'])
+    creds = _load_credentials()
     service = build('sheets', 'v4', credentials=creds)
     sheet = service.spreadsheets()
 
