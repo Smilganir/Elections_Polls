@@ -919,7 +919,8 @@ html[lang='he'] .lpo-col-header-text-block {
 }
 
 .lpo-party-cell-name {
-  font-size: 0.72rem;
+  /* Match .lpo-col-prev-date above each poll column header */
+  font-size: 0.66rem;
   color: #5d6f85;
 }
 
@@ -1459,6 +1460,10 @@ html[lang='he'] .lpo-col-header-text-block {
     font-size: 0.62rem;
   }
 
+  .lpo-party-cell-name {
+    font-size: 0.62rem;
+  }
+
   .lpo-col-totals:not(.lpo-col-totals--multi) {
     flex-direction: column;
     gap: 0.15rem;
@@ -1620,10 +1625,6 @@ html[lang='he'] .lpo-col-header-text-block {
 
   .lpo-party-cell {
     padding: 0.2rem 0.35rem;
-  }
-
-  .lpo-party-cell-name {
-    font-size: 0.62rem;
   }
 
   .lpo-votes {
