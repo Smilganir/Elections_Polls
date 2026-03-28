@@ -934,7 +934,6 @@ export function LatestPollsOverviewPage() {
 
                   return (
                     <div key={poll.pollId} className={`lpo-party-cell${showSparklines ? ' lpo-has-sparkline' : ''}`}>
-                      <span className="lpo-party-cell-name">{displayParty(partyInfo.party)}</span>
                       <div className="lpo-bar-row">
                         <div className="lpo-bar-track">
                           <div

@@ -918,12 +918,6 @@ html[lang='he'] .lpo-col-header-text-block {
   min-width: 0;
 }
 
-.lpo-party-cell-name {
-  /* Match .lpo-col-prev-date above each poll column header */
-  font-size: 0.66rem;
-  color: #5d6f85;
-}
-
 .lpo-bar-row {
   display: flex;
   align-items: center;
@@ -1242,10 +1236,6 @@ html[lang='he'] .lpo-col-header-text-block {
   padding: 0.45rem 0.4rem 0.45rem 0.15rem;
 }
 
-.lpo-has-sparkline .lpo-party-cell-name {
-  display: none;
-}
-
 /* ~30% wider bar column vs sparkline (sparkline flex:1 absorbs the shrink) */
 .lpo-has-sparkline .lpo-bar-row {
   flex: 0 0 calc(195px * 1.3);
@@ -1460,10 +1450,6 @@ html[lang='he'] .lpo-col-header-text-block {
     font-size: 0.62rem;
   }
 
-  .lpo-party-cell-name {
-    font-size: 0.62rem;
-  }
-
   .lpo-col-totals:not(.lpo-col-totals--multi) {
     flex-direction: column;
     gap: 0.15rem;
@@ -1574,10 +1560,6 @@ html[lang='he'] .lpo-col-header-text-block {
 
   .lpo-party-name {
     font-size: 0.54rem;
-  }
-
-  .lpo-party-cell-name {
-    display: none;
   }
 
   .lpo-col-header {
