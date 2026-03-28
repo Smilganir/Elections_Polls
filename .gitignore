@@ -1,6 +1,7 @@
 # OS / editor
 .DS_Store
 Thumbs.db
+.cursor/
 
 # Python (repo root scripts)
 __pycache__/
