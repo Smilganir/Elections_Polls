@@ -6,6 +6,8 @@
   background: #121820;
   /* Fixed slot between vote figure and ↗↘ (space U+0020 at this font size; width enforces 5px) */
   --lpo-vote-diff-space-px: 5px;
+  /* Offset LPO outlet header when a sticky topbar sits above the page (match topbar height). */
+  --lpo-sticky-header-top: 0px;
 }
 
 html[lang='he'] {
@@ -657,8 +659,34 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 0.6rem;
   background: rgba(22, 30, 44, 0.85);
+  min-width: 0;
+  /* Horizontal scroll lives in .lpo-body-hscroll only so the outlet header can use
+     position:sticky vs the viewport (sticky inside overflow-x:auto never sticks correctly). */
+}
+
+.lpo-sticky-header-shell {
+  position: sticky;
+  top: var(--lpo-sticky-header-top);
+  z-index: 5;
+  background: rgb(22, 30, 44);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  border-radius: 0.55rem 0.55rem 0 0;
+}
+
+.lpo-header-sync-clip {
+  overflow: hidden;
+  width: 100%;
+}
+
+.lpo-header-sync-track {
+  box-sizing: border-box;
+}
+
+.lpo-body-hscroll {
   overflow-x: auto;
   min-width: 0;
+  border-radius: 0 0 0.55rem 0.55rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .lpo-header-row {

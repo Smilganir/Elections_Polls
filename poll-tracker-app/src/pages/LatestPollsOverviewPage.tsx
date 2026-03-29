@@ -382,6 +382,7 @@ export function LatestPollsOverviewPage() {
     safePage * pollsPerPage,
     (safePage + 1) * pollsPerPage,
   )
+  const lpoHorizontalSyncKey = visiblePolls.map((p) => p.pollId).join(',')
 
   const allParties = useMemo(() => {
     const pSet = new Map<string, { segment: Segment; maxVotes: number; partyId: number }>()
@@ -542,6 +543,10 @@ export function LatestPollsOverviewPage() {
 
   const rowsRef = useRef<HTMLDivElement>(null)
   const lpoTableRef = useRef<HTMLDivElement>(null)
+  const lpoBodyHScrollRef = useRef<HTMLDivElement>(null)
+  const lpoOutletPageKeyRef = useRef<string>('')
+  const [lpoHScrollLeft, setLpoHScrollLeft] = useState(0)
+  const [lpoHScrollWidth, setLpoHScrollWidth] = useState(0)
   const lpoSwipeStartRef = useRef<{
     x0: number
     y0: number
@@ -619,17 +624,50 @@ export function LatestPollsOverviewPage() {
   }
 
   const lpoSwipeMaxWidthPx = 768
+  const syncLpoHorizontalScrollMetrics = useCallback(() => {
+    const el = lpoBodyHScrollRef.current
+    if (!el) return
+    setLpoHScrollLeft(el.scrollLeft)
+    setLpoHScrollWidth(el.scrollWidth)
+  }, [])
+
+  useLayoutEffect(() => {
+    const el = lpoBodyHScrollRef.current
+    if (el && lpoHorizontalSyncKey !== lpoOutletPageKeyRef.current) {
+      lpoOutletPageKeyRef.current = lpoHorizontalSyncKey
+      el.scrollLeft = 0
+    }
+    syncLpoHorizontalScrollMetrics()
+  }, [
+    syncLpoHorizontalScrollMetrics,
+    lpoHorizontalSyncKey,
+    displayedParties.length,
+    showSparklines,
+    sparklineFocusedParty,
+    loading,
+  ])
+
+  useEffect(() => {
+    const el = lpoBodyHScrollRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => syncLpoHorizontalScrollMetrics())
+    ro.observe(el)
+    const inner = el.firstElementChild
+    if (inner) ro.observe(inner)
+    return () => ro.disconnect()
+  }, [syncLpoHorizontalScrollMetrics, loading, lpoHorizontalSyncKey])
+
   const handleLpoTableTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (typeof window === 'undefined') return
     if (window.innerWidth > lpoSwipeMaxWidthPx) return
     if (totalPagesRef.current <= 1) return
     if (e.touches.length !== 1) return
     const touch = e.touches[0]
-    const table = lpoTableRef.current
+    const scrollHost = lpoBodyHScrollRef.current
     lpoSwipeStartRef.current = {
       x0: touch.clientX,
       y0: touch.clientY,
-      scrollLeft0: table?.scrollLeft ?? 0,
+      scrollLeft0: scrollHost?.scrollLeft ?? 0,
     }
   }, [])
 
@@ -644,8 +682,8 @@ export function LatestPollsOverviewPage() {
     const touch = e.changedTouches[0]
     const dx = touch.clientX - start.x0
     const dy = touch.clientY - start.y0
-    const table = lpoTableRef.current
-    const scrollDelta = table ? Math.abs(table.scrollLeft - start.scrollLeft0) : 0
+    const scrollHost = lpoBodyHScrollRef.current
+    const scrollDelta = scrollHost ? Math.abs(scrollHost.scrollLeft - start.scrollLeft0) : 0
     const minSwipePx = 56
     const scrollIgnorePx = 14
     if (scrollDelta > scrollIgnorePx) return
@@ -779,8 +817,18 @@ export function LatestPollsOverviewPage() {
           onTouchEnd={handleLpoTableTouchEnd}
           onTouchCancel={handleLpoTableTouchCancel}
         >
-          {/* Header row */}
-          <div className="lpo-header-row">
+          <div className="lpo-sticky-header-shell">
+            <div className="lpo-header-sync-clip">
+              <div
+                className="lpo-header-sync-track"
+                style={{
+                  minWidth: '100%',
+                  ...(lpoHScrollWidth > 0 ? { width: lpoHScrollWidth } : {}),
+                  marginLeft: -lpoHScrollLeft,
+                }}
+              >
+                {/* Header row */}
+                <div className="lpo-header-row">
             {!showSparklines && <div className="lpo-party-label-col" />}
             {visiblePolls.map((poll) => {
               const prevDate = getPreviousDate(poll.mediaOutlet)
@@ -988,6 +1036,9 @@ export function LatestPollsOverviewPage() {
                 </div>
               )
             })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {showSparklines && sparklineFocusedParty ? (
@@ -1007,7 +1058,12 @@ export function LatestPollsOverviewPage() {
           ) : null}
 
           {/* Party rows with event line overlay in sparkline mode */}
-          <div ref={rowsRef} className="lpo-rows-container" style={{ position: 'relative' }}>
+          <div
+            ref={lpoBodyHScrollRef}
+            className="lpo-body-hscroll"
+            onScroll={(e) => setLpoHScrollLeft(e.currentTarget.scrollLeft)}
+          >
+            <div ref={rowsRef} className="lpo-rows-container" style={{ position: 'relative' }}>
             {showSparklines && overlayPos && (() => {
               const { minT, maxT } = sparklineData.timeRange
               const timeRange = maxT - minT || 1
@@ -1100,6 +1156,7 @@ export function LatestPollsOverviewPage() {
                 })}
               </div>
             ))}
+            </div>
           </div>
         </div>
       )}
