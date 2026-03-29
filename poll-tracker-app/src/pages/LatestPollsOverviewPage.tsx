@@ -375,6 +375,8 @@ export function LatestPollsOverviewPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(polls.length / pollsPerPage))
+  const totalPagesRef = useRef(totalPages)
+  totalPagesRef.current = totalPages
   const safePage = Math.min(pageIndex, totalPages - 1)
   const visiblePolls = polls.slice(
     safePage * pollsPerPage,
@@ -539,6 +541,12 @@ export function LatestPollsOverviewPage() {
   }, [unpivot, events, majorEvents, sparklineOutlet, eventViewportWidth])
 
   const rowsRef = useRef<HTMLDivElement>(null)
+  const lpoTableRef = useRef<HTMLDivElement>(null)
+  const lpoSwipeStartRef = useRef<{
+    x0: number
+    y0: number
+    scrollLeft0: number
+  } | null>(null)
   const headerEventsRef = useRef<HTMLDivElement>(null)
   const [overlayPos, setOverlayPos] = useState<{ left: number; width: number } | null>(null)
 
@@ -609,6 +617,50 @@ export function LatestPollsOverviewPage() {
     }
     return null
   }
+
+  const lpoSwipeMaxWidthPx = 768
+  const handleLpoTableTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (typeof window === 'undefined') return
+    if (window.innerWidth > lpoSwipeMaxWidthPx) return
+    if (totalPagesRef.current <= 1) return
+    if (e.touches.length !== 1) return
+    const touch = e.touches[0]
+    const table = lpoTableRef.current
+    lpoSwipeStartRef.current = {
+      x0: touch.clientX,
+      y0: touch.clientY,
+      scrollLeft0: table?.scrollLeft ?? 0,
+    }
+  }, [])
+
+  const handleLpoTableTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (typeof window === 'undefined') return
+    if (window.innerWidth > lpoSwipeMaxWidthPx) return
+    const start = lpoSwipeStartRef.current
+    lpoSwipeStartRef.current = null
+    if (!start || e.changedTouches.length !== 1) return
+    const maxPage = totalPagesRef.current - 1
+    if (maxPage < 1) return
+    const touch = e.changedTouches[0]
+    const dx = touch.clientX - start.x0
+    const dy = touch.clientY - start.y0
+    const table = lpoTableRef.current
+    const scrollDelta = table ? Math.abs(table.scrollLeft - start.scrollLeft0) : 0
+    const minSwipePx = 56
+    const scrollIgnorePx = 14
+    if (scrollDelta > scrollIgnorePx) return
+    if (Math.abs(dx) < minSwipePx) return
+    if (Math.abs(dx) < Math.abs(dy) * 1.25) return
+    if (dx < 0) {
+      setPageIndex((p) => Math.min(maxPage, p + 1))
+    } else {
+      setPageIndex((p) => Math.max(0, p - 1))
+    }
+  }, [])
+
+  const handleLpoTableTouchCancel = useCallback(() => {
+    lpoSwipeStartRef.current = null
+  }, [])
 
   return (
     <section className="dashboard-frame">
@@ -718,10 +770,14 @@ export function LatestPollsOverviewPage() {
         <p style={{ color: '#6b829e' }}>{t.noPolls}</p>
       ) : (
         <div
+          ref={lpoTableRef}
           className={`lpo-table${showSparklines ? ' lpo-single-col' : ''}${showSparklines && sparklineFocusedParty ? ' lpo-sparkline-party-focus' : ''}`}
           style={{
             '--lpo-cols': visiblePolls.length,
           } as React.CSSProperties}
+          onTouchStart={handleLpoTableTouchStart}
+          onTouchEnd={handleLpoTableTouchEnd}
+          onTouchCancel={handleLpoTableTouchCancel}
         >
           {/* Header row */}
           <div className="lpo-header-row">
