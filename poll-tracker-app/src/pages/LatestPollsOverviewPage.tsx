@@ -36,13 +36,15 @@ type PollColumn = {
 
 type PreviousPollMap = Map<string, Map<string, number>>
 
-function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel }: {
+function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel, currentPollDate }: {
   data: { date: string; votes: number }[]
   eventDates: string[]
   color: string
   globalMinT?: number
   globalMaxT?: number
   seatsLabel: string
+  /** Date of the poll row being viewed; draws a marker on the series at that point. */
+  currentPollDate?: string
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
@@ -89,6 +91,24 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
   const lastX = toX(maxT)
   const lastY = toY(vals[vals.length - 1])
 
+  const highlightIdx = useMemo(() => {
+    if (!currentPollDate || data.length === 0) return null
+    const exact = data.findIndex((d) => d.date === currentPollDate)
+    if (exact >= 0) return exact
+    const targetT = new Date(currentPollDate).getTime()
+    if (!Number.isFinite(targetT)) return data.length - 1
+    let best = 0
+    let bestDist = Infinity
+    for (let i = 0; i < ts.length; i++) {
+      const dist = Math.abs(ts[i] - targetT)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = i
+      }
+    }
+    return best
+  }, [currentPollDate, data, ts])
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const pxX = e.clientX - rect.left
@@ -130,8 +150,10 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
         ))}
         <path d={pathD} fill="none" stroke={color} strokeWidth={1}
           vectorEffect="non-scaling-stroke" />
-        <circle cx={lastX} cy={lastY} r={0.1} fill="none" stroke={color}
-          strokeWidth={3} vectorEffect="non-scaling-stroke" />
+        {highlightIdx === null ? (
+          <circle cx={lastX} cy={lastY} r={0.1} fill="none" stroke={color}
+            strokeWidth={3} vectorEffect="non-scaling-stroke" />
+        ) : null}
         {hoverPoint && (
           <>
             <line x1={hoverPoint.vx} y1={pad.t} x2={hoverPoint.vx} y2={H - pad.b}
@@ -142,6 +164,18 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
           </>
         )}
       </svg>
+      {highlightIdx !== null ? (
+        <span
+          className="lpo-sparkline-current-marker"
+          style={{
+            left: `${(toX(ts[highlightIdx]) / W) * 100}%`,
+            top: `${(toY(vals[highlightIdx]) / H) * 100}%`,
+          }}
+          title={data[highlightIdx].date}
+          role="img"
+          aria-label={data[highlightIdx].date}
+        />
+      ) : null}
       {hover !== null && (
         <div
           className="lpo-sparkline-tooltip"
@@ -162,6 +196,8 @@ export function LatestPollsOverviewPage() {
   const t = UI[locale]
   const { unpivot, events, majorEvents, partiesDim, loading, error } = useDashboardData()
   const [pageIndex, setPageIndex] = useState(0)
+  /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
+  const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -413,6 +449,16 @@ export function LatestPollsOverviewPage() {
   const showSparklines = visiblePolls.length === 1
   const sparklineOutlet = showSparklines ? visiblePolls[0].mediaOutlet : null
 
+  useEffect(() => {
+    if (!showSparklines) setSparklineFocusedParty(null)
+  }, [showSparklines])
+
+  const displayedParties = useMemo(() => {
+    if (!showSparklines || !sparklineFocusedParty) return allParties
+    const row = allParties.find((p) => p.party === sparklineFocusedParty)
+    return row ? [row] : allParties
+  }, [allParties, showSparklines, sparklineFocusedParty])
+
   type EnrichedEvent = {
     date: string
     name: string
@@ -533,7 +579,7 @@ export function LatestPollsOverviewPage() {
     if (wrapper) ro.observe(wrapper)
     ro.observe(container)
     return () => ro.disconnect()
-  }, [showSparklines, allParties, eventViewportWidth, alignHeaderEventsToSparkline])
+  }, [showSparklines, allParties, eventViewportWidth, sparklineFocusedParty, alignHeaderEventsToSparkline])
 
   useLayoutEffect(() => {
     if (!showSparklines) {
@@ -541,7 +587,7 @@ export function LatestPollsOverviewPage() {
       return
     }
     alignHeaderEventsToSparkline()
-  }, [showSparklines, alignHeaderEventsToSparkline, sparklineData.enrichedEvents.length, overlayPos?.width])
+  }, [showSparklines, alignHeaderEventsToSparkline, sparklineData.enrichedEvents.length, overlayPos?.width, sparklineFocusedParty])
 
   function getChange(
     mediaOutlet: string,
@@ -672,7 +718,7 @@ export function LatestPollsOverviewPage() {
         <p style={{ color: '#6b829e' }}>{t.noPolls}</p>
       ) : (
         <div
-          className={`lpo-table${showSparklines ? ' lpo-single-col' : ''}`}
+          className={`lpo-table${showSparklines ? ' lpo-single-col' : ''}${showSparklines && sparklineFocusedParty ? ' lpo-sparkline-party-focus' : ''}`}
           style={{
             '--lpo-cols': visiblePolls.length,
           } as React.CSSProperties}
@@ -888,6 +934,22 @@ export function LatestPollsOverviewPage() {
             })}
           </div>
 
+          {showSparklines && sparklineFocusedParty ? (
+            <div className="lpo-party-focus-banner">
+              <div className="lpo-party-focus-banner-main">
+                <button
+                  type="button"
+                  className="lpo-party-focus-back"
+                  onClick={() => setSparklineFocusedParty(null)}
+                >
+                  {t.backToAllParties}
+                </button>
+                <span className="lpo-party-focus-current">{displayParty(sparklineFocusedParty)}</span>
+              </div>
+              <p className="lpo-party-focus-hint">{t.sparklineFocusPollHint}</p>
+            </div>
+          ) : null}
+
           {/* Party rows with event line overlay in sparkline mode */}
           <div ref={rowsRef} className="lpo-rows-container" style={{ position: 'relative' }}>
             {showSparklines && overlayPos && (() => {
@@ -906,8 +968,29 @@ export function LatestPollsOverviewPage() {
                 </div>
               )
             })()}
-            {allParties.map((partyInfo) => (
-              <div key={partyInfo.party} className="lpo-party-row">
+            {displayedParties.map((partyInfo) => (
+              <div
+                key={partyInfo.party}
+                className={`lpo-party-row${showSparklines && !sparklineFocusedParty ? ' lpo-party-row--sparkline-selectable' : ''}`}
+                role={showSparklines && !sparklineFocusedParty ? 'button' : undefined}
+                tabIndex={showSparklines && !sparklineFocusedParty ? 0 : undefined}
+                aria-label={showSparklines && !sparklineFocusedParty ? `${t.sparklineRowFocusAria}: ${displayParty(partyInfo.party)}` : undefined}
+                onClick={
+                  showSparklines && !sparklineFocusedParty
+                    ? () => setSparklineFocusedParty(partyInfo.party)
+                    : undefined
+                }
+                onKeyDown={
+                  showSparklines && !sparklineFocusedParty
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setSparklineFocusedParty(partyInfo.party)
+                        }
+                      }
+                    : undefined
+                }
+              >
                 <div className="lpo-party-label-col">
                   <IconWithFallback
                     src={PARTY_ICON_MAP[partyInfo.party]}
@@ -953,6 +1036,7 @@ export function LatestPollsOverviewPage() {
                         globalMinT={sparklineData.timeRange.minT}
                         globalMaxT={sparklineData.timeRange.maxT}
                         seatsLabel={t.seats}
+                        currentPollDate={poll.date}
                       />
                     )}
                     </div>

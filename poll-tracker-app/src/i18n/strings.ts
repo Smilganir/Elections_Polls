@@ -21,6 +21,9 @@ export type UiStrings = {
   data: string
   design: string
   localeToggleAria: string
+  backToAllParties: string
+  sparklineRowFocusAria: string
+  sparklineFocusPollHint: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -45,6 +48,9 @@ export const UI: Record<AppLocale, UiStrings> = {
     data: 'Data:',
     design: 'Design:',
     localeToggleAria: 'Interface language',
+    backToAllParties: 'All parties',
+    sparklineRowFocusAria: 'Show this party only',
+    sparklineFocusPollHint: 'Use the date slider above to move between polls for this outlet; focus stays on this party until you choose All parties.',
   },
   he: {
     titleLatest: '',
@@ -67,5 +73,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     data: 'נתונים:',
     design: 'עיצוב:',
     localeToggleAria: 'שפת הממשק',
+    backToAllParties: 'כל המפלגות',
+    sparklineRowFocusAria: 'הצג רק מפלגה זו',
+    sparklineFocusPollHint: 'ניתן לעבור בין סקרים עם סרגל התאריכים למעלה; התצוגה נשארת על מפלגה זו עד שתלחצו על ״כל המפלגות״.',
   },
 }

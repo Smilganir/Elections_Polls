@@ -939,6 +939,71 @@ html[lang='he'] .lpo-col-header-text-block {
   background: rgba(58, 123, 213, 0.06);
 }
 
+.lpo-party-row--sparkline-selectable {
+  cursor: pointer;
+}
+
+.lpo-party-row--sparkline-selectable:hover {
+  background: rgba(58, 123, 213, 0.1);
+}
+
+.lpo-party-row--sparkline-selectable:focus-visible {
+  outline: 2px solid rgba(58, 123, 213, 0.65);
+  outline-offset: 2px;
+}
+
+.lpo-party-focus-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.45rem 0.55rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.lpo-party-focus-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.lpo-party-focus-hint {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.35;
+  color: #7a93ae;
+  max-width: 42rem;
+}
+
+.lpo-party-focus-back {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8ebfff;
+  background: transparent;
+  border: 1px solid rgba(58, 123, 213, 0.45);
+  border-radius: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+}
+
+.lpo-party-focus-back:hover {
+  background: rgba(58, 123, 213, 0.14);
+}
+
+.lpo-party-focus-back:focus-visible {
+  outline: 2px solid rgba(58, 123, 213, 0.65);
+  outline-offset: 2px;
+}
+
+.lpo-party-focus-current {
+  font-size: 0.8rem;
+  color: #c8d8ea;
+  font-weight: 600;
+}
+
 .lpo-party-cell {
   padding: 0.25rem 0.6rem;
   border-left: 1px solid rgba(255, 255, 255, 0.04);
@@ -1318,6 +1383,23 @@ html[lang='he'] .lpo-col-header-text-block {
   display: block;
 }
 
+/* Pixel-perfect circle: SVG uses preserveAspectRatio none (stretches), so marker is HTML not <circle> */
+.lpo-sparkline-current-marker {
+  position: absolute;
+  z-index: 2;
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #9c8c3d;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
 .lpo-sparkline-tooltip {
   position: fixed;
   transform: translate(-50%, -120%);
@@ -1339,6 +1421,25 @@ html[lang='he'] .lpo-col-header-text-block {
 .lpo-sparkline-tooltip-date {
   color: #7a93ae;
   font-size: 0.68rem;
+}
+
+/* Single party selected: more vertical space for sparkline; poll scrubber still changes outlet poll */
+.lpo-sparkline-party-focus .lpo-sparkline-wrap {
+  height: min(140px, 34vh);
+  min-height: 96px;
+}
+
+.lpo-sparkline-party-focus .lpo-has-sparkline {
+  padding: 0.65rem 0.5rem 0.65rem 0.2rem;
+  gap: 0.5rem;
+}
+
+.lpo-sparkline-party-focus .lpo-has-sparkline .lpo-bar-track {
+  height: 26px;
+}
+
+.lpo-sparkline-party-focus .lpo-party-row {
+  min-height: 4.75rem;
 }
 
 /* ── Trellis grid for Election Polls ─── */
@@ -1543,6 +1644,19 @@ html[lang='he'] .lpo-col-header-text-block {
     height: 24px;
   }
 
+  .lpo-sparkline-party-focus .lpo-sparkline-wrap {
+    height: min(110px, 30vh);
+    min-height: 80px;
+  }
+
+  .lpo-sparkline-party-focus .lpo-sparkline-svg {
+    height: 100%;
+  }
+
+  .lpo-sparkline-party-focus .lpo-has-sparkline .lpo-bar-track {
+    height: 22px;
+  }
+
   .media-selector-bar {
     gap: 0.25rem;
   }
@@ -1692,6 +1806,23 @@ html[lang='he'] .lpo-col-header-text-block {
 
   .lpo-sparkline-svg {
     height: 22px;
+  }
+
+  .lpo-sparkline-party-focus .lpo-sparkline-wrap {
+    height: min(92px, 26vh);
+    min-height: 70px;
+  }
+
+  .lpo-sparkline-party-focus .lpo-sparkline-svg {
+    height: 100%;
+  }
+
+  .lpo-sparkline-party-focus .lpo-has-sparkline .lpo-bar-track {
+    height: 20px;
+  }
+
+  .lpo-sparkline-party-focus .lpo-party-focus-hint {
+    font-size: 0.58rem;
   }
 
   /* Keep toolbar on one row; tighter gaps so scrubber + filter fit narrow phones. */
