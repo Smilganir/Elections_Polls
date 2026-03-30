@@ -68,14 +68,52 @@ POLL_ID_1_DATA = {
 }
 
 
-def fetch_html(url):
-    """Fetch page with browser-like headers to avoid bot blocking."""
+def fetch_html(url: str) -> str:
+    """
+    Fetch the polls page. Prefer curl_cffi (Chrome TLS/JA3 impersonation) so GitHub Actions
+    datacenter IPs are less likely to get 403 from WAFs; fall back to requests if unavailable.
+    """
+    extra_headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+        'Referer': 'https://themadad.com/',
+    }
+    try:
+        from curl_cffi import requests as cf_requests
+    except ImportError:
+        cf_requests = None
+
+    if cf_requests is not None:
+        last: tuple[str, int | str] | None = None
+        for impersonate in ('chrome131', 'chrome124', 'chrome120', 'chrome'):
+            try:
+                r = cf_requests.get(
+                    url,
+                    impersonate=impersonate,
+                    headers=extra_headers,
+                    timeout=45,
+                )
+            except Exception as ex:
+                last = (impersonate, str(ex))
+                continue
+            last = (impersonate, r.status_code)
+            if r.status_code == 200:
+                return r.text
+        imp, info = last if last else ('?', '?')
+        if isinstance(info, int):
+            raise requests.HTTPError(
+                f'{info} Client Error for url: {url} (curl_cffi last impersonate={imp!r}; '
+                '403 often means datacenter IP blocked despite TLS fingerprint)',
+            )
+        raise RuntimeError(
+            f'curl_cffi fetch failed for {url} (impersonate={imp!r}): {info}',
+        )
+
     session = requests.Session()
     session.headers.update({
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                        '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+        **extra_headers,
     })
     resp = session.get(url, timeout=30)
     resp.raise_for_status()

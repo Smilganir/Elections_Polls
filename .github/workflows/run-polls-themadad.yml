@@ -2,6 +2,9 @@
 # max Poll ID (same parse/dedupe rules as run_polls.py). If it changed vs last run, run run_polls.py.
 # Fingerprint is stored in GitHub Actions cache (not an inbound HTTP webhook).
 #
+# Fetch uses curl_cffi (Chrome TLS impersonation) in run_polls.fetch_html — plain requests often gets 403
+# from themadad/WAF on GitHub-hosted runner IPs.
+#
 # Secrets: GOOGLE_SERVICE_ACCOUNT_JSON — service account JSON with Sheets edit access; share the sheet.
 
 name: Run polls when themadad updates
