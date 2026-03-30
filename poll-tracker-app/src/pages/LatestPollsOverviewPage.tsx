@@ -1510,17 +1510,14 @@ export function LatestPollsOverviewPage() {
 
           {showSparklines && sparklineFocusedParty ? (
             <div className="lpo-party-focus-banner">
-              <div className="lpo-party-focus-banner-main">
-                <button
-                  type="button"
-                  className="lpo-party-focus-back"
-                  onClick={() => setSparklineFocusedParty(null)}
-                >
-                  {t.backToAllParties}
-                </button>
-                <span className="lpo-party-focus-current">{displayParty(sparklineFocusedParty)}</span>
-              </div>
-              <p className="lpo-party-focus-hint">{t.sparklineFocusPollHint}</p>
+              <button
+                type="button"
+                className="lpo-party-focus-back"
+                onClick={() => setSparklineFocusedParty(null)}
+              >
+                {t.backToAllParties}
+              </button>
+              <span className="lpo-party-focus-current">{displayParty(sparklineFocusedParty)}</span>
             </div>
           ) : null}
 
@@ -1548,36 +1545,36 @@ export function LatestPollsOverviewPage() {
               )
             })()}
             {displayedParties.map((partyInfo) => (
-              <div
-                key={partyInfo.party}
-                className={`lpo-party-row${showSparklines && !sparklineFocusedParty ? ' lpo-party-row--sparkline-selectable' : ''}`}
-                role={showSparklines && !sparklineFocusedParty ? 'button' : undefined}
-                tabIndex={showSparklines && !sparklineFocusedParty ? 0 : undefined}
-                aria-label={showSparklines && !sparklineFocusedParty ? `${t.sparklineRowFocusAria}: ${displayParty(partyInfo.party)}` : undefined}
-                onClick={
-                  showSparklines && !sparklineFocusedParty
-                    ? () => setSparklineFocusedParty(partyInfo.party)
-                    : undefined
-                }
-                onKeyDown={
-                  showSparklines && !sparklineFocusedParty
-                    ? (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          setSparklineFocusedParty(partyInfo.party)
+              <div key={partyInfo.party} style={{ display: 'contents' }}>
+                <div
+                  className={`lpo-party-row${showSparklines && !sparklineFocusedParty ? ' lpo-party-row--sparkline-selectable' : ''}`}
+                  role={showSparklines && !sparklineFocusedParty ? 'button' : undefined}
+                  tabIndex={showSparklines && !sparklineFocusedParty ? 0 : undefined}
+                  aria-label={showSparklines && !sparklineFocusedParty ? `${t.sparklineRowFocusAria}: ${displayParty(partyInfo.party)}` : undefined}
+                  onClick={
+                    showSparklines && !sparklineFocusedParty
+                      ? () => setSparklineFocusedParty(partyInfo.party)
+                      : undefined
+                  }
+                  onKeyDown={
+                    showSparklines && !sparklineFocusedParty
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setSparklineFocusedParty(partyInfo.party)
+                          }
                         }
-                      }
-                    : undefined
-                }
-              >
-                <div className="lpo-party-label-col">
-                  <IconWithFallback
-                    src={PARTY_ICON_MAP[partyInfo.party]}
-                    label={displayParty(partyInfo.party)}
-                  />
-                  <span className="lpo-party-name">{displayParty(partyInfo.party)}</span>
-                </div>
-                {visiblePolls.map((poll) => {
+                      : undefined
+                  }
+                >
+                  <div className="lpo-party-label-col">
+                    <IconWithFallback
+                      src={PARTY_ICON_MAP[partyInfo.party]}
+                      label={displayParty(partyInfo.party)}
+                    />
+                    <span className="lpo-party-name">{displayParty(partyInfo.party)}</span>
+                  </div>
+                  {visiblePolls.map((poll) => {
                   const partyData = poll.parties.find(
                     (p) => p.party === partyInfo.party,
                   )
@@ -1620,6 +1617,12 @@ export function LatestPollsOverviewPage() {
                     </div>
                   )
                 })}
+                </div>
+                {showSparklines && sparklineFocusedParty === partyInfo.party ? (
+                  <div className="lpo-party-focus-hint-row">
+                    <p className="lpo-party-focus-hint">{t.sparklineFocusPollHint}</p>
+                  </div>
+                ) : null}
               </div>
             ))}
             </div>

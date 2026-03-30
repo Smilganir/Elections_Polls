@@ -1124,27 +1124,30 @@ html[lang='he'] .lpo-col-header-text-block {
 
 .lpo-party-focus-banner {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.35rem;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
   padding: 0.45rem 0.55rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.18);
 }
 
-.lpo-party-focus-banner-main {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+.lpo-party-focus-hint-row {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.12rem 0.55rem 0.38rem;
+  padding-inline-start: calc(138px + 0.45rem - 0.5px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .lpo-party-focus-hint {
   margin: 0;
-  font-size: 0.66rem;
-  line-height: 1.35;
+  font-size: 0.62rem;
+  line-height: 1.3;
   color: #7a93ae;
-  max-width: 42rem;
+  max-width: 100%;
 }
 
 .lpo-party-focus-back {
@@ -1908,6 +1911,10 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     min-width: 124px;
   }
 
+  .lpo-party-focus-hint-row {
+    padding-inline-start: calc(124px + 0.45rem - 0.5px);
+  }
+
 }
 
 /* Tablet portrait / phone landscape (481–768px): 2 columns */
@@ -1952,6 +1959,10 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .lpo-party-label-col .icon-fallback {
     width: 36px;
     height: 36px;
+  }
+
+  .lpo-party-focus-hint-row {
+    padding-inline-start: calc(118px + 0.3rem - 0.5px);
   }
 
   .lpo-party-name {
@@ -2091,6 +2102,10 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .lpo-party-label-col .icon-fallback {
     width: 30px;
     height: 30px;
+  }
+
+  .lpo-party-focus-hint-row {
+    padding-inline-start: calc(86px + 0.18rem - 0.5px);
   }
 
   .lpo-party-name {
