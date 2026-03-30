@@ -755,6 +755,36 @@ body {
   border-radius: 0.22rem;
 }
 
+/*
+ * Hebrew: html stays dir=ltr globally; isolate RTL here so the row is [dropdown][label]
+ * (control on the left, two-line label on the right) and the hint aligns to the label’s edge.
+ */
+html[lang='he'] .lpo-filter--page-count {
+  direction: rtl;
+}
+
+html[lang='he'] .lpo-filter--page-count .lpo-filter-top-row {
+  gap: 0;
+  justify-content: flex-start;
+}
+
+/* Shrink label to text width — flex:1 was stretching the label box and leaving a hole beside the dropdown */
+html[lang='he'] .lpo-filter--page-count .lpo-filter-label {
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 3.25rem;
+  min-width: 0;
+  text-align: start;
+  line-height: 1.18;
+}
+
+html[lang='he'] .lpo-filter--page-count select {
+  direction: ltr;
+  text-align: center;
+  padding: 0.08rem 0.12rem;
+  margin-right: -0.18rem;
+}
+
 /* ── LPO Table ───────────────────────── */
 
 .lpo-table {
@@ -769,15 +799,25 @@ body {
 .lpo-sticky-header-shell {
   position: sticky;
   top: var(--lpo-sticky-header-top);
-  z-index: 5;
+  z-index: 6;
   background: rgb(22, 30, 44);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   border-radius: 0.55rem 0.55rem 0 0;
 }
 
+.lpo-single-col .lpo-sticky-header-shell {
+  /* Keep date dot above body rows and below topbar (10) */
+  z-index: 8;
+}
+
 .lpo-header-sync-clip {
   overflow: hidden;
   width: 100%;
+}
+
+/* Sparkline (1 col): let bloc date dot extend below header row without clipping */
+.lpo-single-col .lpo-header-sync-clip {
+  overflow: visible;
 }
 
 .lpo-header-sync-track {
@@ -1368,6 +1408,8 @@ html[lang='he'] .lpo-col-header-text-block {
 .lpo-header-events {
   flex: 1 1 0%;
   position: relative;
+  z-index: 1;
+  isolation: isolate;
   min-height: 100px;
   min-width: 0;
   overflow: visible;
@@ -1378,33 +1420,44 @@ html[lang='he'] .lpo-col-header-text-block {
   flex-shrink: 0;
 }
 
-/* Current poll ▼ at bottom of bloc chart band (same horizontal % as party sparkline event lines) */
+/*
+ * Current poll marker: gold dot centered on .lpo-header-row border (below col padding).
+ * Horizontal % matches party sparkline event lines.
+ */
 .lpo-header-bloc-marker-strip {
   position: absolute;
   left: 0;
   right: 0;
+  top: auto;
+  bottom: 0;
   height: 0;
   overflow: visible;
-  z-index: 6;
+  z-index: 30;
   pointer-events: none;
   box-sizing: border-box;
 }
 
 .lpo-header-bloc-current-marker {
   position: absolute;
-  top: 0;
+  top: auto;
   left: 0;
-  /* Bottom of ▼ aligns with chart band bottom; glyph sits just inside plot, points down toward timeline */
-  transform: translate(-50%, calc(-100% + 1px));
+  /* 7px dot; bottom offset = single-col header padding-bottom + half 2px row border + half dot */
+  bottom: calc(-0.45rem - 1px - 3.5px);
+  width: 7px;
+  height: 7px;
   margin: 0;
   padding: 0;
-  line-height: 1;
-  font-size: 9px;
-  font-weight: 700;
-  color: #9c8c3d;
-  background: none;
   border: none;
-  text-shadow: 0 0 4px rgba(12, 18, 28, 0.9);
+  border-radius: 50%;
+  background: #c4a43a;
+  z-index: 30;
+  box-shadow:
+    0 0 4px rgba(12, 18, 28, 0.95),
+    0 0 2px rgba(0, 0, 0, 0.6);
+  transform: translateX(-50%);
+  line-height: 0;
+  font-size: 0;
+  overflow: visible;
 }
 
 /* Bloc chart band: JS sets top/height to match coalition→arabs tracks; default fills events area until measured */
@@ -1451,9 +1504,7 @@ html[lang='he'] .lpo-col-header-text-block {
   line-height: 1;
   font-weight: 600;
   white-space: nowrap;
-  text-shadow:
-    0 0 3px rgba(12, 18, 28, 0.92),
-    0 0 5px rgba(12, 18, 28, 0.5);
+  text-shadow: none;
 }
 
 .lpo-header-bloc-extrema {
@@ -1465,11 +1516,7 @@ html[lang='he'] .lpo-col-header-text-block {
   line-height: 1;
   font-weight: 600;
   white-space: nowrap;
-  text-shadow:
-    0 0 3px rgba(12, 18, 28, 0.92),
-    0 0 6px rgba(12, 18, 28, 0.55),
-    1px 0 1px rgba(8, 12, 20, 0.85),
-    -1px 0 1px rgba(8, 12, 20, 0.85);
+  text-shadow: none;
 }
 
 .lpo-header-bloc-extrema--max {
@@ -1662,6 +1709,7 @@ html[lang='he'] .lpo-col-header-text-block {
   transform: translate(calc(-100% - 4px), -50%);
   pointer-events: none;
   user-select: none;
+  text-shadow: none;
 }
 
 /* HTML overlays avoid SVG non-uniform scale (preserveAspectRatio none) that stretched <text> */
@@ -1677,11 +1725,7 @@ html[lang='he'] .lpo-col-header-text-block {
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
-  text-shadow:
-    0 0 3px rgba(12, 18, 28, 0.92),
-    0 0 6px rgba(12, 18, 28, 0.55),
-    1px 0 1px rgba(8, 12, 20, 0.85),
-    -1px 0 1px rgba(8, 12, 20, 0.85);
+  text-shadow: none;
 }
 
 .lpo-sparkline-extrema-html--max {
@@ -1896,18 +1940,18 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
   .lpo-header-row,
   .lpo-party-row {
-    grid-template-columns: 104px repeat(var(--lpo-cols, 2), minmax(0, 1fr));
+    grid-template-columns: 118px repeat(var(--lpo-cols, 2), minmax(0, 1fr));
   }
 
   .lpo-party-label-col {
-    min-width: 104px;
+    min-width: 118px;
     padding: calc(0.17rem - 0.5px) calc(0.3rem - 0.5px);
   }
 
   .lpo-party-label-col .mapped-icon,
   .lpo-party-label-col .icon-fallback {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
   }
 
   .lpo-party-name {
@@ -2034,19 +2078,19 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
   .lpo-header-row,
   .lpo-party-row {
-    grid-template-columns: 70px repeat(var(--lpo-cols, 2), minmax(0, 1fr));
+    grid-template-columns: 86px repeat(var(--lpo-cols, 2), minmax(0, 1fr));
   }
 
   .lpo-party-label-col {
-    min-width: 70px;
+    min-width: 86px;
     padding: calc(0.102rem - 0.5px) calc(0.18rem - 0.5px);
-    gap: 0.102rem;
+    gap: 0.14rem;
   }
 
   .lpo-party-label-col .mapped-icon,
   .lpo-party-label-col .icon-fallback {
-    width: 22px;
-    height: 22px;
+    width: 30px;
+    height: 30px;
   }
 
   .lpo-party-name {
@@ -2055,6 +2099,11 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
   .lpo-col-header {
     padding: 0.4rem 0.4rem 0.35rem;
+  }
+
+  /* Match padding-bottom above + half row border + half 7px dot */
+  .lpo-header-bloc-current-marker {
+    bottom: calc(-0.35rem - 1px - 3.5px);
   }
 
   .lpo-col-header-media-row {
@@ -2189,6 +2238,20 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .lpo-filter--page-count .lpo-filter-label {
     max-width: 4.1rem;
     font-size: 0.6rem;
+  }
+
+  html[lang='he'] .lpo-filter--page-count .lpo-filter-label {
+    max-width: 2.95rem;
+    font-size: 0.58rem;
+  }
+
+  html[lang='he'] .lpo-filter--page-count .lpo-filter-top-row {
+    gap: 0;
+  }
+
+  html[lang='he'] .lpo-filter--page-count select {
+    margin-right: -0.14rem;
+    padding: 0.06rem 0.1rem;
   }
 
   .lpo-filter--page-count select {

@@ -172,17 +172,11 @@ function HeaderBlocSparklineBundle({
   const markerLeftPct = hi !== null && series.length ? (toX(ts[hi]) / W) * 100 : null
 
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'MMM D, YYYY'
-  /* ▼ anchored to bottom of bloc chart band (tip on lower plot edge; above vertical event captions) */
-  const markerTopPx = band != null ? band.top + band.height : 0
   const earliestLeftPct = (toX(ts[0]) / W) * 100
 
   return (
     <>
-      <div
-        className="lpo-header-bloc-marker-strip"
-        style={{ top: markerTopPx }}
-        aria-hidden
-      >
+      <div className="lpo-header-bloc-marker-strip" aria-hidden>
         {markerLeftPct !== null ? (
           <span
             className="lpo-header-bloc-current-marker"
@@ -190,9 +184,7 @@ function HeaderBlocSparklineBundle({
             title={series[hi!].date}
             role="img"
             aria-label={series[hi!].date}
-          >
-            ▼
-          </span>
+          />
         ) : null}
       </div>
       <div
@@ -243,6 +235,7 @@ function HeaderBlocSparklineBundle({
               left: `${earliestLeftPct}%`,
               top: `${(toY(series[0].coalition) / H) * 100}%`,
               color: SEGMENT_COLORS.Coalition,
+              opacity: 0.9,
             }}
             title={`${series[0].date} · ${t.coalition}`}
           >
@@ -254,6 +247,7 @@ function HeaderBlocSparklineBundle({
               left: `${earliestLeftPct}%`,
               top: `${(toY(series[0].opposition) / H) * 100}%`,
               color: SEGMENT_COLORS.Opposition,
+              opacity: 0.88,
             }}
             title={`${series[0].date} · ${t.opposition}`}
           >
@@ -268,6 +262,7 @@ function HeaderBlocSparklineBundle({
                     left: `${(toX(ts[exCoal.maxIdx]) / W) * 100}%`,
                     top: `${(toY(series[exCoal.maxIdx].coalition) / H) * 100}%`,
                     color: SEGMENT_COLORS.Coalition,
+                    opacity: 0.9,
                   }}
                   title={`${series[exCoal.maxIdx].date} · max (latest) ${exCoal.maxV} ${t.seats}`}
                 >
@@ -281,6 +276,7 @@ function HeaderBlocSparklineBundle({
                     left: `${(toX(ts[exCoal.minIdx]) / W) * 100}%`,
                     top: `${(toY(series[exCoal.minIdx].coalition) / H) * 100}%`,
                     color: SEGMENT_COLORS.Coalition,
+                    opacity: 0.9,
                   }}
                   title={`${series[exCoal.minIdx].date} · min (latest) ${exCoal.minV} ${t.seats}`}
                 >
@@ -298,6 +294,7 @@ function HeaderBlocSparklineBundle({
                     left: `${(toX(ts[exOpp.maxIdx]) / W) * 100}%`,
                     top: `${(toY(series[exOpp.maxIdx].opposition) / H) * 100}%`,
                     color: SEGMENT_COLORS.Opposition,
+                    opacity: 0.88,
                   }}
                   title={`${series[exOpp.maxIdx].date} · max (latest) ${exOpp.maxV} ${t.seats}`}
                 >
@@ -311,6 +308,7 @@ function HeaderBlocSparklineBundle({
                     left: `${(toX(ts[exOpp.minIdx]) / W) * 100}%`,
                     top: `${(toY(series[exOpp.minIdx].opposition) / H) * 100}%`,
                     color: SEGMENT_COLORS.Opposition,
+                    opacity: 0.88,
                   }}
                   title={`${series[exOpp.minIdx].date} · min (latest) ${exOpp.minV} ${t.seats}`}
                 >
@@ -351,6 +349,8 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
+  /** Match thin stroke brightness; vote labels use the same opacity (no text-shadow glow). */
+  const lineOpacity = 0.88
 
   /* Taller viewBox with same plot band (ch=26) so extrema labels sit in top/bottom gutters, not on y≈0/H. */
   const W = 200, H = 44
@@ -462,8 +462,10 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
             vectorEffect="non-scaling-stroke" />
         ))}
         <path d={pathD} fill="none" stroke={color} strokeWidth={0.35}
+          strokeOpacity={lineOpacity}
           vectorEffect="non-scaling-stroke" />
         <circle cx={lastX} cy={lastY} r={0.1} fill="none" stroke={color}
+          strokeOpacity={lineOpacity}
           strokeWidth={1} vectorEffect="non-scaling-stroke" />
         {hoverPoint && (
           <>
@@ -481,6 +483,7 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
           left: `${(toX(ts[0]) / W) * 100}%`,
           top: `${(toY(vals[0]) / H) * 100}%`,
           color,
+          opacity: lineOpacity,
         }}
         title={`${data[0].date} · ${data[0].votes} ${seatsLabel}`}
       >
@@ -495,6 +498,7 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
                 left: `${(toX(ts[latestExtrema.maxIdx]) / W) * 100}%`,
                 top: `${(toY(vals[latestExtrema.maxIdx]) / H) * 100}%`,
                 color,
+                opacity: lineOpacity,
               }}
               title={`${data[latestExtrema.maxIdx].date} · max (latest) ${latestExtrema.maxV} ${seatsLabel}`}
             >
@@ -508,6 +512,7 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
                 left: `${(toX(ts[latestExtrema.minIdx]) / W) * 100}%`,
                 top: `${(toY(vals[latestExtrema.minIdx]) / H) * 100}%`,
                 color,
+                opacity: lineOpacity,
               }}
               title={`${data[latestExtrema.minIdx].date} · min (latest) ${latestExtrema.minV} ${seatsLabel}`}
             >

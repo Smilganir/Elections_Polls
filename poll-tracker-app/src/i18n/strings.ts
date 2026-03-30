@@ -66,7 +66,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     coalition: 'קואליציה',
     opposition: 'אופוזיציה',
     arabs: 'ערבים',
-    pollsPerPage: 'סקרים בעמוד',
+    pollsPerPage: 'סקרים לעמוד',
     pollsPerPageHint: 'בחרו 1 להצגת מגמות',
     loading: 'טוען נתוני סקרים...',
     noPolls: 'לא נמצאו סקרים.',
