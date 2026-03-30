@@ -629,9 +629,61 @@ body {
 
 .lpo-inline-filters {
   display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
   gap: 0.8rem;
   margin-left: 0;
   justify-self: end;
+}
+
+.lpo-event-labels-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.3rem;
+  background: rgba(28, 38, 54, 0.9);
+  color: #8a9fb8;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lpo-event-labels-toggle:hover {
+  color: #c8d8ea;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.lpo-event-labels-toggle--on {
+  background: rgba(58, 123, 213, 0.28);
+  color: #e1e8f2;
+  border-color: rgba(58, 123, 213, 0.45);
+}
+
+.lpo-event-labels-toggle:focus-visible {
+  outline: 2px solid rgba(58, 123, 213, 0.65);
+  outline-offset: 2px;
+}
+
+/* Compact control on bloc sparkline card (replaces top-toolbar placement) */
+.lpo-event-labels-toggle--bloc-header {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  z-index: 8;
+  padding: 0.1rem 0.28rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  border-radius: 0.18rem;
+  max-width: min(5.5rem, 46%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.lpo-event-labels-toggle--bloc-header.lpo-event-labels-toggle--on {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .lpo-filter {
@@ -643,6 +695,45 @@ body {
   font-weight: 600;
 }
 
+/* Polls-per-page: label + select row, hint below (LTR/RTL via document direction) */
+.lpo-filter--page-count {
+  gap: 0.22rem;
+  max-width: min(100%, 9.5rem);
+  align-items: stretch;
+}
+
+.lpo-filter-top-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.lpo-filter--page-count .lpo-filter-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 4.75rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: #8da2be;
+}
+
+.lpo-filter-hint {
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: rgba(122, 147, 174, 0.88);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  text-align: start;
+  cursor: default;
+  width: 100%;
+  min-width: 0;
+}
+
 .lpo-filter select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -651,6 +742,17 @@ body {
   color: #c8d8ea;
   padding: 0.25rem 0.35rem;
   font-size: 0.78rem;
+}
+
+.lpo-filter--page-count select {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 2rem;
+  max-width: 2.85rem;
+  padding: 0.1rem 0.22rem;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  border-radius: 0.22rem;
 }
 
 /* ── LPO Table ───────────────────────── */
@@ -702,8 +804,8 @@ body {
 .lpo-party-label-col {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.45rem;
+  gap: 0.2975rem;
+  padding: calc(0.255rem - 0.5px) calc(0.45rem - 0.5px);
   min-width: 138px;
 }
 
@@ -1033,13 +1135,19 @@ html[lang='he'] .lpo-col-header-text-block {
 }
 
 .lpo-party-cell {
-  padding: 0.25rem 0.6rem;
+  padding: calc(0.2125rem - 0.5px) calc(0.6rem - 0.5px);
   border-left: 1px solid rgba(255, 255, 255, 0.04);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.1rem;
+  gap: 0.085rem;
   min-width: 0;
+}
+
+.lpo-party-cell.lpo-has-sparkline {
+  overflow: visible;
+  padding-top: calc(0.357rem - 0.5px);
+  padding-bottom: calc(0.357rem - 0.5px);
 }
 
 .lpo-bar-row {
@@ -1061,7 +1169,7 @@ html[lang='he'] .lpo-col-header-text-block {
   flex: 1;
   min-width: 0;
   position: relative;
-  height: 20px;
+  height: 17px;
   border-radius: 3px;
   background: transparent;
   overflow: visible;
@@ -1156,7 +1264,7 @@ html[lang='he'] .lpo-col-header-text-block {
 
 .lpo-header-merged-inner {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.55rem;
   width: 100%;
   max-width: 100%;
@@ -1167,6 +1275,7 @@ html[lang='he'] .lpo-col-header-text-block {
 .lpo-header-meta-bars {
   flex: 1 1 0%;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
@@ -1208,6 +1317,11 @@ html[lang='he'] .lpo-col-header-text-block {
   position: relative;
 }
 
+/* Nudge bloc vote tracks down slightly vs outlet title row; band measure picks this up so chart stays aligned */
+.lpo-single-col .lpo-header-meta-bars .lpo-hbars {
+  margin-top: 10px;
+}
+
 .lpo-hbar-segment {
   display: flex;
   flex-direction: row;
@@ -1226,7 +1340,8 @@ html[lang='he'] .lpo-col-header-text-block {
 }
 
 .lpo-hbar-value {
-  font-size: 0.85rem;
+  /* Match party row seat figures (`.lpo-bar-end-meta .lpo-votes`) */
+  font-size: 0.68rem;
   line-height: 1;
   margin: 0;
 }
@@ -1263,10 +1378,119 @@ html[lang='he'] .lpo-col-header-text-block {
   flex-shrink: 0;
 }
 
+/* Current poll ▼ at bottom of bloc chart band (same horizontal % as party sparkline event lines) */
+.lpo-header-bloc-marker-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 6;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.lpo-header-bloc-current-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Bottom of ▼ aligns with chart band bottom; glyph sits just inside plot, points down toward timeline */
+  transform: translate(-50%, calc(-100% + 1px));
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  font-size: 9px;
+  font-weight: 700;
+  color: #9c8c3d;
+  background: none;
+  border: none;
+  text-shadow: 0 0 4px rgba(12, 18, 28, 0.9);
+}
+
+/* Bloc chart band: JS sets top/height to match coalition→arabs tracks; default fills events area until measured */
+.lpo-header-events-bloc-chart-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+.lpo-header-bloc-interactive {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.lpo-header-bloc-interactive .lpo-header-events-bloc-chart {
+  pointer-events: none;
+}
+
+.lpo-header-events-bloc-chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* One span per bloc line; top % matches that line’s y at the earliest poll */
+.lpo-header-bloc-earliest-val {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  transform: translate(calc(-100% - 5px), -50%);
+  z-index: 3;
+  pointer-events: none;
+  font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgba(12, 18, 28, 0.92),
+    0 0 5px rgba(12, 18, 28, 0.5);
+}
+
+.lpo-header-bloc-extrema {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgba(12, 18, 28, 0.92),
+    0 0 6px rgba(12, 18, 28, 0.55),
+    1px 0 1px rgba(8, 12, 20, 0.85),
+    -1px 0 1px rgba(8, 12, 20, 0.85);
+}
+
+.lpo-header-bloc-extrema--max {
+  transform: translate(-50%, calc(-100% - 3px));
+}
+
+.lpo-header-bloc-extrema--min {
+  transform: translate(-50%, 4px);
+}
+
+.lpo-header-bloc-tooltip-lines {
+  display: block;
+  text-align: left;
+  line-height: 1.4;
+}
+
 .lpo-event-label {
   position: absolute;
   top: 0;
   bottom: 0;
+  z-index: 2;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -1281,11 +1505,22 @@ html[lang='he'] .lpo-col-header-text-block {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   transform: rotate(180deg);
-  font-size: 0.62rem;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   line-height: 1.1;
   flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  /* Semi-transparent dark halo so labels stay readable over bloc sparklines */
+  text-shadow:
+    0 0 4px rgba(12, 18, 28, 0.92),
+    0 0 8px rgba(12, 18, 28, 0.65),
+    0 0 12px rgba(12, 18, 28, 0.45),
+    1px 0 2px rgba(8, 12, 20, 0.85),
+    -1px 0 2px rgba(8, 12, 20, 0.85),
+    0 1px 2px rgba(8, 12, 20, 0.85),
+    0 -1px 2px rgba(8, 12, 20, 0.85);
 }
 
 @media (max-width: 768px) {
@@ -1294,7 +1529,7 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-event-label-text {
-    font-size: 0.54rem;
+    font-size: 9px;
     max-width: 3.5em;
   }
 
@@ -1313,7 +1548,7 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-event-label-text {
-    font-size: 0.48rem;
+    font-size: 8px;
     max-width: 3em;
   }
 
@@ -1384,8 +1619,9 @@ html[lang='he'] .lpo-col-header-text-block {
 .lpo-has-sparkline {
   flex-direction: row;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.45rem 0.4rem 0.45rem 0.15rem;
+  gap: 0.255rem;
+  padding: calc(0.3825rem - 0.5px) calc(0.34rem - 0.5px) calc(0.3825rem - 0.5px) calc(0.1275rem - 0.5px);
+  overflow: visible;
 }
 
 /* ~30% wider bar column vs sparkline (sparkline flex:1 absorbs the shrink) */
@@ -1394,38 +1630,96 @@ html[lang='he'] .lpo-col-header-text-block {
 }
 
 .lpo-has-sparkline .lpo-bar-track {
-  height: 20px;
+  height: 17px;
 }
 
 .lpo-sparkline-wrap {
   flex: 1;
   min-width: 0;
   position: relative;
-  height: 36px;
+  /* ~26/44 of height matches prior ~26/30 of 36px plot thickness; extra px for label gutters */
+  height: 43px;
   cursor: crosshair;
+  overflow: visible;
 }
 
 .lpo-sparkline-svg {
   width: 100%;
   height: 100%;
   display: block;
+  overflow: visible;
 }
 
-/* Pixel-perfect circle: SVG uses preserveAspectRatio none (stretches), so marker is HTML not <circle> */
+.lpo-sparkline-earliest-votes {
+  position: absolute;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translate(calc(-100% - 4px), -50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* HTML overlays avoid SVG non-uniform scale (preserveAspectRatio none) that stretched <text> */
+.lpo-sparkline-extrema-html {
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  text-shadow:
+    0 0 3px rgba(12, 18, 28, 0.92),
+    0 0 6px rgba(12, 18, 28, 0.55),
+    1px 0 1px rgba(8, 12, 20, 0.85),
+    -1px 0 1px rgba(8, 12, 20, 0.85);
+}
+
+.lpo-sparkline-extrema-html--max {
+  transform: translate(-50%, calc(-100% - 4px));
+}
+
+.lpo-sparkline-extrema-html--min {
+  transform: translate(-50%, 5px);
+}
+
+.lpo-sparkline-extrema-text {
+  font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+html[lang='he'] .lpo-sparkline-extrema-text,
+html[lang='he'] .lpo-sparkline-extrema-html,
+html[lang='he'] .lpo-header-bloc-extrema,
+html[lang='he'] .lpo-header-bloc-earliest-val {
+  font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* HTML marker: SVG uses preserveAspectRatio none (stretches); ▼ sits above the selected point */
 .lpo-sparkline-current-marker {
   position: absolute;
   z-index: 2;
-  width: 8px;
-  height: 8px;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  border-radius: 50%;
-  background: #9c8c3d;
-  border: 1.5px solid rgba(255, 255, 255, 0.92);
-  transform: translate(-50%, -50%);
+  line-height: 1;
+  font-size: 9px;
+  font-weight: 700;
+  color: #9c8c3d;
+  background: none;
+  border: none;
+  box-shadow: none;
+  transform: translate(-50%, calc(-100% - 3px));
   pointer-events: none;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  user-select: none;
 }
 
 .lpo-sparkline-tooltip {
@@ -1453,21 +1747,21 @@ html[lang='he'] .lpo-col-header-text-block {
 
 /* Single party selected: more vertical space for sparkline; poll scrubber still changes outlet poll */
 .lpo-sparkline-party-focus .lpo-sparkline-wrap {
-  height: min(140px, 34vh);
-  min-height: 96px;
+  height: min(119px, 29vh);
+  min-height: 82px;
 }
 
 .lpo-sparkline-party-focus .lpo-has-sparkline {
-  padding: 0.65rem 0.5rem 0.65rem 0.2rem;
-  gap: 0.5rem;
+  padding: calc(0.5525rem - 0.5px) calc(0.425rem - 0.5px) calc(0.5525rem - 0.5px) calc(0.17rem - 0.5px);
+  gap: 0.425rem;
 }
 
 .lpo-sparkline-party-focus .lpo-has-sparkline .lpo-bar-track {
-  height: 26px;
+  height: 22px;
 }
 
 .lpo-sparkline-party-focus .lpo-party-row {
-  min-height: 4.75rem;
+  min-height: calc(4.0375rem - 1px);
 }
 
 /* ── Trellis grid for Election Polls ─── */
@@ -1607,7 +1901,7 @@ html[lang='he'] .lpo-col-header-text-block {
 
   .lpo-party-label-col {
     min-width: 104px;
-    padding: 0.2rem 0.3rem;
+    padding: calc(0.17rem - 0.5px) calc(0.3rem - 0.5px);
   }
 
   .lpo-party-label-col .mapped-icon,
@@ -1661,20 +1955,16 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-bar-track {
-    height: 16px;
+    height: 14px;
   }
 
   .lpo-has-sparkline .lpo-bar-row {
     flex: 0 0 calc(155px * 1.3);
   }
 
-  .lpo-sparkline-svg {
-    height: 24px;
-  }
-
   .lpo-sparkline-party-focus .lpo-sparkline-wrap {
-    height: min(110px, 30vh);
-    min-height: 80px;
+    height: min(94px, 26vh);
+    min-height: 68px;
   }
 
   .lpo-sparkline-party-focus .lpo-sparkline-svg {
@@ -1682,7 +1972,7 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-sparkline-party-focus .lpo-has-sparkline .lpo-bar-track {
-    height: 22px;
+    height: 19px;
   }
 
   .media-selector-bar {
@@ -1749,8 +2039,8 @@ html[lang='he'] .lpo-col-header-text-block {
 
   .lpo-party-label-col {
     min-width: 70px;
-    padding: 0.12rem 0.18rem;
-    gap: 0.12rem;
+    padding: calc(0.102rem - 0.5px) calc(0.18rem - 0.5px);
+    gap: 0.102rem;
   }
 
   .lpo-party-label-col .mapped-icon,
@@ -1807,7 +2097,12 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-party-cell {
-    padding: 0.2rem 0.35rem;
+    padding: calc(0.17rem - 0.5px) calc(0.35rem - 0.5px);
+  }
+
+  .lpo-party-cell.lpo-has-sparkline {
+    padding-top: calc(0.323rem - 0.5px);
+    padding-bottom: calc(0.323rem - 0.5px);
   }
 
   .lpo-votes {
@@ -1816,7 +2111,7 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-bar-track {
-    height: 14px;
+    height: 12px;
   }
 
   .lpo-change-badge {
@@ -1828,17 +2123,17 @@ html[lang='he'] .lpo-col-header-text-block {
     font-size: 0.6rem;
   }
 
+  .lpo-hbar-value {
+    font-size: 0.6rem;
+  }
+
   .lpo-has-sparkline .lpo-bar-row {
     flex: 0 0 calc(110px * 1.3);
   }
 
-  .lpo-sparkline-svg {
-    height: 22px;
-  }
-
   .lpo-sparkline-party-focus .lpo-sparkline-wrap {
-    height: min(92px, 26vh);
-    min-height: 70px;
+    height: min(78px, 22vh);
+    min-height: 60px;
   }
 
   .lpo-sparkline-party-focus .lpo-sparkline-svg {
@@ -1846,7 +2141,7 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-sparkline-party-focus .lpo-has-sparkline .lpo-bar-track {
-    height: 20px;
+    height: 17px;
   }
 
   .lpo-sparkline-party-focus .lpo-party-focus-hint {
@@ -1884,6 +2179,27 @@ html[lang='he'] .lpo-col-header-text-block {
     padding: 0.18rem 0.22rem;
     min-width: 0;
     max-width: 5.2rem;
+  }
+
+  .lpo-filter--page-count {
+    max-width: min(100%, 8.5rem);
+    gap: 0.18rem;
+  }
+
+  .lpo-filter--page-count .lpo-filter-label {
+    max-width: 4.1rem;
+    font-size: 0.6rem;
+  }
+
+  .lpo-filter--page-count select {
+    min-width: 1.75rem;
+    max-width: 2.65rem;
+    padding: 0.06rem 0.14rem;
+    font-size: 0.58rem;
+  }
+
+  .lpo-filter-hint {
+    font-size: 0.45rem;
   }
 
   .placeholder-card {

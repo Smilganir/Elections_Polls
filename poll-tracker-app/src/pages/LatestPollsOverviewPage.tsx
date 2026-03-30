@@ -10,12 +10,15 @@ import {
   formatEventLabelForDisplay,
   selectEventsForViewportDisplay,
   SEGMENT_COLORS,
+  SPARKLINE_PARTY_DEBUT_DATE,
 } from '../config/mappings'
 import { useDashboardData } from '../hooks/useDashboardData'
 import type { MajorEventRow, PartyDimRow, Segment } from '../types/data'
 import { IconWithFallback } from '../ui/IconWithFallback'
 import { useLocale } from '../i18n/useLocale'
+import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
+import type { UiStrings } from '../i18n/strings'
 import { publicUrl } from '../utils/publicUrl'
 
 type PollColumn = {
@@ -36,21 +39,322 @@ type PollColumn = {
 
 type PreviousPollMap = Map<string, Map<string, number>>
 
-function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel, currentPollDate }: {
+type BlocPollPoint = { date: string; pollId: number; coalition: number; opposition: number; arabs: number }
+
+function latestExtremaIndices(vals: number[]) {
+  if (vals.length < 2) return null
+  const maxV = Math.max(...vals)
+  const minV = Math.min(...vals)
+  let maxIdx = 0
+  for (let i = vals.length - 1; i >= 0; i--) {
+    if (vals[i] === maxV) {
+      maxIdx = i
+      break
+    }
+  }
+  let minIdx = 0
+  for (let i = vals.length - 1; i >= 0; i--) {
+    if (vals[i] === minV) {
+      minIdx = i
+      break
+    }
+  }
+  return { maxV, minV, maxIdx, minIdx, flat: maxV === minV }
+}
+
+function blocHighlightIdx(series: BlocPollPoint[], currentPollDate: string | undefined): number | null {
+  if (!currentPollDate || series.length === 0) return null
+  const exact = series.findIndex((d) => d.date === currentPollDate)
+  if (exact >= 0) return exact
+  const targetT = new Date(currentPollDate).getTime()
+  if (!Number.isFinite(targetT)) return series.length - 1
+  const ts = series.map((d) => new Date(d.date).getTime())
+  let best = 0
+  let bestDist = Infinity
+  for (let i = 0; i < ts.length; i++) {
+    const dist = Math.abs(ts[i] - targetT)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = i
+    }
+  }
+  return best
+}
+
+/** Marker strip + interactive bloc band: stepped lines, HTML labels, hover tooltip, current-poll ▼ on chart top edge. */
+function HeaderBlocSparklineBundle({
+  series,
+  minT,
+  maxT,
+  currentPollDate,
+  band,
+  t,
+  locale,
+}: {
+  series: BlocPollPoint[]
+  minT: number
+  maxT: number
+  currentPollDate: string
+  band: { top: number; height: number } | null
+  t: UiStrings
+  locale: AppLocale
+}) {
+  const W = 200
+  const H = 100
+  const rangeT = maxT - minT || 1
+  const toX = (tMs: number) => ((tMs - minT) / rangeT) * W
+
+  const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
+  const ts = useMemo(() => series.map((d) => new Date(d.date).getTime()), [series])
+  const coalVals = useMemo(() => series.map((p) => p.coalition), [series])
+  const oppVals = useMemo(() => series.map((p) => p.opposition), [series])
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (series.length < 2) return
+      const rect = e.currentTarget.getBoundingClientRect()
+      const pxX = e.clientX - rect.left
+      const ratio = pxX / rect.width
+      const cursorT = minT + ratio * rangeT
+      let best = 0
+      let bestDist = Infinity
+      for (let i = 0; i < ts.length; i++) {
+        const dist = Math.abs(ts[i] - cursorT)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = i
+        }
+      }
+      setHover({ idx: best, x: e.clientX, y: e.clientY })
+    },
+    [ts, minT, rangeT, series.length],
+  )
+
+  const handleMouseLeave = useCallback(() => setHover(null), [])
+
+  if (series.length < 2) return null
+
+  let minV = Infinity
+  let maxV = -Infinity
+  for (const p of series) {
+    if (p.coalition < minV) minV = p.coalition
+    if (p.coalition > maxV) maxV = p.coalition
+    if (p.opposition < minV) minV = p.opposition
+    if (p.opposition > maxV) maxV = p.opposition
+  }
+  const vPad = 1
+  const fullRange = (maxV + vPad) - (minV - vPad) || 1
+  const toY = (v: number) => H - ((v - (minV - vPad)) / fullRange) * H
+
+  let coalD = ''
+  let oppD = ''
+  for (let i = 0; i < series.length; i++) {
+    const x = toX(ts[i])
+    const yc = toY(series[i].coalition)
+    const yo = toY(series[i].opposition)
+    coalD += i === 0 ? `M${x},${yc}` : `H${x}V${yc}`
+    oppD += i === 0 ? `M${x},${yo}` : `H${x}V${yo}`
+  }
+
+  const showMajLine = 60 >= minV - vPad && 60 <= maxV + vPad
+  const majY = toY(60)
+
+  const stepStroke = {
+    fill: 'none' as const,
+    vectorEffect: 'non-scaling-stroke' as const,
+    strokeLinecap: 'butt' as const,
+    strokeLinejoin: 'miter' as const,
+  }
+
+  const exCoal = latestExtremaIndices(coalVals)
+  const exOpp = latestExtremaIndices(oppVals)
+  const hi = blocHighlightIdx(series, currentPollDate)
+  const markerLeftPct = hi !== null && series.length ? (toX(ts[hi]) / W) * 100 : null
+
+  const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'MMM D, YYYY'
+  /* ▼ anchored to bottom of bloc chart band (tip on lower plot edge; above vertical event captions) */
+  const markerTopPx = band != null ? band.top + band.height : 0
+  const earliestLeftPct = (toX(ts[0]) / W) * 100
+
+  return (
+    <>
+      <div
+        className="lpo-header-bloc-marker-strip"
+        style={{ top: markerTopPx }}
+        aria-hidden
+      >
+        {markerLeftPct !== null ? (
+          <span
+            className="lpo-header-bloc-current-marker"
+            style={{ left: `${markerLeftPct}%` }}
+            title={series[hi!].date}
+            role="img"
+            aria-label={series[hi!].date}
+          >
+            ▼
+          </span>
+        ) : null}
+      </div>
+      <div
+        className="lpo-header-events-bloc-chart-wrap"
+        style={band ? { top: band.top, height: band.height } : undefined}
+      >
+        <div
+          className="lpo-header-bloc-interactive"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          <svg
+            className="lpo-header-events-bloc-chart"
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            overflow="visible"
+            aria-hidden
+          >
+            {showMajLine ? (
+              <line
+                x1={0}
+                x2={W}
+                y1={majY}
+                y2={majY}
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth={0.6}
+                vectorEffect="non-scaling-stroke"
+              />
+            ) : null}
+            <path
+              d={coalD}
+              {...stepStroke}
+              stroke={SEGMENT_COLORS.Coalition}
+              strokeWidth={0.35}
+              strokeOpacity={0.9}
+            />
+            <path
+              d={oppD}
+              {...stepStroke}
+              stroke={SEGMENT_COLORS.Opposition}
+              strokeWidth={0.35}
+              strokeOpacity={0.88}
+            />
+          </svg>
+          <span
+            className="lpo-header-bloc-earliest-val"
+            style={{
+              left: `${earliestLeftPct}%`,
+              top: `${(toY(series[0].coalition) / H) * 100}%`,
+              color: SEGMENT_COLORS.Coalition,
+            }}
+            title={`${series[0].date} · ${t.coalition}`}
+          >
+            {series[0].coalition}
+          </span>
+          <span
+            className="lpo-header-bloc-earliest-val"
+            style={{
+              left: `${earliestLeftPct}%`,
+              top: `${(toY(series[0].opposition) / H) * 100}%`,
+              color: SEGMENT_COLORS.Opposition,
+            }}
+            title={`${series[0].date} · ${t.opposition}`}
+          >
+            {series[0].opposition}
+          </span>
+          {exCoal && !exCoal.flat && (
+            <>
+              {exCoal.maxV !== series[0].coalition ? (
+                <span
+                  className="lpo-header-bloc-extrema lpo-header-bloc-extrema--max"
+                  style={{
+                    left: `${(toX(ts[exCoal.maxIdx]) / W) * 100}%`,
+                    top: `${(toY(series[exCoal.maxIdx].coalition) / H) * 100}%`,
+                    color: SEGMENT_COLORS.Coalition,
+                  }}
+                  title={`${series[exCoal.maxIdx].date} · max (latest) ${exCoal.maxV} ${t.seats}`}
+                >
+                  {exCoal.maxV}
+                </span>
+              ) : null}
+              {exCoal.minIdx !== 0 ? (
+                <span
+                  className="lpo-header-bloc-extrema lpo-header-bloc-extrema--min"
+                  style={{
+                    left: `${(toX(ts[exCoal.minIdx]) / W) * 100}%`,
+                    top: `${(toY(series[exCoal.minIdx].coalition) / H) * 100}%`,
+                    color: SEGMENT_COLORS.Coalition,
+                  }}
+                  title={`${series[exCoal.minIdx].date} · min (latest) ${exCoal.minV} ${t.seats}`}
+                >
+                  {exCoal.minV}
+                </span>
+              ) : null}
+            </>
+          )}
+          {exOpp && !exOpp.flat && (
+            <>
+              {exOpp.maxV !== series[0].opposition ? (
+                <span
+                  className="lpo-header-bloc-extrema lpo-header-bloc-extrema--max"
+                  style={{
+                    left: `${(toX(ts[exOpp.maxIdx]) / W) * 100}%`,
+                    top: `${(toY(series[exOpp.maxIdx].opposition) / H) * 100}%`,
+                    color: SEGMENT_COLORS.Opposition,
+                  }}
+                  title={`${series[exOpp.maxIdx].date} · max (latest) ${exOpp.maxV} ${t.seats}`}
+                >
+                  {exOpp.maxV}
+                </span>
+              ) : null}
+              {exOpp.minIdx !== 0 ? (
+                <span
+                  className="lpo-header-bloc-extrema lpo-header-bloc-extrema--min"
+                  style={{
+                    left: `${(toX(ts[exOpp.minIdx]) / W) * 100}%`,
+                    top: `${(toY(series[exOpp.minIdx].opposition) / H) * 100}%`,
+                    color: SEGMENT_COLORS.Opposition,
+                  }}
+                  title={`${series[exOpp.minIdx].date} · min (latest) ${exOpp.minV} ${t.seats}`}
+                >
+                  {exOpp.minV}
+                </span>
+              ) : null}
+            </>
+          )}
+          {hover !== null && (
+            <div className="lpo-sparkline-tooltip" style={{ left: hover.x, top: hover.y }}>
+              <span className="lpo-header-bloc-tooltip-lines">
+                <strong style={{ color: SEGMENT_COLORS.Coalition }}>{series[hover.idx].coalition}</strong>{' '}
+                {t.coalition}
+                <br />
+                <strong style={{ color: SEGMENT_COLORS.Opposition }}>{series[hover.idx].opposition}</strong>{' '}
+                {t.opposition}
+                <br />
+                <strong style={{ color: SEGMENT_COLORS.Arabs }}>{series[hover.idx].arabs}</strong> {t.arabs}
+              </span>
+              <span className="lpo-sparkline-tooltip-date">
+                {dayjs(series[hover.idx].date).format(dateFmt)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel }: {
   data: { date: string; votes: number }[]
   eventDates: string[]
   color: string
   globalMinT?: number
   globalMaxT?: number
   seatsLabel: string
-  /** Date of the poll row being viewed; draws a marker on the series at that point. */
-  currentPollDate?: string
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
 
-  const W = 200, H = 30
-  const pad = { t: 2, b: 2, l: 0, r: 0 }
+  /* Taller viewBox with same plot band (ch=26) so extrema labels sit in top/bottom gutters, not on y≈0/H. */
+  const W = 200, H = 44
+  const pad = { t: 9, b: 9, l: 0, r: 0 }
   const cw = W
   const ch = H - pad.t - pad.b
 
@@ -91,23 +395,27 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
   const lastX = toX(maxT)
   const lastY = toY(vals[vals.length - 1])
 
-  const highlightIdx = useMemo(() => {
-    if (!currentPollDate || data.length === 0) return null
-    const exact = data.findIndex((d) => d.date === currentPollDate)
-    if (exact >= 0) return exact
-    const targetT = new Date(currentPollDate).getTime()
-    if (!Number.isFinite(targetT)) return data.length - 1
-    let best = 0
-    let bestDist = Infinity
-    for (let i = 0; i < ts.length; i++) {
-      const dist = Math.abs(ts[i] - targetT)
-      if (dist < bestDist) {
-        bestDist = dist
-        best = i
+  /** Latest chronological index for each extrema (scan from end of sorted series). */
+  const latestExtrema = useMemo(() => {
+    if (vals.length < 2) return null
+    const maxV = Math.max(...vals)
+    const minV = Math.min(...vals)
+    let maxIdx = 0
+    for (let i = vals.length - 1; i >= 0; i--) {
+      if (vals[i] === maxV) {
+        maxIdx = i
+        break
       }
     }
-    return best
-  }, [currentPollDate, data, ts])
+    let minIdx = 0
+    for (let i = vals.length - 1; i >= 0; i--) {
+      if (vals[i] === minV) {
+        minIdx = i
+        break
+      }
+    }
+    return { maxV, minV, maxIdx, minIdx, flat: maxV === minV }
+  }, [vals])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -139,7 +447,12 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="lpo-sparkline-svg">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        overflow="visible"
+        className="lpo-sparkline-svg"
+      >
         <line x1={pad.l} y1={avgY} x2={W - pad.r} y2={avgY}
           stroke="rgba(255,255,255,0.15)" strokeWidth={0.5} strokeDasharray="3,2"
           vectorEffect="non-scaling-stroke" />
@@ -148,34 +461,61 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
             stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} strokeDasharray="2,2"
             vectorEffect="non-scaling-stroke" />
         ))}
-        <path d={pathD} fill="none" stroke={color} strokeWidth={1}
+        <path d={pathD} fill="none" stroke={color} strokeWidth={0.35}
           vectorEffect="non-scaling-stroke" />
-        {highlightIdx === null ? (
-          <circle cx={lastX} cy={lastY} r={0.1} fill="none" stroke={color}
-            strokeWidth={3} vectorEffect="non-scaling-stroke" />
-        ) : null}
+        <circle cx={lastX} cy={lastY} r={0.1} fill="none" stroke={color}
+          strokeWidth={1} vectorEffect="non-scaling-stroke" />
         {hoverPoint && (
           <>
             <line x1={hoverPoint.vx} y1={pad.t} x2={hoverPoint.vx} y2={H - pad.b}
               stroke="rgba(255,255,255,0.35)" strokeWidth={0.8}
               vectorEffect="non-scaling-stroke" />
             <circle cx={hoverPoint.vx} cy={hoverPoint.vy} r={0.1} fill="none" stroke="#fff"
-              strokeWidth={3.5} vectorEffect="non-scaling-stroke" />
+              strokeWidth={1.1} vectorEffect="non-scaling-stroke" />
           </>
         )}
       </svg>
-      {highlightIdx !== null ? (
-        <span
-          className="lpo-sparkline-current-marker"
-          style={{
-            left: `${(toX(ts[highlightIdx]) / W) * 100}%`,
-            top: `${(toY(vals[highlightIdx]) / H) * 100}%`,
-          }}
-          title={data[highlightIdx].date}
-          role="img"
-          aria-label={data[highlightIdx].date}
-        />
-      ) : null}
+      <span
+        className="lpo-sparkline-earliest-votes"
+        style={{
+          left: `${(toX(ts[0]) / W) * 100}%`,
+          top: `${(toY(vals[0]) / H) * 100}%`,
+          color,
+        }}
+        title={`${data[0].date} · ${data[0].votes} ${seatsLabel}`}
+      >
+        {data[0].votes}
+      </span>
+      {latestExtrema && !latestExtrema.flat && (
+        <>
+          {latestExtrema.maxV !== data[0].votes ? (
+            <span
+              className="lpo-sparkline-extrema-html lpo-sparkline-extrema-html--max"
+              style={{
+                left: `${(toX(ts[latestExtrema.maxIdx]) / W) * 100}%`,
+                top: `${(toY(vals[latestExtrema.maxIdx]) / H) * 100}%`,
+                color,
+              }}
+              title={`${data[latestExtrema.maxIdx].date} · max (latest) ${latestExtrema.maxV} ${seatsLabel}`}
+            >
+              {latestExtrema.maxV}
+            </span>
+          ) : null}
+          {latestExtrema.minIdx !== 0 ? (
+            <span
+              className="lpo-sparkline-extrema-html lpo-sparkline-extrema-html--min"
+              style={{
+                left: `${(toX(ts[latestExtrema.minIdx]) / W) * 100}%`,
+                top: `${(toY(vals[latestExtrema.minIdx]) / H) * 100}%`,
+                color,
+              }}
+              title={`${data[latestExtrema.minIdx].date} · min (latest) ${latestExtrema.minV} ${seatsLabel}`}
+            >
+              {latestExtrema.minV}
+            </span>
+          ) : null}
+        </>
+      )}
       {hover !== null && (
         <div
           className="lpo-sparkline-tooltip"
@@ -198,6 +538,7 @@ export function LatestPollsOverviewPage() {
   const [pageIndex, setPageIndex] = useState(0)
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
+  const [showEventLabels, setShowEventLabels] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -476,6 +817,7 @@ export function LatestPollsOverviewPage() {
       eventDates: [] as string[],
       enrichedEvents: [] as EnrichedEvent[],
       timeRange: { minT: 0, maxT: 0 },
+      blocSeries: [] as BlocPollPoint[],
     }
     if (!sparklineOutlet) return empty
 
@@ -487,6 +829,20 @@ export function LatestPollsOverviewPage() {
     }
     for (const [, arr] of history) {
       arr.sort((a, b) => a.date.localeCompare(b.date))
+    }
+    for (const party of [...history.keys()]) {
+      const debutStr = SPARKLINE_PARTY_DEBUT_DATE[party]
+      if (!debutStr) continue
+      const debut = dayjs(debutStr)
+      if (!debut.isValid()) continue
+      const arr = history.get(party)!
+      history.set(
+        party,
+        arr.filter((pt) => {
+          const t = dayjs(pt.date)
+          return t.isValid() && !t.isBefore(debut, 'day')
+        }),
+      )
     }
 
     let minT = Infinity
@@ -515,7 +871,7 @@ export function LatestPollsOverviewPage() {
       if (seen.has(row.eventName)) continue
       seen.add(row.eventName)
       const major = majorEventMap.get(row.eventName)
-      const shortName = formatEventLabelForDisplay(row.eventName, 20)
+      const shortName = formatEventLabelForDisplay(row.eventName, 20, 'en-event-name')
       const heRaw = major?.eventNameHe?.trim() ?? ''
       const shortNameHe = heRaw
         ? formatEventLabelForDisplay(heRaw, 20)
@@ -538,8 +894,25 @@ export function LatestPollsOverviewPage() {
     const enrichedEvents = selectEventsForViewportDisplay(enrichedInPollRange, maxLabels)
     const eventDates = enrichedEvents.map((e) => e.date)
 
-    return { history, eventDates, enrichedEvents, timeRange: { minT, maxT } }
-  }, [unpivot, events, majorEvents, sparklineOutlet, eventViewportWidth])
+    const blocByPoll = new Map<number, { date: string; coalition: number; opposition: number; arabs: number }>()
+    for (const row of unpivot) {
+      if (row.mediaOutlet !== sparklineOutlet) continue
+      let rec = blocByPoll.get(row.pollId)
+      if (!rec) {
+        rec = { date: row.date, coalition: 0, opposition: 0, arabs: 0 }
+        blocByPoll.set(row.pollId, rec)
+      }
+      const seg = segmentMap.get(row.party)?.segment ?? 'Opposition'
+      if (seg === 'Coalition') rec.coalition += row.votes
+      else if (seg === 'Opposition') rec.opposition += row.votes
+      else if (seg === 'Arabs') rec.arabs += row.votes
+    }
+    const blocSeries: BlocPollPoint[] = Array.from(blocByPoll.entries())
+      .map(([pollId, v]) => ({ pollId, ...v }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+
+    return { history, eventDates, enrichedEvents, timeRange: { minT, maxT }, blocSeries }
+  }, [unpivot, events, majorEvents, sparklineOutlet, eventViewportWidth, segmentMap])
 
   const rowsRef = useRef<HTMLDivElement>(null)
   const lpoTableRef = useRef<HTMLDivElement>(null)
@@ -553,7 +926,10 @@ export function LatestPollsOverviewPage() {
     scrollLeft0: number
   } | null>(null)
   const headerEventsRef = useRef<HTMLDivElement>(null)
+  const headerHbarsRef = useRef<HTMLDivElement>(null)
   const [overlayPos, setOverlayPos] = useState<{ left: number; width: number } | null>(null)
+  /** Top/height of bloc chart vs `.lpo-header-events`, aligned to coalition→arabs bar tracks. */
+  const [headerBlocBand, setHeaderBlocBand] = useState<{ top: number; height: number } | null>(null)
 
   const alignHeaderEventsToSparkline = useCallback(() => {
     if (!showSparklines) return
@@ -566,8 +942,37 @@ export function LatestPollsOverviewPage() {
     if (Math.abs(dx) > 0.25) events.style.marginLeft = `${dx}px`
   }, [showSparklines])
 
+  const measureHeaderBlocBand = useCallback(() => {
+    if (!showSparklines) {
+      setHeaderBlocBand(null)
+      return
+    }
+    const events = headerEventsRef.current
+    const hbars = headerHbarsRef.current
+    if (!events || !hbars) return
+    const tracks = hbars.querySelectorAll('.lpo-hbar-track')
+    if (tracks.length < 1) return
+    const er = events.getBoundingClientRect()
+    let trackTop = Infinity
+    let trackBottom = -Infinity
+    for (const node of tracks) {
+      const r = node.getBoundingClientRect()
+      trackTop = Math.min(trackTop, r.top)
+      trackBottom = Math.max(trackBottom, r.bottom)
+    }
+    const top = trackTop - er.top
+    const height = trackBottom - trackTop
+    if (height > 2 && Number.isFinite(top) && Number.isFinite(height)) {
+      setHeaderBlocBand({ top, height })
+    }
+  }, [showSparklines])
+
   useEffect(() => {
-    if (!showSparklines) { setOverlayPos(null); return }
+    if (!showSparklines) {
+      setOverlayPos(null)
+      setHeaderBlocBand(null)
+      return
+    }
     function measure() {
       if (!rowsRef.current) return
       const wrapper = rowsRef.current.querySelector('.lpo-sparkline-wrap')
@@ -578,7 +983,11 @@ export function LatestPollsOverviewPage() {
         left: wrapperRect.left - containerRect.left,
         width: wrapperRect.width,
       })
-      requestAnimationFrame(() => alignHeaderEventsToSparkline())
+      requestAnimationFrame(() => {
+        alignHeaderEventsToSparkline()
+        measureHeaderBlocBand()
+        requestAnimationFrame(() => measureHeaderBlocBand())
+      })
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -591,8 +1000,18 @@ export function LatestPollsOverviewPage() {
     const wrapper = container.querySelector('.lpo-sparkline-wrap')
     if (wrapper) ro.observe(wrapper)
     ro.observe(container)
+    const table = lpoTableRef.current
+    if (table) ro.observe(table)
     return () => ro.disconnect()
-  }, [showSparklines, allParties, eventViewportWidth, sparklineFocusedParty, alignHeaderEventsToSparkline])
+  }, [
+    showSparklines,
+    allParties,
+    eventViewportWidth,
+    sparklineFocusedParty,
+    alignHeaderEventsToSparkline,
+    measureHeaderBlocBand,
+    sparklineData.blocSeries.length,
+  ])
 
   useLayoutEffect(() => {
     if (!showSparklines) {
@@ -600,7 +1019,16 @@ export function LatestPollsOverviewPage() {
       return
     }
     alignHeaderEventsToSparkline()
-  }, [showSparklines, alignHeaderEventsToSparkline, sparklineData.enrichedEvents.length, overlayPos?.width, sparklineFocusedParty])
+    measureHeaderBlocBand()
+  }, [
+    showSparklines,
+    alignHeaderEventsToSparkline,
+    measureHeaderBlocBand,
+    sparklineData.enrichedEvents.length,
+    sparklineData.blocSeries.length,
+    overlayPos?.width,
+    sparklineFocusedParty,
+  ])
 
   function getChange(
     mediaOutlet: string,
@@ -782,22 +1210,36 @@ export function LatestPollsOverviewPage() {
           </div>
         </div>
         <div className="lpo-inline-filters">
-          <label className="lpo-filter">
-            <span>{t.pollsPerPage}</span>
-            <select
-              value={pollsPerPage}
-              onChange={(e) => {
-                pollsPerPageUserChosenRef.current = true
-                setPollsPerPage(Number(e.target.value))
-                setPageIndex(0)
-              }}
+          <label className="lpo-filter lpo-filter--page-count">
+            <div className="lpo-filter-top-row">
+              <span className="lpo-filter-label" id="lpo-polls-per-page-lbl">
+                {t.pollsPerPage}
+              </span>
+              <select
+                value={pollsPerPage}
+                title={t.pollsPerPageHint}
+                aria-labelledby="lpo-polls-per-page-lbl"
+                aria-describedby="lpo-polls-per-page-hint"
+                onChange={(e) => {
+                  pollsPerPageUserChosenRef.current = true
+                  setPollsPerPage(Number(e.target.value))
+                  setPageIndex(0)
+                }}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span
+              id="lpo-polls-per-page-hint"
+              className="lpo-filter-hint"
+              title={t.pollsPerPageHint}
             >
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
+              {t.pollsPerPageHint}
+            </span>
           </label>
         </div>
       </div>
@@ -868,7 +1310,7 @@ export function LatestPollsOverviewPage() {
                               label={displayMediaOutlet(poll.mediaOutlet)}
                             />
                           </div>
-                          <div className="lpo-hbars">
+                          <div className="lpo-hbars" ref={headerHbarsRef}>
                             <div className="lpo-hbar-segment">
                               <span className="lpo-hbar-label">{t.coalition}</span>
                               <div className="lpo-hbar-track">
@@ -913,18 +1355,38 @@ export function LatestPollsOverviewPage() {
                         className={`lpo-header-events${overlayPos ? ' lpo-header-events--sized' : ''}`}
                         style={overlayPos ? { width: overlayPos.width } : undefined}
                       >
-                        {sparklineData.enrichedEvents.map((ev) => {
-                          const evT = new Date(ev.date).getTime()
-                          const pct = ((evT - minT) / timeRange) * 100
-                          const catColor = EVENT_CATEGORY_COLORS[ev.category] ?? 'rgba(255,255,255,0.3)'
-                          return (
-                            <div key={`${ev.name}-${ev.date}`} className="lpo-event-label" style={{ left: `${pct}%` }}>
-                              <span className="lpo-event-label-text" style={{ color: catColor }}>
-                                {locale === 'he' ? ev.shortNameHe : ev.shortName}
-                              </span>
-                            </div>
-                          )
-                        })}
+                        <button
+                          type="button"
+                          className={`lpo-event-labels-toggle lpo-event-labels-toggle--bloc-header${showEventLabels ? ' lpo-event-labels-toggle--on' : ''}`}
+                          aria-pressed={showEventLabels}
+                          aria-label={t.eventLabelsToggleAria}
+                          onClick={() => setShowEventLabels((v) => !v)}
+                        >
+                          {t.eventLabelsToggle}
+                        </button>
+                        <HeaderBlocSparklineBundle
+                          series={sparklineData.blocSeries}
+                          minT={minT}
+                          maxT={maxT}
+                          currentPollDate={poll.date}
+                          band={headerBlocBand}
+                          t={t}
+                          locale={locale}
+                        />
+                        {showEventLabels
+                          ? sparklineData.enrichedEvents.map((ev) => {
+                              const evT = new Date(ev.date).getTime()
+                              const pct = ((evT - minT) / timeRange) * 100
+                              const catColor = EVENT_CATEGORY_COLORS[ev.category] ?? 'rgba(255,255,255,0.3)'
+                              return (
+                                <div key={`${ev.name}-${ev.date}`} className="lpo-event-label" style={{ left: `${pct}%` }}>
+                                  <span className="lpo-event-label-text" style={{ color: catColor }}>
+                                    {locale === 'he' ? ev.shortNameHe : ev.shortName}
+                                  </span>
+                                </div>
+                              )
+                            })
+                          : null}
                       </div>
                     </div>
                   ) : (
@@ -1064,7 +1526,7 @@ export function LatestPollsOverviewPage() {
             onScroll={(e) => setLpoHScrollLeft(e.currentTarget.scrollLeft)}
           >
             <div ref={rowsRef} className="lpo-rows-container" style={{ position: 'relative' }}>
-            {showSparklines && overlayPos && (() => {
+            {showSparklines && overlayPos && showEventLabels && (() => {
               const { minT, maxT } = sparklineData.timeRange
               const timeRange = maxT - minT || 1
               return (
@@ -1148,7 +1610,6 @@ export function LatestPollsOverviewPage() {
                         globalMinT={sparklineData.timeRange.minT}
                         globalMaxT={sparklineData.timeRange.maxT}
                         seatsLabel={t.seats}
-                        currentPollDate={poll.date}
                       />
                     )}
                     </div>

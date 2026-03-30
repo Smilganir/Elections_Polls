@@ -18,6 +18,14 @@ export const PARTY_ICON_MAP: Record<string, string> = {
   'Yisrael Beiteinu': '/parties/Parties-Heads-Cropped_0002_Layer-11.png',
 }
 
+/** Inclusive first poll date for sparklines: drop earlier sheet rows (often 0) before the party was polled. */
+export const SPARKLINE_PARTY_DEBUT_DATE: Partial<Record<string, string>> = {
+  "Bennett's Party": '2025-02-07',
+  'Yashar!': '2025-08-08',
+  'Otzma Yehudit': '2023-12-15',
+  'The Reservists': '2025-08-15',
+}
+
 export const MEDIA_ICON_MAP: Record<string, string> = {
   'i24 news': '/media/_0006_Layer-6.png',
   וואלה: '/media/_0005_Layer-8.png',
@@ -73,6 +81,37 @@ export const EVENT_CATEGORY_COLORS: Record<string, string> = {
   'Security Operation': '#5E53A8',
 }
 
+/**
+ * English timeline labels (canonical sheet “Event Name” → compact UI text).
+ * Lookup is exact on trimmed string, then case-insensitive fallback.
+ */
+export const ENGLISH_EVENT_DISPLAY_SHORT: Record<string, string> = {
+  'Judicial Overhaul Plan Announced': 'Judicial Overhaul',
+  'Oct 7 Attacks': 'Oct 7 Attacks',
+  'First Temporary Ceasefire (Hostage Release)': 'Gaza 1st Ceasefire',
+  "Iran's First Direct Attack on Israel": 'Iran 1st attack',
+  'Bippers, Nasrallah & Sinwar killed': 'Bippers, Nasrallah',
+  'Killing of Yahya Sinwar': 'Killing Sinwar',
+  'Gaza Ceasefire Deal Approved': 'Gaza 2nd Ceasefire',
+  'Iran-Israel War (12-Day War)': '12 day war',
+  'Shas Leaves the Government': 'Shas leaves govmt',
+  'Galant Night': 'Galant Night',
+  '3rd Ceasefire Deal': 'Gaza 3rd Ceasefire',
+  'Yashar Launched': 'Yashar Launched',
+  'Bennett 2026': 'Bennett 2026',
+  'Operation Mighty Roar': 'Mighty Roar Op',
+}
+
+const ENGLISH_EVENT_SHORT_LOOKUP_LOWER = new Map<string, string>()
+for (const [k, v] of Object.entries(ENGLISH_EVENT_DISPLAY_SHORT)) {
+  ENGLISH_EVENT_SHORT_LOOKUP_LOWER.set(k.trim().toLowerCase(), v)
+}
+
+function resolveEnglishEventShortLabel(raw: string): string | undefined {
+  const t = raw.trim()
+  return ENGLISH_EVENT_DISPLAY_SHORT[t] ?? ENGLISH_EVENT_SHORT_LOOKUP_LOWER.get(t.toLowerCase())
+}
+
 /** Higher = kept first when the layout limits how many event labels are shown. */
 export const EVENT_CATEGORY_DISPLAY_PRIORITY: Record<string, number> = {
   'Gaza War': 100,
@@ -94,8 +133,26 @@ function keepLettersNumbersSpacesOnly(s: string): string {
   return t.replace(/\s+/g, ' ').trim()
 }
 
-/** Display label: letters / digits / spaces only; max maxLen graphemes (no ellipsis punctuation). */
-export function formatEventLabelForDisplay(raw: string, maxLen = 20): string {
+export type EventLabelFormatMode = 'default' | 'en-event-name'
+
+/**
+ * Display label: letters / digits / spaces only; max maxLen (no ellipsis punctuation).
+ * Use mode `en-event-name` for English canonical event names to apply ENGLISH_EVENT_DISPLAY_SHORT first.
+ */
+export function formatEventLabelForDisplay(
+  raw: string,
+  maxLen = 20,
+  mode: EventLabelFormatMode = 'default',
+): string {
+  if (mode === 'en-event-name') {
+    const mapped = resolveEnglishEventShortLabel(raw)
+    if (mapped !== undefined) {
+      const m = mapped.trim()
+      if (m.length <= maxLen) return m
+      if (maxLen <= 1) return m.slice(0, maxLen)
+      return m.slice(0, maxLen)
+    }
+  }
   let s = keepLettersNumbersSpacesOnly(raw)
   if (s.length <= maxLen) return s
   if (maxLen <= 1) return s.slice(0, maxLen)

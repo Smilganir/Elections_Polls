@@ -8,6 +8,8 @@ export type UiStrings = {
   opposition: string
   arabs: string
   pollsPerPage: string
+  /** Second line under label + dropdown; 1 enables sparkline mode */
+  pollsPerPageHint: string
   loading: string
   noPolls: string
   latestPrefix: string
@@ -24,6 +26,8 @@ export type UiStrings = {
   backToAllParties: string
   sparklineRowFocusAria: string
   sparklineFocusPollHint: string
+  eventLabelsToggle: string
+  eventLabelsToggleAria: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -34,7 +38,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     coalition: 'Coalition',
     opposition: 'Opposition',
     arabs: 'Arabs',
-    pollsPerPage: '# of Polls in page',
+    pollsPerPage: 'Polls in Page',
+    pollsPerPageHint: 'Select 1 to show trends',
     loading: 'Loading poll data...',
     noPolls: 'No polls found.',
     latestPrefix: 'Latest:',
@@ -51,6 +56,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     backToAllParties: 'All parties',
     sparklineRowFocusAria: 'Show this party only',
     sparklineFocusPollHint: 'Use the date slider above to move between polls for this outlet; focus stays on this party until you choose All parties.',
+    eventLabelsToggle: 'Events',
+    eventLabelsToggleAria: 'Show or hide timeline event labels',
   },
   he: {
     titleLatest: '',
@@ -59,7 +66,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     coalition: 'קואליציה',
     opposition: 'אופוזיציה',
     arabs: 'ערבים',
-    pollsPerPage: 'מספר סקרים בעמוד',
+    pollsPerPage: 'סקרים בעמוד',
+    pollsPerPageHint: 'בחרו 1 להצגת מגמות',
     loading: 'טוען נתוני סקרים...',
     noPolls: 'לא נמצאו סקרים.',
     latestPrefix: 'אחרון:',
@@ -76,5 +84,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     backToAllParties: 'כל המפלגות',
     sparklineRowFocusAria: 'הצג רק מפלגה זו',
     sparklineFocusPollHint: 'ניתן לעבור בין סקרים עם סרגל התאריכים למעלה; התצוגה נשארת על מפלגה זו עד שתלחצו על ״כל המפלגות״.',
+    eventLabelsToggle: 'אירועים',
+    eventLabelsToggleAria: 'הצגה או הסתרה של תוויות ציר הזמן',
   },
 }
