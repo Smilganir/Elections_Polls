@@ -15,12 +15,11 @@ import {
 import { useDashboardData } from '../hooks/useDashboardData'
 import type { MajorEventRow, PartyDimRow, Segment } from '../types/data'
 import { IconWithFallback } from '../ui/IconWithFallback'
+import { PaginationChevronIcon } from '../ui/PaginationChevronIcon'
 import { useLocale } from '../i18n/useLocale'
 import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
-import { publicUrl } from '../utils/publicUrl'
-
 type PollColumn = {
   pollId: number
   date: string
@@ -349,8 +348,8 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
-  /** Match thin stroke brightness; vote labels use the same opacity (no text-shadow glow). */
-  const lineOpacity = 0.88
+  /** Slightly higher contrast for party sparklines + labels. */
+  const lineOpacity = 0.95
 
   /* Taller viewBox with same plot band (ch=26) so extrema labels sit in top/bottom gutters, not on y≈0/H. */
   const W = 200, H = 44
@@ -544,6 +543,28 @@ export function LatestPollsOverviewPage() {
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
   const [showEventLabels, setShowEventLabels] = useState(true)
+
+  const hashString = useCallback((s: string) => {
+    let h = 0
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0
+    return Math.abs(h)
+  }, [])
+
+  /**
+   * Keep segment hue, but apply a tiny deterministic tint by party so rows are easier to scan.
+   * Also bumps brightness slightly to avoid a faded look.
+   */
+  const partySparklineColor = useCallback((baseColor: string, party: string) => {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor.trim())
+    if (!m) return baseColor
+    const r = parseInt(m[1], 16)
+    const g = parseInt(m[2], 16)
+    const b = parseInt(m[3], 16)
+    const offset = (hashString(party) % 9) - 4 // [-4..4]
+    const scale = 1.06 + offset * 0.03
+    const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)))
+    return `rgb(${clamp(r * scale)}, ${clamp(g * scale)}, ${clamp(b * scale)})`
+  }, [hashString])
 
   useEffect(() => {
     let cancelled = false
@@ -795,8 +816,10 @@ export function LatestPollsOverviewPage() {
     ? dayjs(pollDateBounds.oldest).format(boundDateFmt)
     : ''
 
-  const showSparklines = visiblePolls.length === 1
-  const sparklineOutlet = showSparklines ? visiblePolls[0].mediaOutlet : null
+  /** Sparklines + merged header only when the user sets "1 poll per page" — not when the last page has fewer polls than requested. */
+  const showSparklines = pollsPerPage === 1
+  const sparklineOutlet =
+    showSparklines && visiblePolls[0] ? visiblePolls[0].mediaOutlet : null
 
   useEffect(() => {
     if (!showSparklines) setSparklineFocusedParty(null)
@@ -1174,7 +1197,7 @@ export function LatestPollsOverviewPage() {
               aria-label={t.previousBtn}
               onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
             >
-              <img src={publicUrl('/pagination-prev.png')} alt="" decoding="async" />
+              <PaginationChevronIcon direction="prev" />
             </button>
             <div className="lpo-page-scrubber-shell">
               <input
@@ -1195,7 +1218,7 @@ export function LatestPollsOverviewPage() {
               aria-label={t.nextBtn}
               onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
             >
-              <img src={publicUrl('/pagination-next.png')} alt="" decoding="async" />
+              <PaginationChevronIcon direction="next" />
             </button>
             {newestBoundLabel ? (
               <span className="lpo-nav-bound-date lpo-nav-date-cell lpo-nav-date-cell--leading">
@@ -1319,6 +1342,7 @@ export function LatestPollsOverviewPage() {
                             <div className="lpo-hbar-segment">
                               <span className="lpo-hbar-label">{t.coalition}</span>
                               <div className="lpo-hbar-track">
+                                <div className="lpo-hbar-sixty-line" aria-hidden title="60" />
                                 <div className="lpo-hbar-fill" style={{ width: `${(poll.coalitionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Coalition }} />
                                 <div
                                   className="lpo-hbar-end-meta"
@@ -1331,6 +1355,7 @@ export function LatestPollsOverviewPage() {
                             <div className="lpo-hbar-segment">
                               <span className="lpo-hbar-label">{t.opposition}</span>
                               <div className="lpo-hbar-track">
+                                <div className="lpo-hbar-sixty-line" aria-hidden title="60" />
                                 <div className="lpo-hbar-fill" style={{ width: `${(poll.oppositionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Opposition }} />
                                 <div
                                   className="lpo-hbar-end-meta"
@@ -1343,6 +1368,7 @@ export function LatestPollsOverviewPage() {
                             <div className="lpo-hbar-segment">
                               <span className="lpo-hbar-label">{t.arabs}</span>
                               <div className="lpo-hbar-track">
+                                <div className="lpo-hbar-sixty-line" aria-hidden title="60" />
                                 <div className="lpo-hbar-fill" style={{ width: `${(poll.arabsTotal / 120) * 100}%`, background: SEGMENT_COLORS.Arabs }} />
                                 <div
                                   className="lpo-hbar-end-meta"
@@ -1544,10 +1570,10 @@ export function LatestPollsOverviewPage() {
                 </div>
               )
             })()}
-            {displayedParties.map((partyInfo) => (
+            {displayedParties.map((partyInfo, rowIdx) => (
               <div key={partyInfo.party} style={{ display: 'contents' }}>
                 <div
-                  className={`lpo-party-row${showSparklines && !sparklineFocusedParty ? ' lpo-party-row--sparkline-selectable' : ''}`}
+                  className={`lpo-party-row${rowIdx % 2 === 1 ? ' lpo-party-row--alt' : ''}${showSparklines && !sparklineFocusedParty ? ' lpo-party-row--sparkline-selectable' : ''}`}
                   role={showSparklines && !sparklineFocusedParty ? 'button' : undefined}
                   tabIndex={showSparklines && !sparklineFocusedParty ? 0 : undefined}
                   aria-label={showSparklines && !sparklineFocusedParty ? `${t.sparklineRowFocusAria}: ${displayParty(partyInfo.party)}` : undefined}
@@ -1607,8 +1633,8 @@ export function LatestPollsOverviewPage() {
                     {showSparklines && partyHistory && partyHistory.length >= 2 && (
                       <Sparkline
                         data={partyHistory}
-                        eventDates={sparklineData.eventDates}
-                        color={SEGMENT_COLORS[segment]}
+                        eventDates={showEventLabels ? sparklineData.eventDates : []}
+                        color={partySparklineColor(SEGMENT_COLORS[segment], partyInfo.party)}
                         globalMinT={sparklineData.timeRange.minT}
                         globalMaxT={sparklineData.timeRange.maxT}
                         seatsLabel={t.seats}
@@ -1638,7 +1664,7 @@ export function LatestPollsOverviewPage() {
           aria-label={t.previousBtn}
           onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
         >
-          <img src={publicUrl('/pagination-prev.png')} alt="" decoding="async" />
+          <PaginationChevronIcon direction="prev" />
         </button>
         <span className="pagination-controls-caption">
           {t.pageOf} {safePage + 1} {t.pageOfMid} {totalPages} &middot; {polls.length}{' '}
@@ -1651,7 +1677,7 @@ export function LatestPollsOverviewPage() {
           aria-label={t.nextBtn}
           onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
         >
-          <img src={publicUrl('/pagination-next.png')} alt="" decoding="async" />
+          <PaginationChevronIcon direction="next" />
         </button>
       </div>
     </section>
