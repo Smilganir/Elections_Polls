@@ -96,17 +96,24 @@ function useMediaMaxWidth(maxPx: number) {
   return matches
 }
 
+/** Narrow portrait phone/tablet — event labels default off (crowded sparklines). */
+const PORTRAIT_MOBILE_EVENT_MQ = '(max-width: 768px) and (orientation: portrait)'
+
+function isPortraitMobileForEvents(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return window.matchMedia(PORTRAIT_MOBILE_EVENT_MQ).matches
+  } catch {
+    return false
+  }
+}
+
 /**
- * Initial event-label visibility: hidden on narrow portrait (vertical phone/tablet) where
- * sparklines + vertical event text are crowded; visible on landscape and wider layouts.
+ * Initial event-label visibility: hidden on narrow portrait; visible on landscape and wider layouts.
  */
 function defaultShowEventLabelsForViewport(): boolean {
   if (typeof window === 'undefined') return true
-  try {
-    return !window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
-  } catch {
-    return true
-  }
+  return !isPortraitMobileForEvents()
 }
 
 /** Marker strip + interactive bloc band: stepped lines, HTML labels, hover tooltip, current-poll ▼ on chart top edge. */
@@ -589,6 +596,33 @@ export function LatestPollsOverviewPage() {
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
   const [showEventLabels, setShowEventLabels] = useState(defaultShowEventLabelsForViewport)
+
+  /** When rotating from portrait mobile to horizontal, show event labels again (iOS may need a tick for dimensions). */
+  useEffect(() => {
+    const mq = window.matchMedia(PORTRAIT_MOBILE_EVENT_MQ)
+    let wasPortraitMobile = mq.matches
+
+    const apply = () => {
+      const pm = window.matchMedia(PORTRAIT_MOBILE_EVENT_MQ).matches
+      if (wasPortraitMobile && !pm) {
+        setShowEventLabels(true)
+      }
+      wasPortraitMobile = pm
+    }
+
+    mq.addEventListener('change', apply)
+    let orientTimeout: ReturnType<typeof setTimeout> | undefined
+    const onOrientationChange = () => {
+      if (orientTimeout !== undefined) clearTimeout(orientTimeout)
+      orientTimeout = setTimeout(apply, 100)
+    }
+    window.addEventListener('orientationchange', onOrientationChange)
+    return () => {
+      mq.removeEventListener('change', apply)
+      window.removeEventListener('orientationchange', onOrientationChange)
+      if (orientTimeout !== undefined) clearTimeout(orientTimeout)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
