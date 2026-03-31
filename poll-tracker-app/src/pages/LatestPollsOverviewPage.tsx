@@ -597,7 +597,7 @@ export function LatestPollsOverviewPage() {
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
   const [showEventLabels, setShowEventLabels] = useState(defaultShowEventLabelsForViewport)
 
-  /** When rotating from portrait mobile to horizontal, show event labels again (iOS may need a tick for dimensions). */
+  /** Sync event labels with portrait vs horizontal narrow layout (iOS may need a tick after orientation change). */
   useEffect(() => {
     const mq = window.matchMedia(PORTRAIT_MOBILE_EVENT_MQ)
     let wasPortraitMobile = mq.matches
@@ -606,6 +606,8 @@ export function LatestPollsOverviewPage() {
       const pm = window.matchMedia(PORTRAIT_MOBILE_EVENT_MQ).matches
       if (wasPortraitMobile && !pm) {
         setShowEventLabels(true)
+      } else if (!wasPortraitMobile && pm) {
+        setShowEventLabels(false)
       }
       wasPortraitMobile = pm
     }
