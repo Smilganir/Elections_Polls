@@ -1287,6 +1287,7 @@ html[lang='he'] .lpo-col-header-text-block {
   flex-direction: row;
   align-items: center;
   gap: 0;
+  direction: ltr;
 }
 
 /* Shrink-wrapped inline block: avoids stretched abspos flex box pushing ↗/↘ away from the seat figure */
@@ -1309,8 +1310,15 @@ html[lang='he'] .lpo-col-header-text-block {
 
 .lpo-bar-end-meta .lpo-votes,
 .lpo-bar-end-meta .lpo-change-badge,
-.lpo-hbar-end-meta .lpo-hbar-value {
+.lpo-hbar-end-meta .lpo-hbar-value,
+.lpo-hbar-end-meta .lpo-change-badge {
   margin: 0;
+}
+
+.lpo-hbar-end-meta .lpo-change-badge {
+  font-size: 0.68rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .lpo-bar-fill {
@@ -2317,7 +2325,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     font-size: 0.6rem;
   }
 
-  .lpo-hbar-value {
+  .lpo-hbar-value,
+  .lpo-hbar-end-meta .lpo-change-badge {
     font-size: 0.6rem;
   }
 

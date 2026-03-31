@@ -1347,6 +1347,12 @@ export function LatestPollsOverviewPage() {
                 : null
               const coalChange = prevCoalition !== null ? poll.coalitionTotal - prevCoalition : null
               const oppChange = prevOpposition !== null ? poll.oppositionTotal - prevOpposition : null
+              const prevArabs = previousVotes.get(poll.mediaOutlet)
+                ? Array.from(previousVotes.get(poll.mediaOutlet)!.entries())
+                    .filter(([p]) => segmentMap.get(p)?.segment === 'Arabs')
+                    .reduce((s, [, v]) => s + v, 0)
+                : null
+              const arabsChange = prevArabs !== null ? poll.arabsTotal - prevArabs : null
               const { minT, maxT } = sparklineData.timeRange
               const timeRange = maxT - minT || 1
 
@@ -1380,6 +1386,15 @@ export function LatestPollsOverviewPage() {
                                 style={{ left: `${(poll.coalitionTotal / 120) * 100}%` }}
                               >
                                 <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Coalition }}>{poll.coalitionTotal}</strong>
+                                {showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change-badge ${coalChange > 0 ? 'up' : 'down'}`}>
+                                      {coalChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(coalChange)}
+                                    </span>
+                                  </>
+                                ) : null}
                               </div>
                             </div>
                             <span className="lpo-hbar-label">{t.opposition}</span>
@@ -1390,6 +1405,15 @@ export function LatestPollsOverviewPage() {
                                 style={{ left: `${(poll.oppositionTotal / 120) * 100}%` }}
                               >
                                 <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Opposition }}>{poll.oppositionTotal}</strong>
+                                {showDeltaVsPrior && oppChange !== null && oppChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change-badge ${oppChange > 0 ? 'up' : 'down'}`}>
+                                      {oppChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(oppChange)}
+                                    </span>
+                                  </>
+                                ) : null}
                               </div>
                             </div>
                             <span className="lpo-hbar-label">{t.arabs}</span>
@@ -1400,6 +1424,15 @@ export function LatestPollsOverviewPage() {
                                 style={{ left: `${(poll.arabsTotal / 120) * 100}%` }}
                               >
                                 <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Arabs }}>{poll.arabsTotal}</strong>
+                                {showDeltaVsPrior && arabsChange !== null && arabsChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change-badge ${arabsChange > 0 ? 'up' : 'down'}`}>
+                                      {arabsChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(arabsChange)}
+                                    </span>
+                                  </>
+                                ) : null}
                               </div>
                             </div>
                           </div>
