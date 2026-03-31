@@ -80,6 +80,21 @@ function blocHighlightIdx(series: BlocPollPoint[], currentPollDate: string | und
   return best
 }
 
+/** True when viewport width is at most `maxPx` (for overlap heuristics on small screens). */
+function useMediaMaxWidth(maxPx: number) {
+  const [matches, setMatches] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(`(max-width: ${maxPx}px)`).matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${maxPx}px)`)
+    const onChange = () => setMatches(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [maxPx])
+  return matches
+}
+
 /** Marker strip + interactive bloc band: stepped lines, HTML labels, hover tooltip, current-poll ▼ on chart top edge. */
 function HeaderBlocSparklineBundle({
   series,
@@ -104,6 +119,7 @@ function HeaderBlocSparklineBundle({
   const toX = (tMs: number) => ((tMs - minT) / rangeT) * W
 
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
+  const narrowLayout = useMediaMaxWidth(768)
   const ts = useMemo(() => series.map((d) => new Date(d.date).getTime()), [series])
   const coalVals = useMemo(() => series.map((p) => p.coalition), [series])
   const oppVals = useMemo(() => series.map((p) => p.opposition), [series])
@@ -172,6 +188,7 @@ function HeaderBlocSparklineBundle({
 
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'MMM D, YYYY'
   const earliestLeftPct = (toX(ts[0]) / W) * 100
+  const showEarliestBlocLabels = !narrowLayout || earliestLeftPct >= 26
 
   return (
     <>
@@ -228,30 +245,34 @@ function HeaderBlocSparklineBundle({
               strokeOpacity={0.88}
             />
           </svg>
-          <span
-            className="lpo-header-bloc-earliest-val"
-            style={{
-              left: `${earliestLeftPct}%`,
-              top: `${(toY(series[0].coalition) / H) * 100}%`,
-              color: SEGMENT_COLORS.Coalition,
-              opacity: 0.9,
-            }}
-            title={`${series[0].date} · ${t.coalition}`}
-          >
-            {series[0].coalition}
-          </span>
-          <span
-            className="lpo-header-bloc-earliest-val"
-            style={{
-              left: `${earliestLeftPct}%`,
-              top: `${(toY(series[0].opposition) / H) * 100}%`,
-              color: SEGMENT_COLORS.Opposition,
-              opacity: 0.88,
-            }}
-            title={`${series[0].date} · ${t.opposition}`}
-          >
-            {series[0].opposition}
-          </span>
+          {showEarliestBlocLabels ? (
+            <>
+              <span
+                className="lpo-header-bloc-earliest-val"
+                style={{
+                  left: `${earliestLeftPct}%`,
+                  top: `${(toY(series[0].coalition) / H) * 100}%`,
+                  color: SEGMENT_COLORS.Coalition,
+                  opacity: 0.9,
+                }}
+                title={`${series[0].date} · ${t.coalition}`}
+              >
+                {series[0].coalition}
+              </span>
+              <span
+                className="lpo-header-bloc-earliest-val"
+                style={{
+                  left: `${earliestLeftPct}%`,
+                  top: `${(toY(series[0].opposition) / H) * 100}%`,
+                  color: SEGMENT_COLORS.Opposition,
+                  opacity: 0.88,
+                }}
+                title={`${series[0].date} · ${t.opposition}`}
+              >
+                {series[0].opposition}
+              </span>
+            </>
+          ) : null}
           {exCoal && !exCoal.flat && (
             <>
               {exCoal.maxV !== series[0].coalition ? (
@@ -348,6 +369,7 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
+  const narrowLayout = useMediaMaxWidth(768)
   /** Slightly higher contrast for party sparklines + labels. */
   const lineOpacity = 0.95
 
@@ -439,6 +461,9 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
     vy: toY(vals[hover.idx]),
   } : null
 
+  const earliestXPct = (toX(ts[0]) / W) * 100
+  const showEarliestVotesLabel = !narrowLayout || earliestXPct >= 26
+
   return (
     <div
       ref={wrapRef}
@@ -476,18 +501,20 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
           </>
         )}
       </svg>
-      <span
-        className="lpo-sparkline-earliest-votes"
-        style={{
-          left: `${(toX(ts[0]) / W) * 100}%`,
-          top: `${(toY(vals[0]) / H) * 100}%`,
-          color,
-          opacity: lineOpacity,
-        }}
-        title={`${data[0].date} · ${data[0].votes} ${seatsLabel}`}
-      >
-        {data[0].votes}
-      </span>
+      {showEarliestVotesLabel ? (
+        <span
+          className="lpo-sparkline-earliest-votes"
+          style={{
+            left: `${(toX(ts[0]) / W) * 100}%`,
+            top: `${(toY(vals[0]) / H) * 100}%`,
+            color,
+            opacity: lineOpacity,
+          }}
+          title={`${data[0].date} · ${data[0].votes} ${seatsLabel}`}
+        >
+          {data[0].votes}
+        </span>
+      ) : null}
       {latestExtrema && !latestExtrema.flat && (
         <>
           {latestExtrema.maxV !== data[0].votes ? (
@@ -1360,43 +1387,35 @@ export function LatestPollsOverviewPage() {
                             />
                           </div>
                           <div className="lpo-hbars" ref={headerHbarsRef}>
-                            <div className="lpo-hbar-segment">
-                              <span className="lpo-hbar-label">{t.coalition}</span>
-                              <div className="lpo-hbar-track">
-                                <div className="lpo-hbar-sixty-line" aria-hidden title="60" />
-                                <div className="lpo-hbar-fill" style={{ width: `${(poll.coalitionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Coalition }} />
-                                <div
-                                  className="lpo-hbar-end-meta"
-                                  style={{ left: `${(poll.coalitionTotal / 120) * 100}%` }}
-                                >
-                                  <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Coalition }}>{poll.coalitionTotal}</strong>
-                                </div>
+                            <div className="lpo-hbar-sixty-line-global" aria-hidden title="60" />
+                            <span className="lpo-hbar-label">{t.coalition}</span>
+                            <div className="lpo-hbar-track">
+                              <div className="lpo-hbar-fill" style={{ width: `${(poll.coalitionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Coalition }} />
+                              <div
+                                className="lpo-hbar-end-meta"
+                                style={{ left: `${(poll.coalitionTotal / 120) * 100}%` }}
+                              >
+                                <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Coalition }}>{poll.coalitionTotal}</strong>
                               </div>
                             </div>
-                            <div className="lpo-hbar-segment">
-                              <span className="lpo-hbar-label">{t.opposition}</span>
-                              <div className="lpo-hbar-track">
-                                <div className="lpo-hbar-sixty-line" aria-hidden title="60" />
-                                <div className="lpo-hbar-fill" style={{ width: `${(poll.oppositionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Opposition }} />
-                                <div
-                                  className="lpo-hbar-end-meta"
-                                  style={{ left: `${(poll.oppositionTotal / 120) * 100}%` }}
-                                >
-                                  <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Opposition }}>{poll.oppositionTotal}</strong>
-                                </div>
+                            <span className="lpo-hbar-label">{t.opposition}</span>
+                            <div className="lpo-hbar-track">
+                              <div className="lpo-hbar-fill" style={{ width: `${(poll.oppositionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Opposition }} />
+                              <div
+                                className="lpo-hbar-end-meta"
+                                style={{ left: `${(poll.oppositionTotal / 120) * 100}%` }}
+                              >
+                                <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Opposition }}>{poll.oppositionTotal}</strong>
                               </div>
                             </div>
-                            <div className="lpo-hbar-segment">
-                              <span className="lpo-hbar-label">{t.arabs}</span>
-                              <div className="lpo-hbar-track">
-                                <div className="lpo-hbar-sixty-line" aria-hidden title="60" />
-                                <div className="lpo-hbar-fill" style={{ width: `${(poll.arabsTotal / 120) * 100}%`, background: SEGMENT_COLORS.Arabs }} />
-                                <div
-                                  className="lpo-hbar-end-meta"
-                                  style={{ left: `${(poll.arabsTotal / 120) * 100}%` }}
-                                >
-                                  <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Arabs }}>{poll.arabsTotal}</strong>
-                                </div>
+                            <span className="lpo-hbar-label">{t.arabs}</span>
+                            <div className="lpo-hbar-track">
+                              <div className="lpo-hbar-fill" style={{ width: `${(poll.arabsTotal / 120) * 100}%`, background: SEGMENT_COLORS.Arabs }} />
+                              <div
+                                className="lpo-hbar-end-meta"
+                                style={{ left: `${(poll.arabsTotal / 120) * 100}%` }}
+                              >
+                                <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Arabs }}>{poll.arabsTotal}</strong>
                               </div>
                             </div>
                           </div>

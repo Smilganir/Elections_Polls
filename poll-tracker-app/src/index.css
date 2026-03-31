@@ -870,7 +870,7 @@ html[lang='he'] .lpo-filter--page-count select {
 .lpo-bloc-legend-row {
   display: flex;
   align-items: center;
-  gap: 0.22rem;
+  gap: 0.28rem;
   min-width: 0;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -879,7 +879,7 @@ html[lang='he'] .lpo-filter--page-count select {
 /* Neutral legend copy; segment colors stay on swatches only. */
 .lpo-bloc-legend-text {
   color: #6d849d;
-  font-size: 0.44rem;
+  font-size: 0.54rem;
   font-weight: 400;
   line-height: 1.25;
   letter-spacing: 0.015em;
@@ -887,8 +887,8 @@ html[lang='he'] .lpo-filter--page-count select {
 
 .lpo-bloc-legend-swatch {
   flex-shrink: 0;
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 2px;
 }
 
@@ -1407,32 +1407,33 @@ html[lang='he'] .lpo-col-header-text-block {
 .lpo-hbars {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
   position: relative;
-  /* Bridges flex row-gap so per-track 60-lines read as one vertical marker */
+  display: grid;
+  grid-template-columns: var(--lpo-hbar-label-col, 4.85rem) minmax(48px, 1fr);
+  column-gap: var(--lpo-hbar-col-gap, 0.4rem);
+  row-gap: var(--lpo-hbar-row-gap, 0.35rem);
+  align-items: center;
+  --lpo-hbar-label-col: 4.85rem;
+  --lpo-hbar-col-gap: 0.4rem;
   --lpo-hbar-row-gap: 0.35rem;
 }
 
-/* 60 / 120: inside each track — above grey track bg, below colored fill + vote figure */
-.lpo-hbar-sixty-line {
+/* Single 60-seat marker (60/120 = 50% of track column); spans all three bloc rows */
+.lpo-hbar-sixty-line-global {
   position: absolute;
-  left: 50%;
+  top: 0;
+  bottom: 0;
+  left: calc(
+    var(--lpo-hbar-label-col) + var(--lpo-hbar-col-gap) +
+      (100% - var(--lpo-hbar-label-col) - var(--lpo-hbar-col-gap)) / 2
+  );
+  width: 1px;
   transform: translateX(-50%);
-  top: -2px;
-  width: 2px;
-  /* Extend through the flex gap below so the marker is continuous across 3 blocs */
-  height: calc(100% + 4px + var(--lpo-hbar-row-gap));
   background: #9c8c3d;
-  border-radius: 1px;
+  border-radius: 0.5px;
   z-index: 1;
   pointer-events: none;
-  box-shadow: 0 0 0 1px rgba(12, 18, 28, 0.35);
-}
-
-.lpo-hbar-segment:last-child .lpo-hbar-sixty-line {
-  height: calc(100% + 4px);
+  box-shadow: 0 0 0 0.5px rgba(12, 18, 28, 0.4);
 }
 
 /* Nudge bloc vote tracks down slightly vs outlet title row; band measure picks this up so chart stays aligned */
@@ -1440,16 +1441,8 @@ html[lang='he'] .lpo-col-header-text-block {
   margin-top: 10px;
 }
 
-.lpo-hbar-segment {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 18px;
-}
-
 .lpo-hbar-label {
-  flex: 0 0 4.85rem;
+  min-width: 0;
   font-size: 0.65rem;
   color: #7a93ae;
   white-space: nowrap;
@@ -1664,8 +1657,8 @@ html[lang='he'] .lpo-col-header-text-block {
     max-width: 3.5em;
   }
 
-  .lpo-hbar-label {
-    flex: 0 0 4rem;
+  .lpo-hbars {
+    --lpo-hbar-label-col: 4rem;
   }
 
   .lpo-header-meta-bars {
@@ -1708,12 +1701,7 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-hbar-label {
-    flex: 0 0 3.2rem;
     font-size: 0.58rem;
-  }
-
-  .lpo-hbar-segment {
-    gap: 0.28rem;
   }
 
   .lpo-hbar-track {
@@ -1722,7 +1710,8 @@ html[lang='he'] .lpo-col-header-text-block {
   }
 
   .lpo-hbars {
-    gap: 0.28rem;
+    --lpo-hbar-label-col: 3.2rem;
+    --lpo-hbar-col-gap: 0.28rem;
     --lpo-hbar-row-gap: 0.28rem;
   }
 }
@@ -2051,7 +2040,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .lpo-table:not(.lpo-single-col) .lpo-header-bloc-legend {
     display: flex;
     flex-direction: column;
-    gap: 0.14rem;
+    gap: 0.2rem;
     align-items: flex-start;
     max-width: 100%;
     min-width: 0;
@@ -2220,18 +2209,18 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   }
 
   .lpo-bloc-legend-text {
-    font-size: 0.38rem;
+    font-size: 0.46rem;
     font-weight: 400;
     letter-spacing: 0.015em;
   }
 
   .lpo-bloc-legend-row {
-    gap: 0.16rem;
+    gap: 0.2rem;
   }
 
   .lpo-bloc-legend-swatch {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   .lpo-party-label-col .mapped-icon,
