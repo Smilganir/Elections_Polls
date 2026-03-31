@@ -96,6 +96,19 @@ function useMediaMaxWidth(maxPx: number) {
   return matches
 }
 
+/**
+ * Initial event-label visibility: hidden on narrow portrait (vertical phone/tablet) where
+ * sparklines + vertical event text are crowded; visible on landscape and wider layouts.
+ */
+function defaultShowEventLabelsForViewport(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    return !window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
+  } catch {
+    return true
+  }
+}
+
 /** Marker strip + interactive bloc band: stepped lines, HTML labels, hover tooltip, current-poll ▼ on chart top edge. */
 function HeaderBlocSparklineBundle({
   series,
@@ -575,7 +588,7 @@ export function LatestPollsOverviewPage() {
   const [pageIndex, setPageIndex] = useState(0)
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
-  const [showEventLabels, setShowEventLabels] = useState(true)
+  const [showEventLabels, setShowEventLabels] = useState(defaultShowEventLabelsForViewport)
 
   useEffect(() => {
     let cancelled = false
