@@ -1299,7 +1299,28 @@ export function LatestPollsOverviewPage() {
               >
                 {/* Header row */}
                 <div className="lpo-header-row">
-            {!showSparklines && <div className="lpo-party-label-col" />}
+            {!showSparklines && (
+              <div
+                className={`lpo-party-label-col${visiblePolls.length > 1 ? ' lpo-party-label-col--bloc-legend' : ''}`}
+              >
+                {visiblePolls.length > 1 ? (
+                  <div className="lpo-header-bloc-legend" aria-hidden>
+                    <div className="lpo-bloc-legend-row lpo-bloc-legend-row--opposition">
+                      <span className="lpo-bloc-legend-swatch" />
+                      <span className="lpo-bloc-legend-text">{t.opposition}</span>
+                    </div>
+                    <div className="lpo-bloc-legend-row lpo-bloc-legend-row--arabs">
+                      <span className="lpo-bloc-legend-swatch" />
+                      <span className="lpo-bloc-legend-text">{t.arabs}</span>
+                    </div>
+                    <div className="lpo-bloc-legend-row lpo-bloc-legend-row--coalition">
+                      <span className="lpo-bloc-legend-swatch" />
+                      <span className="lpo-bloc-legend-text">{t.coalition}</span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
             {visiblePolls.map((poll) => {
               const prevDate = getPreviousDate(poll.mediaOutlet)
               const showDeltaVsPrior = hasPriorPollInSeries(poll)

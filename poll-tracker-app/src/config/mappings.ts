@@ -43,13 +43,13 @@ export const MEDIA_ICON_MAP: Record<string, string> = {
 export const SEGMENT_COLORS: Record<Segment, string> = {
   Coalition: '#0166DF',
   Opposition: '#F7F7F7',
-  Arabs: '#8DD2F6',
+  Arabs: '#717982',
 }
 
 export const SEGMENT_BG_COLORS: Record<Segment, string> = {
   Coalition: 'rgba(1, 102, 223, 0.15)',
   Opposition: 'rgba(247, 247, 247, 0.12)',
-  Arabs: 'rgba(141, 210, 246, 0.15)',
+  Arabs: 'rgba(113, 121, 130, 0.15)',
 }
 
 export const PARTY_COLOR_MAP: Record<string, string> = {
@@ -65,10 +65,10 @@ export const PARTY_COLOR_MAP: Record<string, string> = {
   'Yisrael Beiteinu': '#F7F7F7',
   'Blue & White': '#F7F7F7',
   'The Reservists': '#F7F7F7',
-  "Hadash Ta'al": '#8DD2F6',
-  "Ra'am": '#8DD2F6',
-  Balad: '#8DD2F6',
-  'Joint Arab List': '#8DD2F6',
+  "Hadash Ta'al": '#717982',
+  "Ra'am": '#717982',
+  Balad: '#717982',
+  'Joint Arab List': '#717982',
 }
 
 /** Matches Major Events Dim “category” labels; colors aligned to dashboard legend. */

@@ -862,6 +862,48 @@ html[lang='he'] .lpo-filter--page-count select {
   flex-shrink: 0;
 }
 
+/* Shown only on narrow multi-column layouts (see tablet/phone media queries). */
+.lpo-header-bloc-legend {
+  display: none;
+}
+
+.lpo-bloc-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.22rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Neutral legend copy; segment colors stay on swatches only. */
+.lpo-bloc-legend-text {
+  color: #6d849d;
+  font-size: 0.44rem;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.015em;
+}
+
+.lpo-bloc-legend-swatch {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+
+.lpo-bloc-legend-row--opposition .lpo-bloc-legend-swatch {
+  background: #f7f7f7;
+}
+
+.lpo-bloc-legend-row--arabs .lpo-bloc-legend-swatch {
+  background: #717982;
+}
+
+.lpo-bloc-legend-row--coalition .lpo-bloc-legend-swatch {
+  background: #0166df;
+}
+
 .lpo-party-name {
   color: #8da2be;
   font-size: 0.76rem;
@@ -1062,7 +1104,7 @@ html[lang='he'] .lpo-col-header-text-block {
 }
 
 .lpo-threshold-fill.arabs-fill {
-  background: #8DD2F6;
+  background: #717982;
 }
 
 .lpo-threshold-fill.opposition-fill {
@@ -2005,6 +2047,40 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     padding-inline-start: calc(118px + 0.3rem - 0.5px);
   }
 
+  /* Multi-poll headers: move bloc words to label column; numbers + arrows only in each poll cell. */
+  .lpo-table:not(.lpo-single-col) .lpo-header-bloc-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.14rem;
+    align-items: flex-start;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--bloc-legend {
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 0.58rem;
+    padding-inline-start: 0.45rem;
+  }
+
+  .lpo-table:not(.lpo-single-col) .lpo-col-totals--multi .lpo-total {
+    position: relative;
+  }
+
+  .lpo-table:not(.lpo-single-col) .lpo-col-totals--multi .lpo-total-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .lpo-party-name {
     font-size: 0.66rem;
   }
@@ -2136,6 +2212,26 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     min-width: 86px;
     padding: calc(0.102rem - 0.5px) calc(0.18rem - 0.5px);
     gap: 0.14rem;
+  }
+
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--bloc-legend {
+    padding-top: 0.48rem;
+    padding-inline-start: 0.38rem;
+  }
+
+  .lpo-bloc-legend-text {
+    font-size: 0.38rem;
+    font-weight: 400;
+    letter-spacing: 0.015em;
+  }
+
+  .lpo-bloc-legend-row {
+    gap: 0.16rem;
+  }
+
+  .lpo-bloc-legend-swatch {
+    width: 6px;
+    height: 6px;
   }
 
   .lpo-party-label-col .mapped-icon,
