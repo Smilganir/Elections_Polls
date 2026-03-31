@@ -1421,8 +1421,8 @@ html[lang='he'] .lpo-col-header-text-block {
 /* Single 60-seat marker (60/120 = 50% of track column); spans all three bloc rows */
 .lpo-hbar-sixty-line-global {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: -3px;
+  bottom: -3px;
   left: calc(
     var(--lpo-hbar-label-col) + var(--lpo-hbar-col-gap) +
       (100% - var(--lpo-hbar-label-col) - var(--lpo-hbar-col-gap)) / 2
@@ -1431,7 +1431,7 @@ html[lang='he'] .lpo-col-header-text-block {
   transform: translateX(-50%);
   background: #9c8c3d;
   border-radius: 0.5px;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   box-shadow: 0 0 0 0.5px rgba(12, 18, 28, 0.4);
 }
@@ -1470,7 +1470,7 @@ html[lang='he'] .lpo-col-header-text-block {
 
 .lpo-hbar-fill {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   height: 100%;
   border-radius: 3px;
   min-width: 2px;
@@ -1861,6 +1861,11 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .lpo-sparkline-tooltip-date {
   color: #7a93ae;
   font-size: 0.68rem;
+}
+
+/* Portaled to document.body: escapes .lpo-header-events-bloc-chart-wrap (z-index 0) so it stacks above .lpo-event-label (z-index 2). */
+.lpo-header-bloc-sparkline-tooltip {
+  z-index: 200;
 }
 
 /* Single party selected: more vertical space for sparkline; poll scrubber still changes outlet poll */

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import dayjs from 'dayjs'
 import {
   ENGLISH_MEDIA_NAMES,
@@ -234,15 +235,15 @@ function HeaderBlocSparklineBundle({
               d={coalD}
               {...stepStroke}
               stroke={SEGMENT_COLORS.Coalition}
-              strokeWidth={0.35}
-              strokeOpacity={0.9}
+              strokeWidth={0.7}
+              strokeOpacity={1}
             />
             <path
               d={oppD}
               {...stepStroke}
               stroke={SEGMENT_COLORS.Opposition}
-              strokeWidth={0.35}
-              strokeOpacity={0.88}
+              strokeWidth={0.7}
+              strokeOpacity={1}
             />
           </svg>
           {showEarliestBlocLabels ? (
@@ -337,22 +338,28 @@ function HeaderBlocSparklineBundle({
               ) : null}
             </>
           )}
-          {hover !== null && (
-            <div className="lpo-sparkline-tooltip" style={{ left: hover.x, top: hover.y }}>
-              <span className="lpo-header-bloc-tooltip-lines">
-                <strong style={{ color: SEGMENT_COLORS.Coalition }}>{series[hover.idx].coalition}</strong>{' '}
-                {t.coalition}
-                <br />
-                <strong style={{ color: SEGMENT_COLORS.Opposition }}>{series[hover.idx].opposition}</strong>{' '}
-                {t.opposition}
-                <br />
-                <strong style={{ color: SEGMENT_COLORS.Arabs }}>{series[hover.idx].arabs}</strong> {t.arabs}
-              </span>
-              <span className="lpo-sparkline-tooltip-date">
-                {dayjs(series[hover.idx].date).format(dateFmt)}
-              </span>
-            </div>
-          )}
+          {hover !== null &&
+            typeof document !== 'undefined' &&
+            createPortal(
+              <div
+                className="lpo-sparkline-tooltip lpo-header-bloc-sparkline-tooltip"
+                style={{ left: hover.x, top: hover.y }}
+              >
+                <span className="lpo-header-bloc-tooltip-lines">
+                  <strong style={{ color: SEGMENT_COLORS.Coalition }}>{series[hover.idx].coalition}</strong>{' '}
+                  {t.coalition}
+                  <br />
+                  <strong style={{ color: SEGMENT_COLORS.Opposition }}>{series[hover.idx].opposition}</strong>{' '}
+                  {t.opposition}
+                  <br />
+                  <strong style={{ color: SEGMENT_COLORS.Arabs }}>{series[hover.idx].arabs}</strong> {t.arabs}
+                </span>
+                <span className="lpo-sparkline-tooltip-date">
+                  {dayjs(series[hover.idx].date).format(dateFmt)}
+                </span>
+              </div>,
+              document.body,
+            )}
         </div>
       </div>
     </>
@@ -370,8 +377,7 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
   const wrapRef = useRef<HTMLDivElement>(null)
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
   const narrowLayout = useMediaMaxWidth(768)
-  /** Slightly higher contrast for party sparklines + labels. */
-  const lineOpacity = 0.95
+  const lineOpacity = 1
 
   /* Taller viewBox with same plot band (ch=26) so extrema labels sit in top/bottom gutters, not on y≈0/H. */
   const W = 200, H = 44
@@ -485,12 +491,12 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
             stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} strokeDasharray="2,2"
             vectorEffect="non-scaling-stroke" />
         ))}
-        <path d={pathD} fill="none" stroke={color} strokeWidth={0.35}
+        <path d={pathD} fill="none" stroke={color} strokeWidth={0.7}
           strokeOpacity={lineOpacity}
           vectorEffect="non-scaling-stroke" />
         <circle cx={lastX} cy={lastY} r={0.1} fill="none" stroke={color}
           strokeOpacity={lineOpacity}
-          strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          strokeWidth={0.7} vectorEffect="non-scaling-stroke" />
         {hoverPoint && (
           <>
             <line x1={hoverPoint.vx} y1={pad.t} x2={hoverPoint.vx} y2={H - pad.b}
@@ -570,28 +576,6 @@ export function LatestPollsOverviewPage() {
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
   const [showEventLabels, setShowEventLabels] = useState(true)
-
-  const hashString = useCallback((s: string) => {
-    let h = 0
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0
-    return Math.abs(h)
-  }, [])
-
-  /**
-   * Keep segment hue, but apply a tiny deterministic tint by party so rows are easier to scan.
-   * Also bumps brightness slightly to avoid a faded look.
-   */
-  const partySparklineColor = useCallback((baseColor: string, party: string) => {
-    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(baseColor.trim())
-    if (!m) return baseColor
-    const r = parseInt(m[1], 16)
-    const g = parseInt(m[2], 16)
-    const b = parseInt(m[3], 16)
-    const offset = (hashString(party) % 9) - 4 // [-4..4]
-    const scale = 1.06 + offset * 0.03
-    const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)))
-    return `rgb(${clamp(r * scale)}, ${clamp(g * scale)}, ${clamp(b * scale)})`
-  }, [hashString])
 
   useEffect(() => {
     let cancelled = false
@@ -1674,7 +1658,7 @@ export function LatestPollsOverviewPage() {
                       <Sparkline
                         data={partyHistory}
                         eventDates={showEventLabels ? sparklineData.eventDates : []}
-                        color={partySparklineColor(SEGMENT_COLORS[segment], partyInfo.party)}
+                        color={SEGMENT_COLORS[segment]}
                         globalMinT={sparklineData.timeRange.minT}
                         globalMaxT={sparklineData.timeRange.maxT}
                         seatsLabel={t.seats}
