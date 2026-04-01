@@ -1,25 +1,26 @@
-# Twice daily (09:00 & 21:00 Asia/Jerusalem): check https://themadad.com/allpolls/ for a new
-# max Poll ID (same parse/dedupe rules as run_polls.py). If it changed vs last run, run run_polls.py.
-# Fingerprint is stored in GitHub Actions cache (not an inbound HTTP webhook).
+# Self-hosted runner: fetch themadad from YOUR network (avoids GitHub datacenter 403).
 #
-# Fetch uses curl_cffi (Chrome TLS impersonation) in run_polls.fetch_html — plain requests often gets 403
-# from themadad/WAF on GitHub-hosted runner IPs.
+# Setup (once):
+#   1. Repo → Settings → Actions → Runners → New self-hosted runner → Linux (or macOS) x64.
+#   2. On the machine (must stay online near run times): follow the download + config.sh commands.
+#   3. Start the runner: ./run.sh (or install as a service — see GitHub docs "Configuring the self-hosted runner application as a service").
 #
-# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON — service account JSON with Sheets edit access; share the sheet.
+# runs-on: [self-hosted, linux] matches the default OS label GitHub assigns (labels are case-insensitive).
+# On macOS, change to [self-hosted, macOS]. Windows: use WSL2/Linux runner or custom label + bash.
 #
-# Manual test: Actions → Run workflow → enable "force_upload" to always run run_polls.py (fetch + Sheets)
-# even when max Poll ID unchanged — verifies themadad fetch + GOOGLE_SERVICE_ACCOUNT_JSON on CI.
+# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
+#
+# Schedule: hourly :25 UTC; gate keeps only ~09:25 and ~21:25 Asia/Jerusalem (same as before).
 
 name: Run polls when themadad updates
 
 on:
   schedule:
-    # Hourly :25 UTC — time gate below keeps only two runs/day at ~9:25 and ~21:25 Jerusalem
     - cron: '25 * * * *'
   workflow_dispatch:
     inputs:
       force_upload:
-        description: 'Always upload (skip fingerprint) — use to verify fetch + Sheets on CI'
+        description: 'Always upload (skip fingerprint) — use to verify fetch + Sheets'
         type: boolean
         default: false
 
@@ -28,11 +29,14 @@ permissions:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
-      - name: Gate — 09:00 or 21:00 Asia/Jerusalem (scheduled), or any manual run
+      - name: Gate — manual always runs; scheduled only 09:00 / 21:00 Asia/Jerusalem
         id: gate
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -70,6 +74,9 @@ jobs:
       - name: Detect new polls on themadad.com (or force)
         id: check
         if: steps.gate.outputs.skip != 'true'
+        env:
+          HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
+          HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.force_upload }}" = "true" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -92,11 +99,16 @@ jobs:
         if: steps.gate.outputs.skip != 'true' && steps.check.outputs.changed == 'true'
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
+          HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
         run: python run_polls.py
 
       - name: Refresh fingerprint after successful upload
         id: write-fp
         if: success() && steps.gate.outputs.skip != 'true' && steps.check.outputs.changed == 'true'
+        env:
+          HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
+          HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
         run: |
           python -c "from run_polls import fetch_html, DATA_URL, max_poll_id_from_html; m=max_poll_id_from_html(fetch_html(DATA_URL)); assert m is not None; open('.themadad-fingerprint','w').write(str(m))"
           echo "fingerprint=$(cat .themadad-fingerprint)" >> "$GITHUB_OUTPUT"

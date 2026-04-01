@@ -5,6 +5,12 @@ Credentials (pick one):
   • CI: env GOOGLE_SERVICE_ACCOUNT_JSON = full JSON string (GitHub Actions secret).
   • Local: place your key file next to this script as google-sheets-service-account.json
     (gitignored), or set env GOOGLE_SERVICE_ACCOUNT_KEY_FILE to another path.
+
+themadad.com /allpolls/ often returns HTTP 403 from GitHub-hosted runner IPs (WAF / IP
+reputation), even with curl_cffi TLS impersonation. Practical options:
+  • Run this script on a home PC on a schedule (Task Scheduler / cron) — same code, usually works.
+  • Actions: workflow_dispatch only, or attach a self-hosted runner to the repo.
+  • Set HTTPS_PROXY (or HTTP_PROXY) to a residential proxy URL if you use one (also as a secret on CI).
 """
 import json
 import os
@@ -68,16 +74,26 @@ POLL_ID_1_DATA = {
 }
 
 
+def _request_proxies() -> dict | None:
+    p = (os.environ.get('HTTPS_PROXY') or os.environ.get('HTTP_PROXY') or '').strip()
+    if not p:
+        return None
+    return {'http': p, 'https': p}
+
+
 def fetch_html(url: str) -> str:
     """
-    Fetch the polls page. Prefer curl_cffi (Chrome TLS/JA3 impersonation) so GitHub Actions
-    datacenter IPs are less likely to get 403 from WAFs; fall back to requests if unavailable.
+    Fetch the polls page HTML (fragment containing the <table>).
+
+    Uses curl_cffi Chrome impersonation when available; otherwise requests.
+    Optional HTTPS_PROXY / HTTP_PROXY for a residential proxy if datacenter IPs get 403.
     """
     extra_headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
         'Referer': 'https://themadad.com/',
     }
+    proxies = _request_proxies()
     try:
         from curl_cffi import requests as cf_requests
     except ImportError:
@@ -92,6 +108,7 @@ def fetch_html(url: str) -> str:
                     impersonate=impersonate,
                     headers=extra_headers,
                     timeout=45,
+                    proxies=proxies,
                 )
             except Exception as ex:
                 last = (impersonate, str(ex))
@@ -103,7 +120,8 @@ def fetch_html(url: str) -> str:
         if isinstance(info, int):
             raise requests.HTTPError(
                 f'{info} Client Error for url: {url} (curl_cffi last impersonate={imp!r}; '
-                '403 often means datacenter IP blocked despite TLS fingerprint)',
+                '403 often means datacenter IP blocked despite TLS fingerprint). '
+                'Try HTTPS_PROXY, a self-hosted runner, or run run_polls.py from a home network.',
             )
         raise RuntimeError(
             f'curl_cffi fetch failed for {url} (impersonate={imp!r}): {info}',
@@ -115,7 +133,7 @@ def fetch_html(url: str) -> str:
                        '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         **extra_headers,
     })
-    resp = session.get(url, timeout=30)
+    resp = session.get(url, timeout=30, proxies=proxies)
     resp.raise_for_status()
     return resp.text
 
