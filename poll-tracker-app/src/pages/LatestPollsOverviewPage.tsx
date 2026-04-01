@@ -21,6 +21,7 @@ import { useLocale } from '../i18n/useLocale'
 import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
+import { trackMergeArabsToggle } from '../lib/gtagEvents'
 type PollColumn = {
   pollId: number
   date: string
@@ -1314,14 +1315,24 @@ export function LatestPollsOverviewPage() {
               <button
                 type="button"
                 className={`locale-toggle-btn${!combineArabsWithOpposition ? ' active' : ''}`}
-                onClick={() => setCombineArabsWithOpposition(false)}
+                onClick={() => {
+                  if (combineArabsWithOpposition) {
+                    trackMergeArabsToggle(false)
+                    setCombineArabsWithOpposition(false)
+                  }
+                }}
               >
                 {t.blocArabsSeparate}
               </button>
               <button
                 type="button"
                 className={`locale-toggle-btn${combineArabsWithOpposition ? ' active' : ''}`}
-                onClick={() => setCombineArabsWithOpposition(true)}
+                onClick={() => {
+                  if (!combineArabsWithOpposition) {
+                    trackMergeArabsToggle(true)
+                    setCombineArabsWithOpposition(true)
+                  }
+                }}
               >
                 {t.blocArabsCombined}
               </button>
