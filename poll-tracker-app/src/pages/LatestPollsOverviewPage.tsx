@@ -41,6 +41,14 @@ type PreviousPollMap = Map<string, Map<string, number>>
 
 type BlocPollPoint = { date: string; pollId: number; coalition: number; opposition: number; arabs: number }
 
+/** When merge is on, Arab-list parties use the same fill as opposition (white); when off, Arabs stay grey. */
+function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean): string {
+  if (mergeArabsWithOpposition && segment === 'Arabs') return SEGMENT_COLORS.Opposition
+  return SEGMENT_COLORS[segment]
+}
+
+const COMBINE_ARABS_STORAGE_KEY = 'lpo-combine-arabs-with-opposition'
+
 function latestExtremaIndices(vals: number[]) {
   if (vals.length < 2) return null
   const maxV = Math.max(...vals)
@@ -125,6 +133,7 @@ function HeaderBlocSparklineBundle({
   band,
   t,
   locale,
+  combineArabsWithOpposition,
 }: {
   series: BlocPollPoint[]
   minT: number
@@ -133,6 +142,7 @@ function HeaderBlocSparklineBundle({
   band: { top: number; height: number } | null
   t: UiStrings
   locale: AppLocale
+  combineArabsWithOpposition: boolean
 }) {
   const W = 200
   const H = 100
@@ -143,7 +153,13 @@ function HeaderBlocSparklineBundle({
   const narrowLayout = useMediaMaxWidth(768)
   const ts = useMemo(() => series.map((d) => new Date(d.date).getTime()), [series])
   const coalVals = useMemo(() => series.map((p) => p.coalition), [series])
-  const oppVals = useMemo(() => series.map((p) => p.opposition), [series])
+  const oppVals = useMemo(
+    () =>
+      series.map((p) =>
+        combineArabsWithOpposition ? p.opposition + p.arabs : p.opposition,
+      ),
+    [series, combineArabsWithOpposition],
+  )
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -173,10 +189,11 @@ function HeaderBlocSparklineBundle({
   let minV = Infinity
   let maxV = -Infinity
   for (const p of series) {
+    const oppV = combineArabsWithOpposition ? p.opposition + p.arabs : p.opposition
     if (p.coalition < minV) minV = p.coalition
     if (p.coalition > maxV) maxV = p.coalition
-    if (p.opposition < minV) minV = p.opposition
-    if (p.opposition > maxV) maxV = p.opposition
+    if (oppV < minV) minV = oppV
+    if (oppV > maxV) maxV = oppV
   }
   const vPad = 1
   const fullRange = (maxV + vPad) - (minV - vPad) || 1
@@ -187,7 +204,11 @@ function HeaderBlocSparklineBundle({
   for (let i = 0; i < series.length; i++) {
     const x = toX(ts[i])
     const yc = toY(series[i].coalition)
-    const yo = toY(series[i].opposition)
+    const yo = toY(
+      combineArabsWithOpposition
+        ? series[i].opposition + series[i].arabs
+        : series[i].opposition,
+    )
     coalD += i === 0 ? `M${x},${yc}` : `H${x}V${yc}`
     oppD += i === 0 ? `M${x},${yo}` : `H${x}V${yo}`
   }
@@ -284,13 +305,15 @@ function HeaderBlocSparklineBundle({
                 className="lpo-header-bloc-earliest-val"
                 style={{
                   left: `${earliestLeftPct}%`,
-                  top: `${(toY(series[0].opposition) / H) * 100}%`,
+                  top: `${(toY(combineArabsWithOpposition ? series[0].opposition + series[0].arabs : series[0].opposition) / H) * 100}%`,
                   color: SEGMENT_COLORS.Opposition,
                   opacity: 0.88,
                 }}
-                title={`${series[0].date} · ${t.opposition}`}
+                title={`${series[0].date} · ${combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}`}
               >
-                {series[0].opposition}
+                {combineArabsWithOpposition
+                  ? series[0].opposition + series[0].arabs
+                  : series[0].opposition}
               </span>
             </>
           ) : null}
@@ -328,12 +351,15 @@ function HeaderBlocSparklineBundle({
           )}
           {exOpp && !exOpp.flat && (
             <>
-              {exOpp.maxV !== series[0].opposition ? (
+              {exOpp.maxV !==
+              (combineArabsWithOpposition
+                ? series[0].opposition + series[0].arabs
+                : series[0].opposition) ? (
                 <span
                   className="lpo-header-bloc-extrema lpo-header-bloc-extrema--max"
                   style={{
                     left: `${(toX(ts[exOpp.maxIdx]) / W) * 100}%`,
-                    top: `${(toY(series[exOpp.maxIdx].opposition) / H) * 100}%`,
+                    top: `${(toY(exOpp.maxV) / H) * 100}%`,
                     color: SEGMENT_COLORS.Opposition,
                     opacity: 0.88,
                   }}
@@ -347,7 +373,7 @@ function HeaderBlocSparklineBundle({
                   className="lpo-header-bloc-extrema lpo-header-bloc-extrema--min"
                   style={{
                     left: `${(toX(ts[exOpp.minIdx]) / W) * 100}%`,
-                    top: `${(toY(series[exOpp.minIdx].opposition) / H) * 100}%`,
+                    top: `${(toY(exOpp.minV) / H) * 100}%`,
                     color: SEGMENT_COLORS.Opposition,
                     opacity: 0.88,
                   }}
@@ -369,10 +395,18 @@ function HeaderBlocSparklineBundle({
                   <strong style={{ color: SEGMENT_COLORS.Coalition }}>{series[hover.idx].coalition}</strong>{' '}
                   {t.coalition}
                   <br />
-                  <strong style={{ color: SEGMENT_COLORS.Opposition }}>{series[hover.idx].opposition}</strong>{' '}
-                  {t.opposition}
-                  <br />
-                  <strong style={{ color: SEGMENT_COLORS.Arabs }}>{series[hover.idx].arabs}</strong> {t.arabs}
+                  <strong style={{ color: SEGMENT_COLORS.Opposition }}>
+                    {combineArabsWithOpposition
+                      ? series[hover.idx].opposition + series[hover.idx].arabs
+                      : series[hover.idx].opposition}
+                  </strong>{' '}
+                  {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                  {!combineArabsWithOpposition ? (
+                    <>
+                      <br />
+                      <strong style={{ color: SEGMENT_COLORS.Arabs }}>{series[hover.idx].arabs}</strong> {t.arabs}
+                    </>
+                  ) : null}
                 </span>
                 <span className="lpo-sparkline-tooltip-date">
                   {dayjs(series[hover.idx].date).format(dateFmt)}
@@ -596,6 +630,18 @@ export function LatestPollsOverviewPage() {
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
   const [showEventLabels, setShowEventLabels] = useState(defaultShowEventLabelsForViewport)
+
+  const [combineArabsWithOpposition, setCombineArabsWithOpposition] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem(COMBINE_ARABS_STORAGE_KEY) === '1'
+  })
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(
+      COMBINE_ARABS_STORAGE_KEY,
+      combineArabsWithOpposition ? '1' : '0',
+    )
+  }, [combineArabsWithOpposition])
 
   /** Sync event labels with portrait vs horizontal narrow layout (iOS may need a tick after orientation change). */
   useEffect(() => {
@@ -1096,6 +1142,7 @@ export function LatestPollsOverviewPage() {
     allParties,
     eventViewportWidth,
     sparklineFocusedParty,
+    combineArabsWithOpposition,
     alignHeaderEventsToSparkline,
     measureHeaderBlocBand,
     sparklineData.blocSeries.length,
@@ -1116,6 +1163,7 @@ export function LatestPollsOverviewPage() {
     sparklineData.blocSeries.length,
     overlayPos?.width,
     sparklineFocusedParty,
+    combineArabsWithOpposition,
   ])
 
   function getChange(
@@ -1219,34 +1267,66 @@ export function LatestPollsOverviewPage() {
   return (
     <section className="dashboard-frame">
       <div className="dashboard-heading">
-        <h2>
-          {t.titleLatest}
-          <strong>{t.titleElectionPolls}</strong>
-          {t.titleOverview}
-        </h2>
+        <div className="dashboard-heading-bar">
+          <div className="dashboard-heading-locale-slot">
+            <div
+              className="locale-toggle dashboard-heading-locale-toggle"
+              role="group"
+              aria-label={t.localeToggleAria}
+            >
+              <button
+                type="button"
+                className={`locale-toggle-btn${locale === 'en' ? ' active' : ''}`}
+                onClick={() => setLocale('en')}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                className={`locale-toggle-btn${locale === 'he' ? ' active' : ''}`}
+                onClick={() => setLocale('he')}
+              >
+                עב
+              </button>
+            </div>
+          </div>
+          <h2>
+            {t.titleLatest}
+            <strong>{t.titleElectionPolls}</strong>
+            {t.titleOverview}
+          </h2>
+          <span className="dashboard-heading-corner-spacer" aria-hidden />
+        </div>
         {error && <p className="meta error">{error}</p>}
       </div>
 
       <div className="lpo-legend-row">
-        <div
-          className="locale-toggle"
-          role="group"
-          aria-label={t.localeToggleAria}
-        >
-          <button
-            type="button"
-            className={`locale-toggle-btn${locale === 'en' ? ' active' : ''}`}
-            onClick={() => setLocale('en')}
-          >
-            EN
-          </button>
-          <button
-            type="button"
-            className={`locale-toggle-btn${locale === 'he' ? ' active' : ''}`}
-            onClick={() => setLocale('he')}
-          >
-            עב
-          </button>
+        <div className="lpo-toolbar-locale-stack">
+          <div className="lpo-bloc-arabs-toggle-wrap" title={t.blocArabsToggleAria}>
+            <span className="lpo-bloc-arabs-toggle-label" id="lpo-bloc-arabs-toggle-lbl">
+              {t.blocArabsToggleLabel}
+            </span>
+            <div
+              className="locale-toggle lpo-bloc-arabs-toggle"
+              role="group"
+              aria-labelledby="lpo-bloc-arabs-toggle-lbl"
+            >
+              <button
+                type="button"
+                className={`locale-toggle-btn${!combineArabsWithOpposition ? ' active' : ''}`}
+                onClick={() => setCombineArabsWithOpposition(false)}
+              >
+                {t.blocArabsSeparate}
+              </button>
+              <button
+                type="button"
+                className={`locale-toggle-btn${combineArabsWithOpposition ? ' active' : ''}`}
+                onClick={() => setCombineArabsWithOpposition(true)}
+              >
+                {t.blocArabsCombined}
+              </button>
+            </div>
+          </div>
         </div>
         <div className="lpo-toolbar-pagination">
           <div className="lpo-nav-arrows">
@@ -1367,12 +1447,16 @@ export function LatestPollsOverviewPage() {
                   <div className="lpo-header-bloc-legend" aria-hidden>
                     <div className="lpo-bloc-legend-row lpo-bloc-legend-row--opposition">
                       <span className="lpo-bloc-legend-swatch" />
-                      <span className="lpo-bloc-legend-text">{t.opposition}</span>
+                      <span className="lpo-bloc-legend-text">
+                        {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                      </span>
                     </div>
-                    <div className="lpo-bloc-legend-row lpo-bloc-legend-row--arabs">
-                      <span className="lpo-bloc-legend-swatch" />
-                      <span className="lpo-bloc-legend-text">{t.arabs}</span>
-                    </div>
+                    {!combineArabsWithOpposition ? (
+                      <div className="lpo-bloc-legend-row lpo-bloc-legend-row--arabs">
+                        <span className="lpo-bloc-legend-swatch" />
+                        <span className="lpo-bloc-legend-text">{t.arabs}</span>
+                      </div>
+                    ) : null}
                     <div className="lpo-bloc-legend-row lpo-bloc-legend-row--coalition">
                       <span className="lpo-bloc-legend-swatch" />
                       <span className="lpo-bloc-legend-text">{t.coalition}</span>
@@ -1402,6 +1486,15 @@ export function LatestPollsOverviewPage() {
                     .reduce((s, [, v]) => s + v, 0)
                 : null
               const arabsChange = prevArabs !== null ? poll.arabsTotal - prevArabs : null
+              const prevCombinedAnti =
+                prevOpposition !== null && prevArabs !== null
+                  ? prevOpposition + prevArabs
+                  : null
+              const oppPlusArabs = poll.oppositionTotal + poll.arabsTotal
+              const combinedOppChange =
+                combineArabsWithOpposition && prevCombinedAnti !== null
+                  ? oppPlusArabs - prevCombinedAnti
+                  : null
               const { minT, maxT } = sparklineData.timeRange
               const timeRange = maxT - minT || 1
 
@@ -1446,15 +1539,63 @@ export function LatestPollsOverviewPage() {
                                 ) : null}
                               </div>
                             </div>
-                            <span className="lpo-hbar-label">{t.opposition}</span>
+                            <span className="lpo-hbar-label">
+                              {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                            </span>
                             <div className="lpo-hbar-track">
-                              <div className="lpo-hbar-fill" style={{ width: `${(poll.oppositionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Opposition }} />
+                              {combineArabsWithOpposition && oppPlusArabs > 0 ? (
+                                <div
+                                  className="lpo-hbar-fill lpo-hbar-fill-combo"
+                                  style={{ width: `${(oppPlusArabs / 120) * 100}%` }}
+                                >
+                                  {poll.oppositionTotal > 0 ? (
+                                    <div
+                                      className={
+                                        'lpo-hbar-fill-combo-seg ' +
+                                        (poll.arabsTotal === 0
+                                          ? 'lpo-hbar-fill-combo-seg--only'
+                                          : 'lpo-hbar-fill-combo-seg--first')
+                                      }
+                                      style={{
+                                        flex: `0 0 ${(poll.oppositionTotal / oppPlusArabs) * 100}%`,
+                                        background: SEGMENT_COLORS.Opposition,
+                                      }}
+                                    />
+                                  ) : null}
+                                  {poll.arabsTotal > 0 ? (
+                                    <div
+                                      className={
+                                        'lpo-hbar-fill-combo-seg ' +
+                                        (poll.oppositionTotal === 0
+                                          ? 'lpo-hbar-fill-combo-seg--only'
+                                          : 'lpo-hbar-fill-combo-seg--last')
+                                      }
+                                      style={{
+                                        flex: `0 0 ${(poll.arabsTotal / oppPlusArabs) * 100}%`,
+                                        background: SEGMENT_COLORS.Opposition,
+                                      }}
+                                    />
+                                  ) : null}
+                                </div>
+                              ) : (
+                                <div
+                                  className="lpo-hbar-fill"
+                                  style={{
+                                    width: `${(poll.oppositionTotal / 120) * 100}%`,
+                                    background: SEGMENT_COLORS.Opposition,
+                                  }}
+                                />
+                              )}
                               <div
                                 className="lpo-hbar-end-meta"
-                                style={{ left: `${(poll.oppositionTotal / 120) * 100}%` }}
+                                style={{
+                                  left: `${((combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal) / 120) * 100}%`,
+                                }}
                               >
-                                <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Opposition }}>{poll.oppositionTotal}</strong>
-                                {showDeltaVsPrior && oppChange !== null && oppChange !== 0 ? (
+                                <strong className="lpo-hbar-value" style={{ color: '#e1e8f2' }}>
+                                  {combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}
+                                </strong>
+                                {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
                                   <>
                                     <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                     <span className={`lpo-change-badge ${oppChange > 0 ? 'up' : 'down'}`}>
@@ -1463,27 +1604,40 @@ export function LatestPollsOverviewPage() {
                                     </span>
                                   </>
                                 ) : null}
-                              </div>
-                            </div>
-                            <span className="lpo-hbar-label">{t.arabs}</span>
-                            <div className="lpo-hbar-track">
-                              <div className="lpo-hbar-fill" style={{ width: `${(poll.arabsTotal / 120) * 100}%`, background: SEGMENT_COLORS.Arabs }} />
-                              <div
-                                className="lpo-hbar-end-meta"
-                                style={{ left: `${(poll.arabsTotal / 120) * 100}%` }}
-                              >
-                                <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Arabs }}>{poll.arabsTotal}</strong>
-                                {showDeltaVsPrior && arabsChange !== null && arabsChange !== 0 ? (
+                                {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
                                   <>
                                     <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
-                                    <span className={`lpo-change-badge ${arabsChange > 0 ? 'up' : 'down'}`}>
-                                      {arabsChange > 0 ? '↗' : '↘'}
-                                      {Math.abs(arabsChange)}
+                                    <span className={`lpo-change-badge ${combinedOppChange > 0 ? 'up' : 'down'}`}>
+                                      {combinedOppChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(combinedOppChange)}
                                     </span>
                                   </>
                                 ) : null}
                               </div>
                             </div>
+                            {!combineArabsWithOpposition ? (
+                              <>
+                                <span className="lpo-hbar-label">{t.arabs}</span>
+                                <div className="lpo-hbar-track">
+                                  <div className="lpo-hbar-fill" style={{ width: `${(poll.arabsTotal / 120) * 100}%`, background: SEGMENT_COLORS.Arabs }} />
+                                  <div
+                                    className="lpo-hbar-end-meta"
+                                    style={{ left: `${(poll.arabsTotal / 120) * 100}%` }}
+                                  >
+                                    <strong className="lpo-hbar-value" style={{ color: SEGMENT_COLORS.Arabs }}>{poll.arabsTotal}</strong>
+                                    {showDeltaVsPrior && arabsChange !== null && arabsChange !== 0 ? (
+                                      <>
+                                        <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                        <span className={`lpo-change-badge ${arabsChange > 0 ? 'up' : 'down'}`}>
+                                          {arabsChange > 0 ? '↗' : '↘'}
+                                          {Math.abs(arabsChange)}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </>
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -1509,6 +1663,7 @@ export function LatestPollsOverviewPage() {
                           band={headerBlocBand}
                           t={t}
                           locale={locale}
+                          combineArabsWithOpposition={combineArabsWithOpposition}
                         />
                         {showEventLabels
                           ? sparklineData.enrichedEvents.map((ev) => {
@@ -1563,8 +1718,30 @@ export function LatestPollsOverviewPage() {
                         {visiblePolls.length > 1 ? (
                           <>
                             <span className="lpo-total opposition">
-                              <span className="lpo-total-label">{t.opposition}</span>
-                              <span className="lpo-total-figures"><strong>{poll.oppositionTotal}</strong>{showDeltaVsPrior && oppChange !== null && oppChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>{oppChange > 0 ? '↗' : '↘'}{Math.abs(oppChange)}</span></> : null}</span>
+                              <span className="lpo-total-label">
+                                {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                              </span>
+                              <span className="lpo-total-figures">
+                                <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
+                                {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
+                                      {combinedOppChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(combinedOppChange)}
+                                    </span>
+                                  </>
+                                ) : null}
+                                {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
+                                      {oppChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(oppChange)}
+                                    </span>
+                                  </>
+                                ) : null}
+                              </span>
                             </span>
                             <span className="lpo-total coalition">
                               <span className="lpo-total-label">{t.coalition}</span>
@@ -1578,8 +1755,30 @@ export function LatestPollsOverviewPage() {
                               <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
                             </span>
                             <span className="lpo-total opposition">
-                              <span className="lpo-total-label">{t.opposition}</span>
-                              <span className="lpo-total-figures"><strong>{poll.oppositionTotal}</strong>{showDeltaVsPrior && oppChange !== null && oppChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>{oppChange > 0 ? '↗' : '↘'}{Math.abs(oppChange)}</span></> : null}</span>
+                              <span className="lpo-total-label">
+                                {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                              </span>
+                              <span className="lpo-total-figures">
+                                <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
+                                {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
+                                      {combinedOppChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(combinedOppChange)}
+                                    </span>
+                                  </>
+                                ) : null}
+                                {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
+                                  <>
+                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                    <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
+                                      {oppChange > 0 ? '↗' : '↘'}
+                                      {Math.abs(oppChange)}
+                                    </span>
+                                  </>
+                                ) : null}
+                              </span>
                             </span>
                           </>
                         )}
@@ -1602,6 +1801,9 @@ export function LatestPollsOverviewPage() {
                               style={{
                                 width: `${(poll.arabsTotal / 120) * 100}%`,
                                 left: `${(poll.oppositionTotal / 120) * 100}%`,
+                                ...(combineArabsWithOpposition
+                                  ? { background: SEGMENT_COLORS.Opposition }
+                                  : {}),
                               }}
                             />
                             <div
@@ -1617,7 +1819,13 @@ export function LatestPollsOverviewPage() {
                             <div className="lpo-threshold-fill coalition-fill" style={{ width: `${(poll.coalitionTotal / 120) * 100}%` }} />
                             <div
                               className="lpo-threshold-fill arabs-fill"
-                              style={{ width: `${(poll.arabsTotal / 120) * 100}%`, left: `${(poll.coalitionTotal / 120) * 100}%` }}
+                              style={{
+                                width: `${(poll.arabsTotal / 120) * 100}%`,
+                                left: `${(poll.coalitionTotal / 120) * 100}%`,
+                                ...(combineArabsWithOpposition
+                                  ? { background: SEGMENT_COLORS.Opposition }
+                                  : {}),
+                              }}
                             />
                             <div
                               className="lpo-threshold-fill opposition-fill"
@@ -1718,6 +1926,7 @@ export function LatestPollsOverviewPage() {
 
                   const partyHistory = showSparklines ? sparklineData.history.get(partyInfo.party) : undefined
                   const barPct = maxVotes > 0 ? (votes / maxVotes) * 100 : 0
+                  const partyBarColor = segmentDisplayColor(segment, combineArabsWithOpposition)
 
                   return (
                     <div key={poll.pollId} className={`lpo-party-cell${showSparklines ? ' lpo-has-sparkline' : ''}`}>
@@ -1727,20 +1936,20 @@ export function LatestPollsOverviewPage() {
                             className="lpo-bar-fill"
                             style={{
                               width: `${barPct}%`,
-                              background: SEGMENT_COLORS[segment],
+                              background: partyBarColor,
                             }}
                           />
                           <div
                             className="lpo-bar-end-meta"
                             style={{ left: `${barPct}%` }}
-                          ><strong className="lpo-votes" style={{ color: SEGMENT_COLORS[segment] }}>{votes}</strong>{change ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change-badge ${change.direction}`}>{change.direction === 'up' ? '↗' : '↘'}{change.value}</span></> : null}</div>
+                          ><strong className="lpo-votes" style={{ color: partyBarColor }}>{votes}</strong>{change ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change-badge ${change.direction}`}>{change.direction === 'up' ? '↗' : '↘'}{change.value}</span></> : null}</div>
                         </div>
                       </div>
                     {showSparklines && partyHistory && partyHistory.length >= 2 && (
                       <Sparkline
                         data={partyHistory}
                         eventDates={showEventLabels ? sparklineData.eventDates : []}
-                        color={SEGMENT_COLORS[segment]}
+                        color={partyBarColor}
                         globalMinT={sparklineData.timeRange.minT}
                         globalMaxT={sparklineData.timeRange.maxT}
                         seatsLabel={t.seats}

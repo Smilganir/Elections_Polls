@@ -28,6 +28,12 @@ export type UiStrings = {
   sparklineFocusPollHint: string
   eventLabelsToggle: string
   eventLabelsToggleAria: string
+  /** Bloc view: opposition vs opposition+Arabs merged */
+  blocArabsToggleLabel: string
+  blocArabsToggleAria: string
+  blocArabsSeparate: string
+  blocArabsCombined: string
+  oppositionPlusArabs: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -58,6 +64,11 @@ export const UI: Record<AppLocale, UiStrings> = {
     sparklineFocusPollHint: 'Swipe to change polls, All parties to go back',
     eventLabelsToggle: 'Events',
     eventLabelsToggleAria: 'Show or hide timeline event labels',
+    blocArabsToggleLabel: 'Merge Arabs with opposition?',
+    blocArabsToggleAria: 'Show Arab-segment seats separately or merged into opposition',
+    blocArabsSeparate: 'Split',
+    blocArabsCombined: 'Merge',
+    oppositionPlusArabs: 'Opposition + Arabs',
   },
   he: {
     titleLatest: '',
@@ -86,5 +97,10 @@ export const UI: Record<AppLocale, UiStrings> = {
     sparklineFocusPollHint: 'החלק כדי להחליף סקר, ״כל המפלגות״ לחזרה',
     eventLabelsToggle: 'אירועים',
     eventLabelsToggleAria: 'הצגה או הסתרה של תוויות ציר הזמן',
+    blocArabsToggleLabel: 'מזג ערבים עם אופוזיציה?',
+    blocArabsToggleAria: 'הצגת מנדטים ערביים נפרד או ממוזג לאופוזיציה',
+    blocArabsSeparate: 'נפרד',
+    blocArabsCombined: 'מיזוג',
+    oppositionPlusArabs: 'אופוזיציה + ערבים',
   },
 }
