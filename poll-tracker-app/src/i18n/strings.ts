@@ -33,7 +33,6 @@ export type UiStrings = {
   blocArabsToggleAria: string
   blocArabsSeparate: string
   blocArabsCombined: string
-  oppositionPlusArabs: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -68,7 +67,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     blocArabsToggleAria: 'Show Arab-segment seats separately or merged into opposition',
     blocArabsSeparate: 'Split',
     blocArabsCombined: 'Merge',
-    oppositionPlusArabs: 'Opposition + Arabs',
   },
   he: {
     titleLatest: '',
@@ -101,6 +99,5 @@ export const UI: Record<AppLocale, UiStrings> = {
     blocArabsToggleAria: 'הצגת מנדטים ערביים נפרד או ממוזג לאופוזיציה',
     blocArabsSeparate: 'נפרד',
     blocArabsCombined: 'מיזוג',
-    oppositionPlusArabs: 'אופוזיציה + ערבים',
   },
 }

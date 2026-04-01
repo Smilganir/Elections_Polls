@@ -309,7 +309,7 @@ function HeaderBlocSparklineBundle({
                   color: SEGMENT_COLORS.Opposition,
                   opacity: 0.88,
                 }}
-                title={`${series[0].date} · ${combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}`}
+                title={`${series[0].date} · ${t.opposition}`}
               >
                 {combineArabsWithOpposition
                   ? series[0].opposition + series[0].arabs
@@ -400,7 +400,7 @@ function HeaderBlocSparklineBundle({
                       ? series[hover.idx].opposition + series[hover.idx].arabs
                       : series[hover.idx].opposition}
                   </strong>{' '}
-                  {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                  {t.opposition}
                   {!combineArabsWithOpposition ? (
                     <>
                       <br />
@@ -1448,7 +1448,7 @@ export function LatestPollsOverviewPage() {
                     <div className="lpo-bloc-legend-row lpo-bloc-legend-row--opposition">
                       <span className="lpo-bloc-legend-swatch" />
                       <span className="lpo-bloc-legend-text">
-                        {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                        {t.opposition}
                       </span>
                     </div>
                     {!combineArabsWithOpposition ? (
@@ -1540,7 +1540,7 @@ export function LatestPollsOverviewPage() {
                               </div>
                             </div>
                             <span className="lpo-hbar-label">
-                              {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                              {t.opposition}
                             </span>
                             <div className="lpo-hbar-track">
                               {combineArabsWithOpposition && oppPlusArabs > 0 ? (
@@ -1719,7 +1719,7 @@ export function LatestPollsOverviewPage() {
                           <>
                             <span className="lpo-total opposition">
                               <span className="lpo-total-label">
-                                {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                                {t.opposition}
                               </span>
                               <span className="lpo-total-figures">
                                 <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
@@ -1756,7 +1756,7 @@ export function LatestPollsOverviewPage() {
                             </span>
                             <span className="lpo-total opposition">
                               <span className="lpo-total-label">
-                                {combineArabsWithOpposition ? t.oppositionPlusArabs : t.opposition}
+                                {t.opposition}
                               </span>
                               <span className="lpo-total-figures">
                                 <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
