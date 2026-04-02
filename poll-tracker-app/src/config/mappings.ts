@@ -5,6 +5,7 @@ export const PARTY_ICON_MAP: Record<string, string> = {
   "Bennett's Party": '/parties/Parties-Heads-Cropped_0000_Layer-14.png',
   'Blue & White': '/parties/Parties-Heads-Cropped_0010_Layer-2.png',
   "Hadash Ta'al": '/parties/Parties-Heads-Cropped_0008_Layer-4.png',
+  'Joint Arab List': '/parties/Parties-Heads-Joint-Arab-List-dark.png',
   Likud: '/parties/Parties-Heads-Cropped_0012_Layer-1.png',
   'Otzma Yehudit': '/parties/Parties-Heads-Cropped_0011_Layer-9.png',
   "Ra'am": '/parties/Parties-Heads-Cropped_0009_Layer-3.png',
