@@ -50,6 +50,16 @@ function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean
 
 const COMBINE_ARABS_STORAGE_KEY = 'lpo-combine-arabs-with-opposition'
 
+/**
+ * Poll paging swipe: use shortest viewport edge so landscape phones still qualify (width often > 768).
+ * 1100 covers common tablets (e.g. iPad short edge 820–1024); min > 1100 excludes typical desktop FHD+.
+ */
+const LPO_SWIPE_MAX_SHORT_EDGE_PX = 1100
+function shouldUseLpoSwipeGestures(): boolean {
+  if (typeof window === 'undefined') return false
+  return Math.min(window.innerWidth, window.innerHeight) <= LPO_SWIPE_MAX_SHORT_EDGE_PX
+}
+
 function latestExtremaIndices(vals: number[]) {
   if (vals.length < 2) return null
   const maxV = Math.max(...vals)
@@ -1188,7 +1198,6 @@ export function LatestPollsOverviewPage() {
     return null
   }
 
-  const lpoSwipeMaxWidthPx = 768
   const syncLpoHorizontalScrollMetrics = useCallback(() => {
     const el = lpoBodyHScrollRef.current
     if (!el) return
@@ -1224,7 +1233,7 @@ export function LatestPollsOverviewPage() {
 
   const handleLpoTableTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (typeof window === 'undefined') return
-    if (window.innerWidth > lpoSwipeMaxWidthPx) return
+    if (!shouldUseLpoSwipeGestures()) return
     if (totalPagesRef.current <= 1) return
     if (e.touches.length !== 1) return
     const touch = e.touches[0]
@@ -1238,7 +1247,7 @@ export function LatestPollsOverviewPage() {
 
   const handleLpoTableTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     if (typeof window === 'undefined') return
-    if (window.innerWidth > lpoSwipeMaxWidthPx) return
+    if (!shouldUseLpoSwipeGestures()) return
     const start = lpoSwipeStartRef.current
     lpoSwipeStartRef.current = null
     if (!start || e.changedTouches.length !== 1) return
