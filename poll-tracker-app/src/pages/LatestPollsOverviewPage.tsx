@@ -8,6 +8,7 @@ import {
   maxEventLabelsForViewportWidth,
   MEDIA_ICON_MAP,
   PARTY_ICON_MAP,
+  HEBREW_PARTY_DISPLAY_OVERRIDES,
   formatEventLabelForDisplay,
   selectEventsForViewportDisplay,
   SEGMENT_COLORS,
@@ -764,6 +765,8 @@ export function LatestPollsOverviewPage() {
   const displayParty = useCallback(
     (partyKey: string) => {
       if (locale !== 'he') return partyKey
+      const override = HEBREW_PARTY_DISPLAY_OVERRIDES[partyKey]
+      if (override) return override
       const he = segmentMap.get(partyKey)?.partyHeb?.trim()
       return he || partyKey
     },

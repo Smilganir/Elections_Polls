@@ -5,7 +5,7 @@ export const PARTY_ICON_MAP: Record<string, string> = {
   "Bennett's Party": '/parties/Parties-Heads-Cropped_0000_Layer-14.png',
   'Blue & White': '/parties/Parties-Heads-Cropped_0010_Layer-2.png',
   "Hadash Ta'al": '/parties/Parties-Heads-Cropped_0008_Layer-4.png',
-  'Joint Arab List': '/parties/Parties-Heads-Joint-Arab-List-dark.png',
+  'Joint Arab List': '/parties/Parties-Heads-Joint-Arab-List-vadaam.png',
   Likud: '/parties/Parties-Heads-Cropped_0012_Layer-1.png',
   'Otzma Yehudit': '/parties/Parties-Heads-Cropped_0011_Layer-9.png',
   "Ra'am": '/parties/Parties-Heads-Cropped_0009_Layer-3.png',
@@ -17,6 +17,11 @@ export const PARTY_ICON_MAP: Record<string, string> = {
   'Yashar!': '/parties/Parties-Heads-Cropped_0005_Layer-7.png',
   'Yesh Atid': '/parties/Parties-Heads-Cropped_0003_Layer-10.png',
   'Yisrael Beiteinu': '/parties/Parties-Heads-Cropped_0002_Layer-11.png',
+}
+
+/** Hebrew UI labels that override `Party_heb` from the sheet (canonical party key → display string). */
+export const HEBREW_PARTY_DISPLAY_OVERRIDES: Partial<Record<string, string>> = {
+  'Joint Arab List': 'רשימה ערבית משותפת',
 }
 
 /** Inclusive first poll date for sparklines: drop earlier sheet rows (often 0) before the party was polled. */
