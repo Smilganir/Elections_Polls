@@ -33,6 +33,20 @@ export type UiStrings = {
   blocArabsToggleAria: string
   blocArabsSeparate: string
   blocArabsCombined: string
+  /** Poll summary rolling window: open / close */
+  pollSummaryOpenBtn: string
+  pollSummaryPartiesDetailBtn: string
+  pollSummaryWindowDaysLabel: string
+  pollSummaryWindowDaysAria: string
+  pollSummarySubtitle: string
+  pollSummaryNoOutlets: string
+  pollSummaryOutletsCount: string
+  pollSummaryVsPriorNote: string
+  pollSummaryHeroAria: string
+  pollSummaryRowsAria: string
+  pollSummaryChangedPartiesAria: string
+  pollSummaryOpenAria: string
+  pollSummaryCloseAria: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -67,6 +81,19 @@ export const UI: Record<AppLocale, UiStrings> = {
     blocArabsToggleAria: 'Show Arab-segment seats separately or merged into opposition',
     blocArabsSeparate: 'Split',
     blocArabsCombined: 'Merge',
+    pollSummaryOpenBtn: 'Poll summary',
+    pollSummaryPartiesDetailBtn: 'Party breakdown',
+    pollSummaryWindowDaysLabel: 'Days in window',
+    pollSummaryWindowDaysAria: 'Number of days to include in the poll summary rolling window',
+    pollSummarySubtitle: 'Average of polls in the last {n} days.',
+    pollSummaryNoOutlets: 'No polls from the last {n} days.',
+    pollSummaryOutletsCount: '{n} outlets',
+    pollSummaryVsPriorNote: 'vs prior poll ({n} outlets)',
+    pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
+    pollSummaryRowsAria: 'Latest poll per outlet in window',
+    pollSummaryChangedPartiesAria: 'Parties with mandate changes vs previous poll',
+    pollSummaryOpenAria: 'Show poll summary for the last {n} days',
+    pollSummaryCloseAria: 'Back to party breakdown table',
   },
   he: {
     titleLatest: '',
@@ -99,5 +126,18 @@ export const UI: Record<AppLocale, UiStrings> = {
     blocArabsToggleAria: 'הצגת מנדטים ערביים נפרד או ממוזג לאופוזיציה',
     blocArabsSeparate: 'נפרד',
     blocArabsCombined: 'מיזוג',
+    pollSummaryOpenBtn: 'סיכום סקרים',
+    pollSummaryPartiesDetailBtn: 'פירוט מפלגות',
+    pollSummaryWindowDaysLabel: 'ימים בחלון',
+    pollSummaryWindowDaysAria: 'מספר הימים האחורה לכלול בסיכום הסקרים',
+    pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
+    pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
+    pollSummaryOutletsCount: '{n} כלי תקשורת',
+    pollSummaryVsPriorNote: 'מול סקר קודם ({n} כלי תקשורת)',
+    pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
+    pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
+    pollSummaryChangedPartiesAria: 'מפלגות עם שינוי במנדטים לעומת הסקר הקודם',
+    pollSummaryOpenAria: 'הצג סיכום סקרים ל-{n} הימים האחרונים',
+    pollSummaryCloseAria: 'חזרה לטבלת פירוט המפלגות',
   },
 }

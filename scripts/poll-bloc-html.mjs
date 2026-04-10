@@ -77,6 +77,22 @@ function blocBar(coal, anti, { mini = false } = {}) {
 </div>`
 }
 
+/** Coalition vs opposition only: segment widths share of (C+O); no 61 line (matches app poll summary). */
+function coOppBar(coal, opp, { mini = false } = {}) {
+  const c = Math.max(0, Number(coal) || 0)
+  const o = Math.max(0, Number(opp) || 0)
+  const sum = c + o || 1
+  const ow = (o / sum) * 100
+  const cw = (c / sum) * 100
+  const cls = mini ? 'coopp-bar mini' : 'coopp-bar'
+  return `<div class="${cls}" role="img" aria-label="Opposition ${o}, coalition ${c}">
+  <div class="coopp-track">
+    <div class="coopp-seg coopp-opp" style="width:${ow}%"><span>${o}</span></div>
+    <div class="coopp-seg coopp-coal" style="width:${cw}%"><span>${c}</span></div>
+  </div>
+</div>`
+}
+
 function trendEl(n) {
   const x = Number(n)
   if (x > 0) return `<span class="trend up">↗ ${fmtDelta(x)}</span>`
@@ -92,6 +108,18 @@ function segmentPillClass(seg) {
 
 export function buildPollBlocHtml(r) {
   const v = r.vsPreviousPollSameOutlets
+  const rw = r.rollingWindow30dCoO ?? {
+    description: '',
+    outlets: 0,
+    avgCoalition: 0,
+    avgOpposition: 0,
+    outletsWithPriorPoll: 0,
+    prevAvgCoalition: 0,
+    prevAvgOpposition: 0,
+    deltaCoalition: 0,
+    deltaOpposition: 0,
+    perOutlet: [],
+  }
   const leadBloc =
     r.avgCoalition > r.avgAntiBloc
       ? 'Coalition'
@@ -208,6 +236,58 @@ export function buildPollBlocHtml(r) {
       (o) =>
         `<tr><td>${escapeHtml(o.media)}</td><td>${escapeHtml(o.date)}</td><td class="num">${o.ageDays}</td></tr>`,
     )
+    .join('')
+
+  const rollingHero = `
+<section class="mean-hero mean-hero--rolling" aria-label="Rolling window average coalition vs opposition">
+  <div class="mean-hero-kicker">${rw.outlets} outlets · poll date ≤ ${r.maxStaleDays}d</div>
+  <h2 class="mean-hero-title">Coalition vs opposition (mean)</h2>
+  <p class="rolling-sub">Arab-segment seats are excluded from these headline averages (same rule as the web app poll summary).</p>
+  <div class="mean-hero-bar-wrap">${coOppBar(rw.avgCoalition, rw.avgOpposition)}</div>
+  <div class="mean-hero-nums mean-hero-nums--roll">
+    <div class="mean-stat coal">
+      <span class="mean-stat-n">${rw.avgCoalition}</span>
+      <span class="mean-stat-l">Coalition avg</span>
+      ${rw.outletsWithPriorPoll ? `<div class="roll-delta-line">vs prior mean ${trendEl(rw.deltaCoalition)}</div>` : ''}
+    </div>
+    <div class="mean-stat anti">
+      <span class="mean-stat-n">${rw.avgOpposition}</span>
+      <span class="mean-stat-l">Opposition avg (excl. Arabs)</span>
+      ${rw.outletsWithPriorPoll ? `<div class="roll-delta-line">vs prior mean ${trendEl(rw.deltaOpposition)}</div>` : ''}
+    </div>
+  </div>
+</section>`
+
+  const rollingDashRows = (rw.perOutlet ?? [])
+    .map((o) => {
+      const d = o.deltaLatestMinusPrevious
+      const chips = (o.changedParties ?? [])
+        .map(
+          (cp) =>
+            `<span class="party-chip ${segmentPillClass(cp.segment)}">${escapeHtml(cp.party)} <span class="party-chip-d">${cp.delta > 0 ? '↗' : '↘'}${Math.abs(cp.delta)}</span></span>`,
+        )
+        .join('')
+      const priorMeta = o.previous
+        ? `Latest <strong>${escapeHtml(o.latest.date)}</strong> · Prior <strong>${escapeHtml(o.previous.date)}</strong>`
+        : `Poll <strong>${o.latest.pollId}</strong> · ${escapeHtml(o.latest.date)}`
+      const trendO = d ? trendEl(d.opposition) : ''
+      const trendC = d ? trendEl(d.coalition) : ''
+      return `<div class="dash-row rolling">
+  <div class="dash-ico">${outletIconEl(o.mediaKey, o.media)}</div>
+  <div class="dash-body">
+    <div class="dash-head">
+      <span class="dash-name">${escapeHtml(o.media)}</span>
+      <span class="dash-meta">${priorMeta}</span>
+    </div>
+    <div class="dash-labels">
+      <span class="dl anti">${o.latest.opposition} <small>Opp</small> ${trendO}</span>
+      <span class="dl coal">${o.latest.coalition} <small>Coal</small> ${trendC}</span>
+    </div>
+    ${coOppBar(o.latest.coalition, o.latest.opposition, { mini: true })}
+    ${chips ? `<div class="party-chips">${chips}</div>` : ''}
+  </div>
+</div>`
+    })
     .join('')
 
   const css = `
@@ -338,6 +418,33 @@ export function buildPollBlocHtml(r) {
     .seg-Coalition { background: rgba(1,102,223,0.25); color: #7eb8ff; }
     .seg-Opposition { background: rgba(255,255,255,0.08); color: #e0e4ea; }
     .seg-Arabs { background: rgba(113,121,130,0.35); color: #c5cad3; }
+    .mean-hero--rolling {
+      border-color: rgba(1, 102, 223, 0.45);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+      background: linear-gradient(165deg, #1a2438 0%, #0f141f 100%);
+    }
+    .rolling-sub { margin: -0.35rem 0 1rem; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    .mean-hero-nums--roll { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 640px) { .mean-hero-nums--roll { grid-template-columns: 1fr; } }
+    .roll-delta-line { margin-top: 0.35rem; font-size: 0.78rem; color: var(--muted); }
+    .coopp-bar { width: 100%; }
+    .coopp-track {
+      display: flex; height: 34px; border-radius: 8px; overflow: hidden;
+      background: #0a0e14; border: 1px solid var(--border);
+    }
+    .coopp-bar.mini .coopp-track { height: 22px; border-radius: 6px; }
+    .coopp-seg { display: flex; align-items: center; justify-content: center; min-width: 0; }
+    .coopp-seg span { font-weight: 800; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+    .coopp-bar.mini .coopp-seg span { font-size: 0.72rem; }
+    .coopp-opp { background: linear-gradient(180deg, #5c6570 0%, #3d4450 100%); color: #111; }
+    .coopp-opp span { color: #0c0c0c; }
+    .coopp-coal { background: var(--coal); color: #fff; }
+    .party-chips { display: flex; flex-wrap: wrap; gap: 0.35rem 0.5rem; margin-top: 0.55rem; }
+    .party-chip {
+      font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.45rem; border-radius: 6px;
+      border: 1px solid var(--border); background: rgba(0,0,0,0.2);
+    }
+    .party-chip-d { font-weight: 800; margin-left: 0.2rem; }
     footer { margin-top: 2rem; font-size: 0.72rem; color: var(--muted); }
     code { background: #1e2738; padding: 0.12rem 0.35rem; border-radius: 4px; font-size: 0.8em; }
   `
@@ -360,6 +467,7 @@ export function buildPollBlocHtml(r) {
       <button type="button" data-tab="latest" role="tab" aria-selected="false">Latest by outlet</button>
       <button type="button" data-tab="breakdown" role="tab" aria-selected="false">Outlet breakdown</button>
       <button type="button" data-tab="vsprev" role="tab" aria-selected="false">vs previous poll</button>
+      <button type="button" data-tab="rolling30" role="tab" aria-selected="false">30d · C vs O</button>
       <button type="button" data-tab="excluded" role="tab" aria-selected="false">Excluded (stale)</button>
     </nav>
 
@@ -391,6 +499,12 @@ export function buildPollBlocHtml(r) {
       <p class="sub" style="margin-top:0">${escapeHtml(v.description)}</p>
       ${meanVsHero}
       <div class="dash-list">${dashRowsVs}</div>
+    </div>
+
+    <div id="panel-rolling30" class="panel" role="tabpanel">
+      <p class="sub" style="margin-top:0">${escapeHtml(rw.description)}</p>
+      ${rollingHero}
+      <div class="dash-list">${rollingDashRows || '<p class="sub">No outlets with a poll in this date window.</p>'}</div>
     </div>
 
     <div id="panel-excluded" class="panel" role="tabpanel">

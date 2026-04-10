@@ -23,6 +23,8 @@ import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
+import { buildRollingWindowReport } from '../lib/pollRollingWindow'
+import { PollSummaryPanel } from '../ui/PollSummaryPanel'
 type PollColumn = {
   pollId: number
   date: string
@@ -50,6 +52,18 @@ function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean
 }
 
 const COMBINE_ARABS_STORAGE_KEY = 'lpo-combine-arabs-with-opposition'
+
+const DEFAULT_POLL_SUMMARY_WINDOW_DAYS = 10
+const MIN_POLL_SUMMARY_WINDOW_DAYS = 1
+const MAX_POLL_SUMMARY_WINDOW_DAYS = 90
+
+function clampPollSummaryWindowDays(n: number): number {
+  if (!Number.isFinite(n)) return DEFAULT_POLL_SUMMARY_WINDOW_DAYS
+  return Math.min(
+    MAX_POLL_SUMMARY_WINDOW_DAYS,
+    Math.max(MIN_POLL_SUMMARY_WINDOW_DAYS, Math.round(n)),
+  )
+}
 
 /** Wider than this: polls-per-page select offers 6; at or below: max option is 5 (matches tablet/small layout). */
 const LPO_DESKTOP_POLLS_PER_PAGE_BREAKPOINT_PX = 768
@@ -654,6 +668,10 @@ export function LatestPollsOverviewPage() {
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem(COMBINE_ARABS_STORAGE_KEY) === '1'
   })
+  const [showPollSummary, setShowPollSummary] = useState(true)
+  const [pollSummaryWindowDays, setPollSummaryWindowDays] = useState(
+    DEFAULT_POLL_SUMMARY_WINDOW_DAYS,
+  )
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem(
@@ -861,6 +879,11 @@ export function LatestPollsOverviewPage() {
 
     return { polls: list, previousVotes: prevVotes }
   }, [unpivot, segmentMap])
+
+  const pollRollingReport = useMemo(
+    () => buildRollingWindowReport(polls, pollSummaryWindowDays),
+    [polls, pollSummaryWindowDays],
+  )
 
   const minPollDateByOutlet = useMemo(() => {
     const m = new Map<string, string>()
@@ -1325,8 +1348,69 @@ export function LatestPollsOverviewPage() {
             <strong>{t.titleElectionPolls}</strong>
             {t.titleOverview}
           </h2>
-          <span className="dashboard-heading-corner-spacer" aria-hidden />
+          <div className="dashboard-heading-actions">
+            {showPollSummary ? (
+              <button
+                type="button"
+                className="lpo-ps-nav-btn"
+                onClick={() => setShowPollSummary(false)}
+                aria-label={t.pollSummaryCloseAria}
+              >
+                {t.pollSummaryPartiesDetailBtn}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="lpo-ps-nav-btn"
+                onClick={() => setShowPollSummary(true)}
+                aria-label={t.pollSummaryOpenAria.replace(
+                  /\{n\}/g,
+                  String(pollSummaryWindowDays),
+                )}
+              >
+                {t.pollSummaryOpenBtn}
+              </button>
+            )}
+          </div>
         </div>
+        {showPollSummary && !loading ? (
+          <div
+            className="lpo-ps-window-days-row"
+            dir={locale === 'he' ? 'rtl' : 'ltr'}
+          >
+            <label className="lpo-ps-window-days-label">
+              <span>{t.pollSummaryWindowDaysLabel}</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={MIN_POLL_SUMMARY_WINDOW_DAYS}
+                max={MAX_POLL_SUMMARY_WINDOW_DAYS}
+                step={1}
+                value={pollSummaryWindowDays}
+                aria-label={`${t.pollSummaryWindowDaysLabel}. ${t.pollSummaryWindowDaysAria}`}
+                onChange={(e) => {
+                  const v = e.target.valueAsNumber
+                  if (Number.isNaN(v)) return
+                  setPollSummaryWindowDays(clampPollSummaryWindowDays(v))
+                }}
+                onBlur={(e) => {
+                  const v = e.target.valueAsNumber
+                  if (Number.isNaN(v)) {
+                    setPollSummaryWindowDays(DEFAULT_POLL_SUMMARY_WINDOW_DAYS)
+                  }
+                }}
+              />
+            </label>
+          </div>
+        ) : null}
+        {showPollSummary && !loading ? (
+          <p
+            className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title"
+            dir={locale === 'he' ? 'rtl' : 'ltr'}
+          >
+            {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
+          </p>
+        ) : null}
         {error && <p className="meta error">{error}</p>}
       </div>
 
@@ -1368,6 +1452,7 @@ export function LatestPollsOverviewPage() {
             </div>
           </div>
         </div>
+        {!showPollSummary ? (
         <div className="lpo-toolbar-pagination">
           <div className="lpo-nav-arrows">
             <button
@@ -1417,6 +1502,8 @@ export function LatestPollsOverviewPage() {
             )}
           </div>
         </div>
+        ) : null}
+        {!showPollSummary ? (
         <div className="lpo-inline-filters">
           <label className="lpo-filter lpo-filter--page-count">
             <div className="lpo-filter-top-row">
@@ -1450,10 +1537,22 @@ export function LatestPollsOverviewPage() {
             </span>
           </label>
         </div>
+        ) : null}
       </div>
 
       {loading ? (
         <p style={{ color: '#6b829e' }}>{t.loading}</p>
+      ) : showPollSummary ? (
+        <PollSummaryPanel
+          rows={pollRollingReport.rows}
+          summary={pollRollingReport.summary}
+          locale={locale}
+          t={t}
+          maxStaleDays={pollSummaryWindowDays}
+          combineArabsWithOpposition={combineArabsWithOpposition}
+          displayMediaOutlet={displayMediaOutlet}
+          displayParty={displayParty}
+        />
       ) : visiblePolls.length === 0 ? (
         <p style={{ color: '#6b829e' }}>{t.noPolls}</p>
       ) : (
@@ -2011,30 +2110,32 @@ export function LatestPollsOverviewPage() {
         </div>
       )}
 
-      <div className="pagination-controls" style={{ marginTop: '1rem' }}>
-        <button
-          type="button"
-          className="icon-pagination-btn icon-pagination-btn--footer"
-          disabled={safePage === 0}
-          aria-label={t.previousBtn}
-          onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-        >
-          <PaginationChevronIcon direction="prev" />
-        </button>
-        <span className="pagination-controls-caption">
-          {t.pageOf} {safePage + 1} {t.pageOfMid} {totalPages} &middot; {polls.length}{' '}
-          {t.pollsWord}
-        </span>
-        <button
-          type="button"
-          className="icon-pagination-btn icon-pagination-btn--footer"
-          disabled={safePage >= totalPages - 1}
-          aria-label={t.nextBtn}
-          onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
-        >
-          <PaginationChevronIcon direction="next" />
-        </button>
-      </div>
+      {!showPollSummary ? (
+        <div className="pagination-controls" style={{ marginTop: '1rem' }}>
+          <button
+            type="button"
+            className="icon-pagination-btn icon-pagination-btn--footer"
+            disabled={safePage === 0}
+            aria-label={t.previousBtn}
+            onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+          >
+            <PaginationChevronIcon direction="prev" />
+          </button>
+          <span className="pagination-controls-caption">
+            {t.pageOf} {safePage + 1} {t.pageOfMid} {totalPages} &middot; {polls.length}{' '}
+            {t.pollsWord}
+          </span>
+          <button
+            type="button"
+            className="icon-pagination-btn icon-pagination-btn--footer"
+            disabled={safePage >= totalPages - 1}
+            aria-label={t.nextBtn}
+            onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
+          >
+            <PaginationChevronIcon direction="next" />
+          </button>
+        </div>
+      ) : null}
     </section>
   )
 }

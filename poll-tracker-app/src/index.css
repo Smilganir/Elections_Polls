@@ -94,6 +94,9 @@ body {
 .page-content {
   padding: 1.25rem 1rem;
   flex: 1;
+  /* Let main shrink inside flex shell so wide poll-summary rows don’t widen the page;
+     backgrounds stay full-viewport; horizontal scroll stays inside chip strips. */
+  min-width: 0;
 }
 
 .loading-splash {
@@ -143,6 +146,7 @@ body {
 .dashboard-frame {
   margin: 0 auto;
   max-width: 1440px;
+  min-width: 0;
 }
 
 .dashboard-heading {
@@ -155,6 +159,7 @@ body {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.5rem 0.75rem;
+  min-width: 0;
 }
 
 .dashboard-heading-locale-slot {
@@ -183,11 +188,46 @@ body {
   min-width: 0;
 }
 
+.dashboard-heading-actions {
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
+  min-width: 0;
+}
+
+.lpo-ps-nav-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #8da2be;
+  background: rgba(30, 40, 56, 0.95);
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.lpo-ps-nav-btn:hover {
+  color: #e1e8f2;
+  background: rgba(40, 52, 72, 0.98);
+}
+
+/* ~370px phones: keep label one line (EN string is wider than HE). */
+@media (max-width: 420px) {
+  .lpo-ps-nav-btn {
+    font-size: 0.56rem;
+    padding: 0.2rem 0.34rem;
+    letter-spacing: -0.01em;
+  }
+}
+
 .dashboard-heading-locale-toggle {
   flex-shrink: 0;
 }
 
-/* Narrow viewports: keep same grid as desktop — locale left, title centered, spacer balances */
+/* Narrow viewports: keep locale | title | actions grid (no overlapping layers). */
 @media (max-width: 520px) {
   .dashboard-heading-bar {
     gap: 0.35rem 0.45rem;
@@ -2620,4 +2660,724 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .pagination-controls-caption {
     font-size: 0.72rem;
   }
+}
+
+/* ── Poll summary (30d rolling window) ───────────── */
+
+.lpo-ps-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0.65rem 1.25rem;
+  box-sizing: border-box;
+}
+
+/* Wide viewports: inset poll summary so the block centers in empty side space. */
+@media (min-width: 960px) {
+  .lpo-ps-wrap {
+    max-width: min(1080px, 100%);
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 3.25rem);
+  }
+}
+
+@media (min-width: 1320px) {
+  .lpo-ps-wrap {
+    max-width: min(1180px, 100%);
+    padding-inline: clamp(1.75rem, 7vw, 5rem);
+  }
+}
+
+.lpo-ps-subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #8da2be;
+  text-align: start;
+  line-height: 1.4;
+}
+
+/* Poll summary: rolling-window days control under the summary / breakdown toggle. */
+.dashboard-heading .lpo-ps-window-days-row {
+  display: flex;
+  justify-content: center;
+  margin: 0.2rem auto 0.05rem;
+}
+
+.dashboard-heading .lpo-ps-window-days-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: #8da2be;
+  font-weight: 500;
+}
+
+.dashboard-heading .lpo-ps-window-days-label input {
+  width: 3.35rem;
+  padding: 0.22rem 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #e1e8f2;
+  background: rgba(22, 30, 44, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.dashboard-heading .lpo-ps-window-days-label input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Poll summary: subtitle sits under the centered page title (see LatestPollsOverviewPage). */
+.dashboard-heading .lpo-ps-subtitle.lpo-ps-subtitle--under-page-title {
+  text-align: center;
+  margin: 0.15rem auto 0.45rem;
+  max-width: 36rem;
+}
+
+.lpo-ps-empty {
+  text-align: start;
+  color: #6b829e;
+  font-size: 0.9rem;
+}
+
+.lpo-ps-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(165deg, rgba(28, 36, 51, 0.95) 0%, rgba(15, 20, 30, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 1rem 1.15rem 0.95rem;
+  margin-bottom: 1.15rem;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.4);
+}
+
+/* Bar + numbers LTR: opposition (white) left, coalition (blue) right — matches party breakdown. */
+.lpo-ps-bar-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.lpo-ps-hero-bar-stack {
+  margin-inline: auto;
+  width: 100%;
+  max-width: min(340px, 100%);
+}
+
+@media (min-width: 960px) {
+  .lpo-ps-hero-bar-stack {
+    max-width: min(420px, 100%);
+  }
+}
+
+@media (min-width: 1320px) {
+  .lpo-ps-hero-bar-stack {
+    /* ~175% of 340px — hero bar scales with row bars on large screens. */
+    max-width: min(595px, 100%);
+  }
+}
+
+.lpo-ps-hero-nums-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+/* LTR inside each cluster so order stays [label][number][delta] when outer row is dir=rtl (Hebrew). */
+.lpo-ps-hero-side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.3rem;
+  min-width: 0;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.lpo-ps-hero-side--coal {
+  justify-content: flex-end;
+}
+
+.lpo-ps-hero-side--opp {
+  justify-content: flex-start;
+}
+
+.lpo-ps-hero-lbl {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.lpo-ps-hero-lbl--coal {
+  color: #0166df;
+}
+
+.lpo-ps-hero-lbl--opp {
+  color: #f7f7f7;
+}
+
+.lpo-ps-hero-num {
+  font-size: 1.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lpo-ps-hero-num--coal {
+  color: #0166df;
+}
+
+.lpo-ps-hero-num--opp {
+  color: #f7f7f7;
+}
+
+.lpo-ps-hero-foot {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  color: #6b7d94;
+  align-self: stretch;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.lpo-ps-bar-slot {
+  position: relative;
+  overflow: visible;
+  width: 100%;
+}
+
+.lpo-ps-bar-track {
+  display: flex;
+  height: 26px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0a0e14;
+}
+
+.lpo-ps-seg {
+  min-width: 0;
+  transition: width 0.2s ease;
+}
+
+/* Match SEGMENT_COLORS (mappings.ts) / .lpo-threshold-fill */
+.lpo-ps-seg--coal {
+  background: #0166df;
+}
+
+.lpo-ps-seg--arabs {
+  background: #717982;
+}
+
+.lpo-ps-seg--opp {
+  background: #f7f7f7;
+}
+
+/* Golden 61 line — extends past bar like .lpo-threshold-line / party breakdown */
+.lpo-ps-maj-line {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: calc(100% + 8px);
+  background: #9c8c3d;
+  border-radius: 1px;
+  box-shadow: 0 0 0 0.5px rgba(12, 18, 28, 0.35);
+  z-index: 2;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.lpo-ps-segbar--mini .lpo-ps-bar-track {
+  height: 16px;
+  border-radius: 5px;
+}
+
+.lpo-ps-hero-bar .lpo-ps-bar-track {
+  height: 26px;
+  border-radius: 8px;
+}
+
+.lpo-ps-delta {
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin-inline-start: 0.15rem;
+}
+
+.lpo-ps-delta.up {
+  color: #2ecc71;
+}
+
+.lpo-ps-delta.down {
+  color: #e74c3c;
+}
+
+.lpo-ps-rows-unified {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Media + blocs (fixed) | party icons (one horizontal scroll under the whole bloc). */
+.lpo-ps-unified-split {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  /* No gap — zebra + row lines read as one band across both columns. */
+  gap: 0;
+  unicode-bidi: isolate;
+}
+
+.lpo-ps-unified-fixed {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lpo-ps-unified-fixed-row {
+  padding: 0.5rem 0.65rem 0.55rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.lpo-ps-unified-fixed-row--alt {
+  background: #1a222e;
+}
+
+.lpo-ps-unified-fixed-row:hover {
+  background: rgba(58, 123, 213, 0.06);
+}
+
+.lpo-ps-unified-fixed-row--alt:hover {
+  background: rgba(58, 123, 213, 0.08);
+}
+
+.lpo-ps-unified-fixed-row .lpo-ps-row-main {
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+  /* Vertically center media + bloc bar as a block; pairs with centered party strip. */
+  align-items: center;
+}
+
+.lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
+  flex: 0 0 auto;
+}
+
+.lpo-ps-unified-parties-wrap {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* Single scroll surface for all party rows; bar sits under the parties bloc. */
+.lpo-ps-unified-parties-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
+  padding-bottom: 8px;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.lpo-ps-unified-parties-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.lpo-ps-unified-parties-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lpo-ps-unified-parties-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.lpo-ps-unified-parties-track {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.lpo-ps-unified-parties-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 100%;
+  padding: 0.5rem 0 0.55rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+  background: transparent;
+}
+
+/* Optical nudge: chip stack slightly shorter than outlet row; aligns with centered row-main. */
+.lpo-ps-unified-parties-line .lpo-ps-chips,
+.lpo-ps-unified-parties-line .lpo-ps-combo-chips-placeholder {
+  transform: translateY(-1px);
+}
+
+/* Larger screens: gutter (1) media+labels ↔ bloc bar via .lpo-ps-row-main gap (all poll rows). */
+@media (min-width: 640px) {
+  .lpo-ps-row-main {
+    gap: 1.85rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .lpo-ps-row-main {
+    gap: 2.1rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .lpo-ps-row-main {
+    gap: 2.5rem;
+  }
+}
+
+/* Gutter (2) bloc bar ↔ party strip — both sides from 501px (501–639 had party-only padding before; fixed column needs matching inline-end). */
+@media (min-width: 501px) {
+  .lpo-ps-unified-fixed-row {
+    padding-inline-end: 0.95rem;
+  }
+
+  .lpo-ps-unified-parties-line {
+    padding-inline-start: 0.95rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .lpo-ps-unified-fixed-row {
+    padding-inline-end: 1.25rem;
+  }
+
+  .lpo-ps-unified-parties-line {
+    padding-inline-start: 1.25rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .lpo-ps-unified-fixed-row {
+    padding-inline-end: 1.4rem;
+  }
+
+  .lpo-ps-unified-parties-line {
+    padding-inline-start: 1.4rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .lpo-ps-unified-fixed-row {
+    padding-inline-end: 1.85rem;
+  }
+
+  .lpo-ps-unified-parties-line {
+    padding-inline-start: 1.85rem;
+  }
+}
+
+.lpo-ps-unified-parties-line--alt {
+  background: #1a222e;
+}
+
+.lpo-ps-unified-parties-line:hover {
+  background: rgba(58, 123, 213, 0.06);
+}
+
+.lpo-ps-unified-parties-line--alt:hover {
+  background: rgba(58, 123, 213, 0.08);
+}
+
+.lpo-ps-combo-chips-placeholder {
+  min-height: 2.75rem;
+  min-width: 0;
+}
+
+.lpo-ps-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lpo-ps-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 0.5rem 0 0.55rem;
+  box-sizing: border-box;
+}
+
+/* Match party breakdown zebra (.lpo-party-row--alt). */
+.lpo-ps-row--alt {
+  background: #1a222e;
+}
+
+.lpo-ps-row:hover {
+  background: rgba(58, 123, 213, 0.06);
+}
+
+.lpo-ps-row--alt:hover {
+  background: rgba(58, 123, 213, 0.08);
+}
+
+/* dir=ltr: media | bar (chips live in combo <td> when present). */
+.lpo-ps-row-main {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.65rem;
+  align-items: flex-start;
+  min-width: 0;
+  unicode-bidi: isolate;
+  box-sizing: border-box;
+}
+
+/* Shrink-wrap icon + labels (max width cap) so RTL text doesn’t leave a huge gap beside the icon. */
+.lpo-ps-row-media {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.35rem;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: var(--lpo-ps-row-media-w, 168px);
+  min-width: 0;
+}
+
+.lpo-ps-row-ico {
+  flex-shrink: 0;
+}
+
+.lpo-ps-row-ico .mapped-icon,
+.lpo-ps-row-ico .icon-fallback {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.lpo-ps-row-ico .icon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(30, 40, 56, 0.9);
+  color: #8da2be;
+}
+
+.lpo-ps-row-meta {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.06rem;
+  overflow: hidden;
+}
+
+.lpo-ps-row-name {
+  display: block;
+  font-weight: 700;
+  font-size: calc(0.88rem * 0.8);
+  color: #e1e8f2;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.lpo-ps-row-dates {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.12rem;
+  margin-top: 0.08rem;
+  font-size: calc(0.68rem * 0.8);
+  text-align: start;
+  line-height: 1.25;
+}
+
+.lpo-ps-row-date {
+  display: block;
+}
+
+.lpo-ps-row-date--latest {
+  color: #8da2be;
+}
+
+.lpo-ps-row-date--prev {
+  color: #6b7d94;
+  font-size: calc(0.64rem * 0.8);
+}
+
+.lpo-ps-row-bar-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  margin-top: 0;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* Bar + nums: bounded 100px–200px; from 640px up wider cap (238px ≈ prior 340px − 30%). */
+.lpo-ps-row-bar-aligned {
+  width: max(100px, min(100%, 200px));
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .lpo-ps-row-bar-aligned {
+    width: max(100px, min(100%, 238px));
+  }
+
+  /*
+   * Unified rows: .lpo-ps-row-main is width:max-content and .lpo-ps-row-bar-stack is shrink-wrapped,
+   * so min(100%, …) on the bar sees an indefinite % base and collapses to max(100px, …) = 100px.
+   * Give the bar column a definite flex basis; inner stack fills it so nums + PsSegmentBar match width.
+   */
+  .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
+    flex: 0 1 238px;
+    width: 238px;
+    min-width: 100px;
+  }
+}
+
+/* Viewports up to 500px wide: fixed bar width for dense mobile rows. */
+@media (max-width: 500px) {
+  .lpo-ps-row-bar-aligned {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+  }
+}
+
+/* Unified 501–639: same indefinite-% issue as at 640+; use 200px cap (design max below large bump). */
+@media (min-width: 501px) and (max-width: 639px) {
+  .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
+    flex: 0 1 200px;
+    width: 200px;
+    min-width: 100px;
+  }
+}
+
+@media (min-width: 501px) {
+  .lpo-ps-unified-fixed-row .lpo-ps-row-bar-aligned {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.lpo-ps-row-nums-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  gap: 0.35rem;
+  margin-bottom: 0.12rem;
+  font-size: 0.74rem;
+}
+
+.lpo-ps-row-bloc {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.12rem 0.2rem;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.lpo-ps-row-bloc--opp {
+  justify-content: flex-start;
+}
+
+.lpo-ps-row-bloc--coal {
+  justify-content: flex-end;
+}
+
+.lpo-ps-row-bloc-num {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lpo-ps-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0 2px;
+  width: max-content;
+}
+
+.lpo-ps-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.lpo-ps-chip-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #717982;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: rgba(20, 26, 38, 0.9);
+}
+
+.lpo-ps-chip-ring .mapped-icon,
+.lpo-ps-chip-ring .icon-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lpo-ps-chip-ring .icon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(0.65rem * 0.8);
+  font-weight: 700;
+  color: #8da2be;
+}
+
+.lpo-ps-chip-delta {
+  font-size: calc(0.62rem * 0.8);
+  font-weight: 700;
+}
+
+.lpo-ps-chip-delta.up {
+  color: #2ecc71;
+}
+
+.lpo-ps-chip-delta.down {
+  color: #e74c3c;
 }

@@ -8,6 +8,9 @@
  *
  * vsPreviousPollSameOutlets: for each remaining outlet, compares latest poll to the prior poll
  * (second-highest Poll ID for that outlet) and reports cross-outlet means + per-outlet deltas.
+ *
+ * rollingWindow30dCoO: matches the web app “poll summary” — per outlet, latest poll *dated* in the window;
+ * headline = coalition vs opposition only (Arabs excluded); prior = next-lower Poll ID; changedParties vs prior.
  */
 const MAX_STALE_DAYS = Number(process.env.MAX_STALE_DAYS) || 30
 
@@ -295,6 +298,105 @@ function round1(x) {
   return Math.round(x * 10) / 10
 }
 
+/** Votes by party name for one poll object from byOutlet. */
+function votesByPartyFromPoll(poll) {
+  const m = new Map()
+  for (const pr of poll.parties) m.set(pr.party, pr.votes)
+  return m
+}
+
+/**
+ * Rolling 30d window: per outlet, latest poll *dated* in window; C/O headline only (matches React poll summary).
+ * Prior = next-lower Poll ID for that outlet.
+ */
+const rollingRowsRaw = []
+for (const [media, pollsMap] of byOutlet) {
+  const outletPolls = [...pollsMap.values()]
+  const inWindow = outletPolls.filter((p) => ageDaysPollToToday(p.date, today) <= MAX_STALE_DAYS)
+  if (inWindow.length === 0) continue
+  inWindow.sort((a, b) => {
+    const dc = b.date.localeCompare(a.date)
+    if (dc !== 0) return dc
+    return b.pollId - a.pollId
+  })
+  const current = inWindow[0]
+  const bl = blocTotals(current, segByParty)
+  const byIdDesc = [...outletPolls].sort((a, b) => b.pollId - a.pollId)
+  const idx = byIdDesc.findIndex((p) => p.pollId === current.pollId)
+  const prevPoll = idx >= 0 && idx + 1 < byIdDesc.length ? byIdDesc[idx + 1] : null
+  const prevBl = prevPoll ? blocTotals(prevPoll, segByParty) : null
+
+  const curM = votesByPartyFromPoll(current)
+  const changedParties = []
+  if (prevPoll) {
+    const pM = votesByPartyFromPoll(prevPoll)
+    const names = new Set([...curM.keys(), ...pM.keys()])
+    for (const party of names) {
+      const c = curM.get(party) ?? 0
+      const pv = pM.get(party) ?? 0
+      if (c === pv) continue
+      changedParties.push({
+        party,
+        segment: segByParty.get(party) ?? 'Opposition',
+        currentVotes: c,
+        previousVotes: pv,
+        delta: c - pv,
+      })
+    }
+    changedParties.sort(
+      (a, b) => Math.abs(b.delta) - Math.abs(a.delta) || a.party.localeCompare(b.party),
+    )
+  }
+
+  rollingRowsRaw.push({
+    media,
+    current: {
+      pollId: current.pollId,
+      date: current.date,
+      coalition: bl.coalition,
+      opposition: bl.opposition,
+      arabs: bl.arabs,
+    },
+    previous:
+      prevPoll && prevBl
+        ? {
+            pollId: prevPoll.pollId,
+            date: prevPoll.date,
+            coalition: prevBl.coalition,
+            opposition: prevBl.opposition,
+          }
+        : null,
+    delta:
+      prevBl !== null
+        ? {
+            coalition: bl.coalition - prevBl.coalition,
+            opposition: bl.opposition - prevBl.opposition,
+          }
+        : null,
+    changedParties,
+  })
+}
+
+rollingRowsRaw.sort((a, b) => {
+  const dc = b.current.date.localeCompare(a.current.date)
+  if (dc !== 0) return dc
+  return b.current.pollId - a.current.pollId
+})
+
+const rn = rollingRowsRaw.length
+const avgRollC = rn ? rollingRowsRaw.reduce((s, x) => s + x.current.coalition, 0) / rn : 0
+const avgRollO = rn ? rollingRowsRaw.reduce((s, x) => s + x.current.opposition, 0) / rn : 0
+const rollWithPrior = rollingRowsRaw.filter((x) => x.previous !== null)
+const nRollPrior = rollWithPrior.length
+const prevRollAvgC =
+  nRollPrior === 0
+    ? 0
+    : rollWithPrior.reduce((s, x) => s + x.previous.coalition, 0) / nRollPrior
+const prevRollAvgO =
+  nRollPrior === 0
+    ? 0
+    : rollWithPrior.reduce((s, x) => s + x.previous.opposition, 0) / nRollPrior
+
 const englishMedia = {
   ערוץ_14: 'Channel 14',
   גלובס: 'Globes',
@@ -389,6 +491,26 @@ const report = {
       segment: p.segment,
     })),
   })),
+  rollingWindow30dCoO: {
+    description:
+      `Latest poll per outlet dated within ${MAX_STALE_DAYS} days (not necessarily each outlet’s global latest poll). Headline averages use coalition vs opposition seats only (Arab-segment parties excluded). Prior poll = same outlet’s next-lower Poll ID.`,
+    outlets: rn,
+    avgCoalition: round1(avgRollC),
+    avgOpposition: round1(avgRollO),
+    outletsWithPriorPoll: nRollPrior,
+    prevAvgCoalition: round1(prevRollAvgC),
+    prevAvgOpposition: round1(prevRollAvgO),
+    deltaCoalition: nRollPrior ? round1(avgRollC - prevRollAvgC) : 0,
+    deltaOpposition: nRollPrior ? round1(avgRollO - prevRollAvgO) : 0,
+    perOutlet: rollingRowsRaw.map((row) => ({
+      media: en(row.media),
+      mediaKey: row.media,
+      latest: { ...row.current },
+      previous: row.previous,
+      deltaLatestMinusPrevious: row.delta,
+      changedParties: row.changedParties,
+    })),
+  },
 }
 
 console.log(JSON.stringify(report, null, 2))
