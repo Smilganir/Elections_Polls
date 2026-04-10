@@ -11,7 +11,7 @@
 # Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
 #
 # Schedule: hourly :25 UTC; gate runs fetch/check only when local Asia/Jerusalem hour is
-# 09, 12, 15, 18, or 21 (covers 9:00–21:00 slots; exact minute ~:25). run_polls.py only if new poll id.
+# 09, 10, 12, 15, 18, or 21 (exact minute ~:25). run_polls.py only if new poll id.
 
 name: Run polls when themadad updates
 
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Gate — manual always runs; scheduled only 09 / 12 / 15 / 18 / 21 Asia/Jerusalem
+      - name: Gate — manual always runs; scheduled only 09 / 10 / 12 / 15 / 18 / 21 Asia/Jerusalem
         id: gate
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -47,7 +47,7 @@ jobs:
           H=$(TZ=Asia/Jerusalem date +%H)
           echo "Asia/Jerusalem hour=$H"
           case "$H" in
-            09|12|15|18|21) echo "skip=false" >> "$GITHUB_OUTPUT" ;;
+            09|10|12|15|18|21) echo "skip=false" >> "$GITHUB_OUTPUT" ;;
             *) echo "skip=true" >> "$GITHUB_OUTPUT" ;;
           esac
 
