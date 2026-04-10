@@ -51,6 +51,13 @@ function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean
 
 const COMBINE_ARABS_STORAGE_KEY = 'lpo-combine-arabs-with-opposition'
 
+/** Wider than this: polls-per-page select offers 6; at or below: max option is 5 (matches tablet/small layout). */
+const LPO_DESKTOP_POLLS_PER_PAGE_BREAKPOINT_PX = 768
+
+function maxPollsPerPageForWidth(width: number): number {
+  return width > LPO_DESKTOP_POLLS_PER_PAGE_BREAKPOINT_PX ? 6 : 5
+}
+
 /**
  * Poll paging swipe: use shortest viewport edge so landscape phones still qualify (width often > 768).
  * 1100 covers common tablets (e.g. iPad short edge 820–1024); min > 1100 excludes typical desktop FHD+.
@@ -715,20 +722,30 @@ export function LatestPollsOverviewPage() {
   const pollsPerPageUserChosenRef = useRef(false)
 
   useEffect(() => {
-    setPollsPerPage((p) => (p > 5 ? 5 : p))
+    const maxOpt = maxPollsPerPageForWidth(typeof window !== 'undefined' ? window.innerWidth : 1200)
+    setPollsPerPage((p) => (p > maxOpt ? maxOpt : p))
   }, [])
 
   const [eventViewportWidth, setEventViewportWidth] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth : 1200,
   )
 
+  const pollsPerPageOptions = useMemo(
+    () => Array.from({ length: maxPollsPerPageForWidth(eventViewportWidth) }, (_, i) => i + 1),
+    [eventViewportWidth],
+  )
+
   useEffect(() => {
     function handleResize() {
+      const w = window.innerWidth
       if (!pollsPerPageUserChosenRef.current) {
         setPollsPerPage(getDefaultPollsPerPage())
         setPageIndex(0)
+      } else {
+        const cap = maxPollsPerPageForWidth(w)
+        setPollsPerPage((p) => (p > cap ? cap : p))
       }
-      setEventViewportWidth(window.innerWidth)
+      setEventViewportWidth(w)
     }
     setEventViewportWidth(window.innerWidth)
     window.addEventListener('resize', handleResize)
@@ -1417,7 +1434,7 @@ export function LatestPollsOverviewPage() {
                   setPageIndex(0)
                 }}
               >
-                {[1, 2, 3, 4, 5].map((n) => (
+                {pollsPerPageOptions.map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>

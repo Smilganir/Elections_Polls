@@ -178,11 +178,16 @@ def max_poll_id_from_html(html: str) -> int | None:
     return int(data_df['Poll ID'].max())
 
 
-def process_data():
-    """Fetch, clean, sort, filter, unpivot."""
-    print("Fetching data from themadad.com ...")
+def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
+    """
+    Fetch themadad wide table: one row per (Date, Media Outlet) after Poll ID dedupe.
+    ``Date`` is timezone-naive datetime. Returns None if fetch/parse fails or no rows.
+    """
+    if verbose:
+        print("Fetching data from themadad.com ...")
     html = fetch_html(DATA_URL)
-    print(f"  HTML fetched: {len(html):,} chars")
+    if verbose:
+        print(f"  HTML fetched: {len(html):,} chars")
 
     dataframes = pd.read_html(StringIO(html), encoding='utf-8')
     data_df = max(dataframes, key=lambda df: len(df.columns)).copy()
@@ -192,37 +197,44 @@ def process_data():
     if len(data_df.columns) > expected_cols:
         data_df = data_df.iloc[:, :expected_cols]
     elif len(data_df.columns) < expected_cols:
-        print(f"Error: scraped data has {len(data_df.columns)} columns, expected {expected_cols}.")
-        return None, None
+        if verbose:
+            print(f"Error: scraped data has {len(data_df.columns)} columns, expected {expected_cols}.")
+        return None
 
     data_df.columns = HEADERS
 
-    # Inject Poll ID 1 then exclude it (keeps structure consistent)
     poll_1_df = pd.DataFrame(POLL_ID_1_DATA)
     data_df = pd.concat([poll_1_df, data_df], ignore_index=True)
 
     data_df['Poll ID'] = pd.to_numeric(data_df['Poll ID'], errors='coerce')
     data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce')
 
-    # Remove known duplicate
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
 
-    # Exclude Poll ID 1
     data_df = data_df[data_df['Poll ID'] > 1].copy()
 
-    # Numeric cleanup on party columns
     data_df[VALUE_VARS] = data_df[VALUE_VARS].apply(pd.to_numeric, errors='coerce')
     data_df = data_df.dropna(subset=['Date']).copy()
     data_df['Poll ID'] = data_df['Poll ID'].fillna(-999).astype(int)
 
-    # When same Date + Media Outlet has multiple polls, keep only the highest Poll ID
     before = len(data_df)
     data_df = data_df.sort_values('Poll ID', ascending=False)
     data_df = data_df.drop_duplicates(subset=['Date', 'Media Outlet'], keep='first').copy()
     dropped = before - len(data_df)
-    if dropped:
+    if verbose and dropped:
         print(f"  Deduplicated: dropped {dropped} lower Poll IDs for same Date + Media Outlet")
+
+    if data_df.empty:
+        return None
+    return data_df
+
+
+def process_data():
+    """Fetch, clean, sort, filter, unpivot."""
+    data_df = get_wide_polls_dataframe(verbose=True)
+    if data_df is None:
+        return None, None
 
     # Historical average votes per party per media outlet (for rank tie-breaking)
     temp = data_df.melt(id_vars=['Media Outlet', 'Poll ID'], value_vars=VALUE_VARS,
