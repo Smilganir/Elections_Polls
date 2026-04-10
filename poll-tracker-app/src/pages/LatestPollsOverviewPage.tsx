@@ -655,6 +655,54 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
   )
 }
 
+function BlocArabsToggle({
+  t,
+  combineArabsWithOpposition,
+  setCombineArabsWithOpposition,
+}: {
+  t: UiStrings
+  combineArabsWithOpposition: boolean
+  setCombineArabsWithOpposition: (v: boolean) => void
+}) {
+  return (
+    <div className="lpo-bloc-arabs-toggle-wrap" title={t.blocArabsToggleAria}>
+      <span className="lpo-bloc-arabs-toggle-label" id="lpo-bloc-arabs-toggle-lbl">
+        {t.blocArabsToggleLabel}
+      </span>
+      <div
+        className="locale-toggle lpo-bloc-arabs-toggle"
+        role="group"
+        aria-labelledby="lpo-bloc-arabs-toggle-lbl"
+      >
+        <button
+          type="button"
+          className={`locale-toggle-btn${!combineArabsWithOpposition ? ' active' : ''}`}
+          onClick={() => {
+            if (combineArabsWithOpposition) {
+              trackMergeArabsToggle(false)
+              setCombineArabsWithOpposition(false)
+            }
+          }}
+        >
+          {t.blocArabsSeparate}
+        </button>
+        <button
+          type="button"
+          className={`locale-toggle-btn${combineArabsWithOpposition ? ' active' : ''}`}
+          onClick={() => {
+            if (!combineArabsWithOpposition) {
+              trackMergeArabsToggle(true)
+              setCombineArabsWithOpposition(true)
+            }
+          }}
+        >
+          {t.blocArabsCombined}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function LatestPollsOverviewPage() {
   const { locale, setLocale } = useLocale()
   const t = UI[locale]
@@ -1319,225 +1367,203 @@ export function LatestPollsOverviewPage() {
 
   return (
     <section className="dashboard-frame">
-      <div className="dashboard-heading">
-        <div className="dashboard-heading-bar">
-          <div className="dashboard-heading-locale-slot">
-            <div
-              className="locale-toggle dashboard-heading-locale-toggle"
-              role="group"
-              aria-label={t.localeToggleAria}
-            >
-              <button
-                type="button"
-                className={`locale-toggle-btn${locale === 'en' ? ' active' : ''}`}
-                onClick={() => setLocale('en')}
+      <div className="dashboard-heading dashboard-heading--lpo">
+        <div className="dashboard-heading-sync-grid" dir="ltr">
+          <div className="dashboard-heading-bar">
+            <div className="dashboard-heading-locale-slot">
+            <div className="dashboard-heading-left-stack" dir="ltr">
+              <div
+                className="locale-toggle dashboard-heading-locale-toggle"
+                role="group"
+                aria-label={t.localeToggleAria}
               >
-                EN
-              </button>
-              <button
-                type="button"
-                className={`locale-toggle-btn${locale === 'he' ? ' active' : ''}`}
-                onClick={() => setLocale('he')}
-              >
-                עב
-              </button>
+                <button
+                  type="button"
+                  className={`locale-toggle-btn${locale === 'en' ? ' active' : ''}`}
+                  onClick={() => setLocale('en')}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  className={`locale-toggle-btn${locale === 'he' ? ' active' : ''}`}
+                  onClick={() => setLocale('he')}
+                >
+                  עב
+                </button>
+              </div>
             </div>
-          </div>
-          <h2>
+            </div>
+            <h2 dir={locale === 'he' ? 'rtl' : 'ltr'}>
             {t.titleLatest}
             <strong>{t.titleElectionPolls}</strong>
             {t.titleOverview}
           </h2>
-          <div className="dashboard-heading-actions">
-            {showPollSummary ? (
-              <button
-                type="button"
-                className="lpo-ps-nav-btn"
-                onClick={() => setShowPollSummary(false)}
-                aria-label={t.pollSummaryCloseAria}
-              >
-                {t.pollSummaryPartiesDetailBtn}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="lpo-ps-nav-btn"
-                onClick={() => setShowPollSummary(true)}
-                aria-label={t.pollSummaryOpenAria.replace(
-                  /\{n\}/g,
-                  String(pollSummaryWindowDays),
-                )}
-              >
-                {t.pollSummaryOpenBtn}
-              </button>
-            )}
+            <div className="dashboard-heading-actions">
+            <div className="dashboard-heading-actions-stack">
+              {showPollSummary ? (
+                <button
+                  type="button"
+                  className="lpo-ps-nav-btn"
+                  onClick={() => setShowPollSummary(false)}
+                  aria-label={t.pollSummaryCloseAria}
+                >
+                  {t.pollSummaryPartiesDetailBtn}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="lpo-ps-nav-btn"
+                  onClick={() => setShowPollSummary(true)}
+                  aria-label={t.pollSummaryOpenAria.replace(
+                    /\{n\}/g,
+                    String(pollSummaryWindowDays),
+                  )}
+                >
+                  {t.pollSummaryOpenBtn}
+                </button>
+              )}
+            </div>
+            </div>
           </div>
-        </div>
-        {showPollSummary && !loading ? (
-          <div
-            className="lpo-ps-window-days-row"
-            dir={locale === 'he' ? 'rtl' : 'ltr'}
-          >
-            <label className="lpo-ps-window-days-label">
-              <span>{t.pollSummaryWindowDaysLabel}</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={MIN_POLL_SUMMARY_WINDOW_DAYS}
-                max={MAX_POLL_SUMMARY_WINDOW_DAYS}
-                step={1}
-                value={pollSummaryWindowDays}
-                aria-label={`${t.pollSummaryWindowDaysLabel}. ${t.pollSummaryWindowDaysAria}`}
-                onChange={(e) => {
-                  const v = e.target.valueAsNumber
-                  if (Number.isNaN(v)) return
-                  setPollSummaryWindowDays(clampPollSummaryWindowDays(v))
-                }}
-                onBlur={(e) => {
-                  const v = e.target.valueAsNumber
-                  if (Number.isNaN(v)) {
-                    setPollSummaryWindowDays(DEFAULT_POLL_SUMMARY_WINDOW_DAYS)
-                  }
-                }}
+          {!loading && showPollSummary ? (
+            <div className="lpo-ps-heading-meta" dir="ltr">
+              <BlocArabsToggle
+                t={t}
+                combineArabsWithOpposition={combineArabsWithOpposition}
+                setCombineArabsWithOpposition={setCombineArabsWithOpposition}
               />
-            </label>
-          </div>
-        ) : null}
-        {showPollSummary && !loading ? (
-          <p
-            className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title"
-            dir={locale === 'he' ? 'rtl' : 'ltr'}
-          >
-            {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
-          </p>
-        ) : null}
+              <p
+                className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title"
+                dir={locale === 'he' ? 'rtl' : 'ltr'}
+              >
+                {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
+              </p>
+              <div className="lpo-ps-window-days-row">
+                <label
+                  className="lpo-ps-window-days-label"
+                  dir={locale === 'he' ? 'rtl' : 'ltr'}
+                >
+                  <span>{t.pollSummaryWindowDaysLabel}</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={MIN_POLL_SUMMARY_WINDOW_DAYS}
+                    max={MAX_POLL_SUMMARY_WINDOW_DAYS}
+                    step={1}
+                    value={pollSummaryWindowDays}
+                    aria-label={`${t.pollSummaryWindowDaysLabel}. ${t.pollSummaryWindowDaysAria}`}
+                    onChange={(e) => {
+                      const v = e.target.valueAsNumber
+                      if (Number.isNaN(v)) return
+                      setPollSummaryWindowDays(clampPollSummaryWindowDays(v))
+                    }}
+                    onBlur={(e) => {
+                      const v = e.target.valueAsNumber
+                      if (Number.isNaN(v)) {
+                        setPollSummaryWindowDays(DEFAULT_POLL_SUMMARY_WINDOW_DAYS)
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          ) : null}
+          {!loading && !showPollSummary ? (
+            <div className="lpo-legend-row">
+              <div className="lpo-toolbar-locale-stack">
+                <BlocArabsToggle
+                  t={t}
+                  combineArabsWithOpposition={combineArabsWithOpposition}
+                  setCombineArabsWithOpposition={setCombineArabsWithOpposition}
+                />
+              </div>
+                <div className="lpo-toolbar-pagination">
+                  <div className="lpo-nav-arrows">
+                    <button
+                      type="button"
+                      className="icon-pagination-btn icon-pagination-btn--header lpo-nav-grid-prev"
+                      disabled={safePage === 0}
+                      aria-label={t.previousBtn}
+                      onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                    >
+                      <PaginationChevronIcon direction="prev" />
+                    </button>
+                    <div className="lpo-page-scrubber-shell">
+                      <input
+                        type="range"
+                        className="lpo-page-scrubber"
+                        min={0}
+                        max={Math.max(0, totalPages - 1)}
+                        value={safePage}
+                        disabled={totalPages <= 1}
+                        aria-label={`${t.pageOf} ${safePage + 1} ${t.pageOfMid} ${totalPages}`}
+                        onChange={(e) => setPageIndex(Number(e.target.value))}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="icon-pagination-btn icon-pagination-btn--header lpo-nav-grid-next"
+                      disabled={safePage >= totalPages - 1}
+                      aria-label={t.nextBtn}
+                      onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
+                    >
+                      <PaginationChevronIcon direction="next" />
+                    </button>
+                    {newestBoundLabel ? (
+                      <span className="lpo-nav-bound-date lpo-nav-date-cell lpo-nav-date-cell--leading">
+                        {newestBoundLabel}
+                      </span>
+                    ) : (
+                      <span className="lpo-nav-date-cell lpo-nav-date-cell--leading" aria-hidden />
+                    )}
+                    <div className="lpo-nav-date-spacer" aria-hidden />
+                    {oldestBoundLabel ? (
+                      <span className="lpo-nav-bound-date lpo-nav-date-cell lpo-nav-date-cell--trailing">
+                        {oldestBoundLabel}
+                      </span>
+                    ) : (
+                      <span className="lpo-nav-date-cell lpo-nav-date-cell--trailing" aria-hidden />
+                    )}
+                  </div>
+                </div>
+                <div className="lpo-inline-filters">
+                  <label className="lpo-filter lpo-filter--page-count">
+                    <div className="lpo-filter-top-row">
+                      <span className="lpo-filter-label" id="lpo-polls-per-page-lbl">
+                        {t.pollsPerPage}
+                      </span>
+                      <select
+                        value={pollsPerPage}
+                        title={t.pollsPerPageHint}
+                        aria-labelledby="lpo-polls-per-page-lbl"
+                        aria-describedby="lpo-polls-per-page-hint"
+                        onChange={(e) => {
+                          pollsPerPageUserChosenRef.current = true
+                          setPollsPerPage(Number(e.target.value))
+                          setPageIndex(0)
+                        }}
+                      >
+                        {pollsPerPageOptions.map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <span
+                      id="lpo-polls-per-page-hint"
+                      className="lpo-filter-hint"
+                      title={t.pollsPerPageHint}
+                    >
+                      {t.pollsPerPageHint}
+                    </span>
+                  </label>
+                </div>
+            </div>
+          ) : null}
+        </div>
         {error && <p className="meta error">{error}</p>}
-      </div>
-
-      <div className="lpo-legend-row">
-        <div className="lpo-toolbar-locale-stack">
-          <div className="lpo-bloc-arabs-toggle-wrap" title={t.blocArabsToggleAria}>
-            <span className="lpo-bloc-arabs-toggle-label" id="lpo-bloc-arabs-toggle-lbl">
-              {t.blocArabsToggleLabel}
-            </span>
-            <div
-              className="locale-toggle lpo-bloc-arabs-toggle"
-              role="group"
-              aria-labelledby="lpo-bloc-arabs-toggle-lbl"
-            >
-              <button
-                type="button"
-                className={`locale-toggle-btn${!combineArabsWithOpposition ? ' active' : ''}`}
-                onClick={() => {
-                  if (combineArabsWithOpposition) {
-                    trackMergeArabsToggle(false)
-                    setCombineArabsWithOpposition(false)
-                  }
-                }}
-              >
-                {t.blocArabsSeparate}
-              </button>
-              <button
-                type="button"
-                className={`locale-toggle-btn${combineArabsWithOpposition ? ' active' : ''}`}
-                onClick={() => {
-                  if (!combineArabsWithOpposition) {
-                    trackMergeArabsToggle(true)
-                    setCombineArabsWithOpposition(true)
-                  }
-                }}
-              >
-                {t.blocArabsCombined}
-              </button>
-            </div>
-          </div>
-        </div>
-        {!showPollSummary ? (
-        <div className="lpo-toolbar-pagination">
-          <div className="lpo-nav-arrows">
-            <button
-              type="button"
-              className="icon-pagination-btn icon-pagination-btn--header lpo-nav-grid-prev"
-              disabled={safePage === 0}
-              aria-label={t.previousBtn}
-              onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-            >
-              <PaginationChevronIcon direction="prev" />
-            </button>
-            <div className="lpo-page-scrubber-shell">
-              <input
-                type="range"
-                className="lpo-page-scrubber"
-                min={0}
-                max={Math.max(0, totalPages - 1)}
-                value={safePage}
-                disabled={totalPages <= 1}
-                aria-label={`${t.pageOf} ${safePage + 1} ${t.pageOfMid} ${totalPages}`}
-                onChange={(e) => setPageIndex(Number(e.target.value))}
-              />
-            </div>
-            <button
-              type="button"
-              className="icon-pagination-btn icon-pagination-btn--header lpo-nav-grid-next"
-              disabled={safePage >= totalPages - 1}
-              aria-label={t.nextBtn}
-              onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
-            >
-              <PaginationChevronIcon direction="next" />
-            </button>
-            {newestBoundLabel ? (
-              <span className="lpo-nav-bound-date lpo-nav-date-cell lpo-nav-date-cell--leading">
-                {newestBoundLabel}
-              </span>
-            ) : (
-              <span className="lpo-nav-date-cell lpo-nav-date-cell--leading" aria-hidden />
-            )}
-            <div className="lpo-nav-date-spacer" aria-hidden />
-            {oldestBoundLabel ? (
-              <span className="lpo-nav-bound-date lpo-nav-date-cell lpo-nav-date-cell--trailing">
-                {oldestBoundLabel}
-              </span>
-            ) : (
-              <span className="lpo-nav-date-cell lpo-nav-date-cell--trailing" aria-hidden />
-            )}
-          </div>
-        </div>
-        ) : null}
-        {!showPollSummary ? (
-        <div className="lpo-inline-filters">
-          <label className="lpo-filter lpo-filter--page-count">
-            <div className="lpo-filter-top-row">
-              <span className="lpo-filter-label" id="lpo-polls-per-page-lbl">
-                {t.pollsPerPage}
-              </span>
-              <select
-                value={pollsPerPage}
-                title={t.pollsPerPageHint}
-                aria-labelledby="lpo-polls-per-page-lbl"
-                aria-describedby="lpo-polls-per-page-hint"
-                onChange={(e) => {
-                  pollsPerPageUserChosenRef.current = true
-                  setPollsPerPage(Number(e.target.value))
-                  setPageIndex(0)
-                }}
-              >
-                {pollsPerPageOptions.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <span
-              id="lpo-polls-per-page-hint"
-              className="lpo-filter-hint"
-              title={t.pollsPerPageHint}
-            >
-              {t.pollsPerPageHint}
-            </span>
-          </label>
-        </div>
-        ) : null}
       </div>
 
       {loading ? (
