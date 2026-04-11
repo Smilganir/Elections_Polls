@@ -1320,6 +1320,29 @@ html[lang='he'] .lpo-col-header-text-block {
   color: #FB3B6D;
 }
 
+.lpo-col-threshold-stack {
+  width: 100%;
+}
+
+.lpo-col-totals-band {
+  position: relative;
+  width: 100%;
+}
+
+.lpo-col-maj-label-fly {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #96883f;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .lpo-threshold-bar {
   position: relative;
   height: 10px;
@@ -1366,10 +1389,11 @@ html[lang='he'] .lpo-col-header-text-block {
   top: -4px;
   width: 2px;
   height: calc(100% + 8px);
-  background: #9C8C3D;
+  background: #96883f;
   opacity: 1;
   z-index: 1;
   border-radius: 1px;
+  transform: translateX(-50%);
 }
 
 /* Party rows */
@@ -1664,24 +1688,51 @@ html[lang='he'] .lpo-col-header-text-block {
   --lpo-hbar-label-col: 4.85rem;
   --lpo-hbar-col-gap: 0.4rem;
   --lpo-hbar-row-gap: 0.35rem;
+  /* room for 12px "60" above the golden line */
+  padding-top: 15px;
 }
 
 /* Single 60-seat marker (60/120 = 50% of track column); spans all three bloc rows */
-.lpo-hbar-sixty-line-global {
+.lpo-hbar-sixty-anchor {
   position: absolute;
-  top: -3px;
+  top: 0;
   bottom: -3px;
   left: calc(
     var(--lpo-hbar-label-col) + var(--lpo-hbar-col-gap) +
       (100% - var(--lpo-hbar-label-col) - var(--lpo-hbar-col-gap)) / 2
   );
-  width: 1px;
+  width: 0;
   transform: translateX(-50%);
-  background: #9c8c3d;
-  border-radius: 0.5px;
   z-index: 2;
   pointer-events: none;
+}
+
+.lpo-hbar-sixty-line-global {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: #96883f;
+  border-radius: 0.5px;
   box-shadow: 0 0 0 0.5px rgba(12, 18, 28, 0.4);
+}
+
+.lpo-hbar-sixty-label {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 2px;
+  transform: translateX(-50%);
+  color: #96883f;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lpo-hbar-sixty-label--12 {
+  font-size: 12px;
 }
 
 /* Nudge bloc vote tracks down slightly vs outlet title row; band measure picks this up so chart stays aligned */
@@ -2923,6 +2974,9 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-hero-bar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-inline: auto;
   width: 100%;
   max-width: min(340px, 100%);
@@ -2939,6 +2993,38 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     /* ~175% of 340px — hero bar scales with row bars on large screens. */
     max-width: min(595px, 100%);
   }
+}
+
+.lpo-ps-blocs-nums-band {
+  position: relative;
+  width: 100%;
+}
+
+.lpo-ps-maj-label-fly {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #96883f;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.lpo-ps-maj-label-fly--12 {
+  font-size: 12px;
+}
+
+/* Hero: nudge "60" down toward the golden line below */
+.lpo-ps-hero-bar-stack .lpo-ps-maj-label-fly--12 {
+  top: 70%;
+  transform: translate(-50%, -50%);
+}
+
+.lpo-ps-maj-label-fly--10 {
+  font-size: 10px;
 }
 
 .lpo-ps-hero-nums-between {
@@ -3224,13 +3310,13 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   background: #f7f7f7;
 }
 
-/* Golden 60 line — same benchmark as party breakdown (.lpo-threshold-line / sixty marker) */
+/* Golden 60 line — "60" text is overlaid on the bloc numbers row (see .lpo-ps-maj-label-fly) */
 .lpo-ps-maj-line {
   position: absolute;
   top: -4px;
   width: 2px;
   height: calc(100% + 8px);
-  background: #9c8c3d;
+  background: #96883f;
   border-radius: 1px;
   box-shadow: 0 0 0 0.5px rgba(12, 18, 28, 0.35);
   z-index: 2;

@@ -165,20 +165,25 @@ function PollSummaryRowMain({
         aria-label={`${t.opposition} ${oppDisplay}, ${t.coalition} ${current.coalitionTotal}`}
       >
         <div className="lpo-ps-row-bar-aligned">
-          <div className="lpo-ps-row-nums-between">
-            <span className="lpo-ps-row-bloc lpo-ps-row-bloc--opp">
-              <span className="lpo-ps-row-bloc-num" style={{ color: SEGMENT_COLORS.Opposition }}>
-                {oppDisplay}
+          <div className="lpo-ps-blocs-nums-band">
+            <div className="lpo-ps-row-nums-between">
+              <span className="lpo-ps-row-bloc lpo-ps-row-bloc--opp">
+                <span className="lpo-ps-row-bloc-num" style={{ color: SEGMENT_COLORS.Opposition }}>
+                  {oppDisplay}
+                </span>
+                {dOppDisplay !== null && dOppDisplay !== 0 ? (
+                  <DeltaBadge delta={dOppDisplay} />
+                ) : null}
               </span>
-              {dOppDisplay !== null && dOppDisplay !== 0 ? (
-                <DeltaBadge delta={dOppDisplay} />
-              ) : null}
-            </span>
-            <span className="lpo-ps-row-bloc lpo-ps-row-bloc--coal">
-              <span className="lpo-ps-row-bloc-num" style={{ color: SEGMENT_COLORS.Coalition }}>
-                {current.coalitionTotal}
+              <span className="lpo-ps-row-bloc lpo-ps-row-bloc--coal">
+                <span className="lpo-ps-row-bloc-num" style={{ color: SEGMENT_COLORS.Coalition }}>
+                  {current.coalitionTotal}
+                </span>
+                {dCoal !== null && dCoal !== 0 ? <DeltaBadge delta={dCoal} /> : null}
               </span>
-              {dCoal !== null && dCoal !== 0 ? <DeltaBadge delta={dCoal} /> : null}
+            </div>
+            <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--10" aria-hidden>
+              60
             </span>
           </div>
           <PsSegmentBar
@@ -323,27 +328,32 @@ export function PollSummaryPanel({
     <div className="lpo-ps-wrap">
       <section className="lpo-ps-hero" aria-label={t.pollSummaryHeroAria}>
         <div className="lpo-ps-hero-bar-stack lpo-ps-bar-ltr">
-          <div className="lpo-ps-hero-nums-between" dir="ltr">
-            <div className="lpo-ps-hero-side lpo-ps-hero-side--opp">
-              <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--opp">{t.opposition}</span>
-              <span className="lpo-ps-hero-num lpo-ps-hero-num--opp">
-                {combineArabsWithOpposition ? summary.avgOppositionPlusArabs : summary.avgOpposition}
-              </span>
-              {hasPrior ? (
-                <DeltaBadge
-                  delta={
-                    combineArabsWithOpposition
-                      ? summary.deltaOppositionPlusArabs
-                      : summary.deltaOpposition
-                  }
-                />
-              ) : null}
+          <div className="lpo-ps-blocs-nums-band">
+            <div className="lpo-ps-hero-nums-between" dir="ltr">
+              <div className="lpo-ps-hero-side lpo-ps-hero-side--opp">
+                <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--opp">{t.opposition}</span>
+                <span className="lpo-ps-hero-num lpo-ps-hero-num--opp">
+                  {combineArabsWithOpposition ? summary.avgOppositionPlusArabs : summary.avgOpposition}
+                </span>
+                {hasPrior ? (
+                  <DeltaBadge
+                    delta={
+                      combineArabsWithOpposition
+                        ? summary.deltaOppositionPlusArabs
+                        : summary.deltaOpposition
+                    }
+                  />
+                ) : null}
+              </div>
+              <div className="lpo-ps-hero-side lpo-ps-hero-side--coal">
+                <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--coal">{t.coalition}</span>
+                <span className="lpo-ps-hero-num lpo-ps-hero-num--coal">{summary.avgCoalition}</span>
+                {hasPrior ? <DeltaBadge delta={summary.deltaCoalition} /> : null}
+              </div>
             </div>
-            <div className="lpo-ps-hero-side lpo-ps-hero-side--coal">
-              <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--coal">{t.coalition}</span>
-              <span className="lpo-ps-hero-num lpo-ps-hero-num--coal">{summary.avgCoalition}</span>
-              {hasPrior ? <DeltaBadge delta={summary.deltaCoalition} /> : null}
-            </div>
+            <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--12" aria-hidden>
+              60
+            </span>
           </div>
           <PsSegmentBar
             coalition={summary.avgCoalition}

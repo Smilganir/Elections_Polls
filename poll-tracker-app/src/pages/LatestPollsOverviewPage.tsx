@@ -67,6 +67,9 @@ function clampPollSummaryWindowDays(n: number): number {
   )
 }
 
+/** Default polls-per-page steps to 4 above this width (was 1100; tablet ~1000px gets 4 columns). */
+const LPO_DEFAULT_POLLS_PER_PAGE_WIDE_BREAKPOINT_PX = 999
+
 /** Wider than this: polls-per-page select offers 6; at or below: max option is 5 (matches tablet/small layout). */
 const LPO_DESKTOP_POLLS_PER_PAGE_BREAKPOINT_PX = 768
 
@@ -781,7 +784,7 @@ export function LatestPollsOverviewPage() {
     const w = window.innerWidth
     if (w <= 480) return 2
     if (w <= 768) return 2
-    if (w <= 1100) return 3
+    if (w <= LPO_DEFAULT_POLLS_PER_PAGE_WIDE_BREAKPOINT_PX) return 3
     return 4
   }
 
@@ -1724,7 +1727,10 @@ export function LatestPollsOverviewPage() {
                             />
                           </div>
                           <div className="lpo-hbars" ref={headerHbarsRef}>
-                            <div className="lpo-hbar-sixty-line-global" aria-hidden title="60" />
+                            <div className="lpo-hbar-sixty-anchor" aria-hidden>
+                              <span className="lpo-hbar-sixty-label lpo-hbar-sixty-label--12">60</span>
+                              <div className="lpo-hbar-sixty-line-global" title="60" />
+                            </div>
                             <span className="lpo-hbar-label">{t.coalition}</span>
                             <div className="lpo-hbar-track">
                               <div className="lpo-hbar-fill" style={{ width: `${(poll.coalitionTotal / 120) * 100}%`, background: SEGMENT_COLORS.Coalition }} />
@@ -1913,88 +1919,94 @@ export function LatestPollsOverviewPage() {
                           )}
                         </div>
                       </div>
-                      <div
-                        className={
-                          visiblePolls.length > 1
-                            ? 'lpo-col-totals lpo-col-totals--multi'
-                            : 'lpo-col-totals'
-                        }
-                      >
-                        {visiblePolls.length > 1 ? (
-                          <>
-                            <span className="lpo-total opposition">
-                              <span className="lpo-total-label">
-                                {t.opposition}
-                              </span>
-                              <span className="lpo-total-figures">
-                                <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
-                                {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
-                                  <>
-                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
-                                    <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
-                                      {combinedOppChange > 0 ? '↗' : '↘'}
-                                      {Math.abs(combinedOppChange)}
-                                    </span>
-                                  </>
-                                ) : null}
-                                {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
-                                  <>
-                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
-                                    <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
-                                      {oppChange > 0 ? '↗' : '↘'}
-                                      {Math.abs(oppChange)}
-                                    </span>
-                                  </>
-                                ) : null}
-                              </span>
-                            </span>
-                            <span className="lpo-total coalition">
-                              <span className="lpo-total-label">{t.coalition}</span>
-                              <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="lpo-total coalition">
-                              <span className="lpo-total-label">{t.coalition}</span>
-                              <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
-                            </span>
-                            <span className="lpo-total opposition">
-                              <span className="lpo-total-label">
-                                {t.opposition}
-                              </span>
-                              <span className="lpo-total-figures">
-                                <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
-                                {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
-                                  <>
-                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
-                                    <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
-                                      {combinedOppChange > 0 ? '↗' : '↘'}
-                                      {Math.abs(combinedOppChange)}
-                                    </span>
-                                  </>
-                                ) : null}
-                                {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
-                                  <>
-                                    <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
-                                    <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
-                                      {oppChange > 0 ? '↗' : '↘'}
-                                      {Math.abs(oppChange)}
-                                    </span>
-                                  </>
-                                ) : null}
-                              </span>
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <div
-                        className={
-                          visiblePolls.length > 1
-                            ? 'lpo-threshold-bar lpo-threshold-bar--opp-left'
-                            : 'lpo-threshold-bar'
-                        }
-                      >
+                      <div className="lpo-col-threshold-stack">
+                        <div className="lpo-col-totals-band">
+                          <div
+                            className={
+                              visiblePolls.length > 1
+                                ? 'lpo-col-totals lpo-col-totals--multi'
+                                : 'lpo-col-totals'
+                            }
+                          >
+                            {visiblePolls.length > 1 ? (
+                              <>
+                                <span className="lpo-total opposition">
+                                  <span className="lpo-total-label">
+                                    {t.opposition}
+                                  </span>
+                                  <span className="lpo-total-figures">
+                                    <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
+                                    {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
+                                      <>
+                                        <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                        <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
+                                          {combinedOppChange > 0 ? '↗' : '↘'}
+                                          {Math.abs(combinedOppChange)}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                    {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
+                                      <>
+                                        <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                        <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
+                                          {oppChange > 0 ? '↗' : '↘'}
+                                          {Math.abs(oppChange)}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                  </span>
+                                </span>
+                                <span className="lpo-total coalition">
+                                  <span className="lpo-total-label">{t.coalition}</span>
+                                  <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="lpo-total coalition">
+                                  <span className="lpo-total-label">{t.coalition}</span>
+                                  <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
+                                </span>
+                                <span className="lpo-total opposition">
+                                  <span className="lpo-total-label">
+                                    {t.opposition}
+                                  </span>
+                                  <span className="lpo-total-figures">
+                                    <strong>{combineArabsWithOpposition ? oppPlusArabs : poll.oppositionTotal}</strong>
+                                    {showDeltaVsPrior && combineArabsWithOpposition && combinedOppChange !== null && combinedOppChange !== 0 ? (
+                                      <>
+                                        <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                        <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
+                                          {combinedOppChange > 0 ? '↗' : '↘'}
+                                          {Math.abs(combinedOppChange)}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                    {showDeltaVsPrior && !combineArabsWithOpposition && oppChange !== null && oppChange !== 0 ? (
+                                      <>
+                                        <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
+                                        <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
+                                          {oppChange > 0 ? '↗' : '↘'}
+                                          {Math.abs(oppChange)}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                  </span>
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <span className="lpo-col-maj-label-fly" aria-hidden>
+                            60
+                          </span>
+                        </div>
+                        <div
+                          className={
+                            visiblePolls.length > 1
+                              ? 'lpo-threshold-bar lpo-threshold-bar--opp-left'
+                              : 'lpo-threshold-bar'
+                          }
+                        >
                         {visiblePolls.length > 1 ? (
                           <>
                             <div
@@ -2042,6 +2054,7 @@ export function LatestPollsOverviewPage() {
                           </>
                         )}
                         <div className="lpo-threshold-line" style={{ left: `${(60 / 120) * 100}%` }} />
+                      </div>
                       </div>
                     </>
                   )}
