@@ -3035,19 +3035,29 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-narrative-trends {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 63rem; /* ~1008px at 16px root; shrinks with viewport */
   margin: 1.25rem auto 0;
   padding: 0;
-  max-width: 52rem;
   background: transparent;
   border: none;
   border-radius: 0;
 }
 
 .lpo-ps-narrative-trends-list {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  /* height grows with content (design ref ~233px) */
   margin: 0;
-  padding-inline-start: 1.15rem;
+  padding: 1.1rem 1.35rem 1.15rem 1.5rem;
   font-size: 13.4px;
   line-height: 1.5;
+  background: #1a222e;
+  border: 1px solid #2d3340;
+  border-radius: 20px;
   /* Match .lpo-ps-narrative-bg (muted light blue-grey) */
   color: #7a8a9e;
 }
@@ -3080,8 +3090,35 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   color: #55657a;
 }
 
+/* Arrow + digits always LTR so ↗/↘ stays left of the number in RTL Hebrew */
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-seat-delta-run {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline;
+}
+
+/* Party trend lines: |Δ seats| — bold + green up / red down (aligns with .lpo-ps-delta / trend arrows) */
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-seat--up,
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-seat--up strong {
+  color: #2ecc71;
+  font-weight: 700;
+}
+
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-seat--down,
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-seat--down strong {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
 .lpo-ps-narrative-trends-li-content {
   display: inline;
+}
+
+/* ↗/↘ flush before seat magnitude in party clause (not beside the icon) */
+.lpo-ps-narrative-trends-li-content .lpo-ps-narrative-party-trend-arrow {
+  display: inline;
+  margin-inline-end: 0;
+  vertical-align: -0.04em;
 }
 
 .lpo-ps-narrative-party-ico-wrap {
@@ -3684,7 +3721,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-chip-delta {
-  font-size: calc(0.62rem * 0.8);
+  font-size: 10px;
   font-weight: 700;
 }
 

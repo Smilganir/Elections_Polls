@@ -23,7 +23,8 @@ import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
-import { pickPollSummaryNarrative } from '../content/pickPollSummaryNarrative'
+import { generatePollSummaryBackground, rollingWindowLatestDateDisplay } from '../lib/generatePollSummaryHeroNarrative'
+import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
 import { buildRollingWindowReport } from '../lib/pollRollingWindow'
 import { PollSummaryPanel } from '../ui/PollSummaryPanel'
 type PollColumn = {
@@ -941,13 +942,33 @@ export function LatestPollsOverviewPage() {
     [polls, pollSummaryWindowDays],
   )
 
-  const pollSummaryNarrativePick = useMemo(() => pickPollSummaryNarrative(locale), [locale])
-  const pollSummaryNarrativeAsOfDisplay = useMemo(() => {
-    if (!pollSummaryNarrativePick?.asOfUtc) return undefined
-    return dayjs(pollSummaryNarrativePick.asOfUtc).format(
-      locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY',
-    )
-  }, [pollSummaryNarrativePick?.asOfUtc, locale])
+  const pollSummaryNarrativeBackground = useMemo(
+    () => generatePollSummaryBackground(locale),
+    [locale],
+  )
+
+  const pollSummaryNarrativeAsOfDisplay = useMemo(
+    () => rollingWindowLatestDateDisplay(pollRollingReport.rows, locale),
+    [pollRollingReport.rows, locale],
+  )
+
+  const pollSummaryTrendBullets = useMemo(
+    () =>
+      generatePollSummaryTrendBullets(pollRollingReport.rows, pollRollingReport.summary, {
+        locale,
+        windowDays: pollSummaryWindowDays,
+        displayMediaOutlet,
+        displayParty,
+      }),
+    [
+      pollRollingReport.rows,
+      pollRollingReport.summary,
+      locale,
+      pollSummaryWindowDays,
+      displayMediaOutlet,
+      displayParty,
+    ],
+  )
 
   const minPollDateByOutlet = useMemo(() => {
     const m = new Map<string, string>()
@@ -1594,8 +1615,8 @@ export function LatestPollsOverviewPage() {
           combineArabsWithOpposition={combineArabsWithOpposition}
           displayMediaOutlet={displayMediaOutlet}
           displayParty={displayParty}
-          narrativeBackground={pollSummaryNarrativePick?.background}
-          narrativeTrendBullets={pollSummaryNarrativePick?.trendBullets}
+          narrativeBackground={pollSummaryNarrativeBackground}
+          narrativeTrendBullets={pollSummaryTrendBullets}
           narrativeAsOfDisplay={pollSummaryNarrativeAsOfDisplay}
         />
       ) : visiblePolls.length === 0 ? (

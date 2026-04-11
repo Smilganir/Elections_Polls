@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-sheet": "node ../scripts/summarize-latest-blocs.mjs",
+    "sync-sheet:no-narrative": "node ../scripts/summarize-latest-blocs.mjs --no-narrative"
   },
   "dependencies": {
     "dayjs": "^1.11.20",

@@ -2,25 +2,25 @@
   "asOfUtc": "2026-04-11",
   "locales": {
     "en": {
-      "background": "The big story in the background is still the run-up to the October vote—budget done, Knesset on break till May—plus the usual drumbeat of security news and the draft / Haredi parties debate, which helps explain why some polls show Likud and the far right a little softer.",
+      "background": "The run-up to the October vote still dominates—budget passed, Knesset on recess until May—alongside steady security news and the Haredi draft debate, all of which can help explain why Likud and the far right look a little softer in some polls.",
       "trendBullets": [
-        "Most outlets in this window show <strong>opposition</strong> inching up and <strong>coalition</strong> easing vs. each outlet’s prior poll. <strong>i24</strong> is the outlier favoring the coalition; <strong>Maariv</strong> and <strong>Channel 14</strong> barely moved—a trend, not lockstep.",
-        "<strong>Likud</strong>[[party:Likud]] is down in several polls.",
-        "<strong>Bennett</strong>[[party:Bennett]] is up on <strong>Channels 12</strong> and <strong>13</strong> and in <strong>Maariv</strong>, but not on <strong>i24</strong>.",
-        "<strong>Yesh Atid</strong>[[party:Yesh Atid]] slips—most sharply on <strong>i24</strong>.",
-        "<strong>Lieberman</strong> (<strong>Yisrael Beiteinu</strong>)[[party:Yisrael Beiteinu]] and <strong>Otzma Yehudit</strong>[[party:Otzma Yehudit]] often pick up seats (notably <strong>i24</strong> / <strong>Kan</strong>).",
-        "On <strong>Channel 12</strong>, <strong>Arab lists</strong> mostly swap mandates between parties—read as a reshuffle, not a full bloc swing."
+        "<strong>Outliers</strong> – coalition moved vs mean direction – i24 News",
+        "<strong>Likud</strong>[[party:Likud]] – avg down 2.5 seats – 4 outlets vs prior",
+        "<strong>Yesh Atid</strong>[[party:Yesh Atid]] – avg down 1.8 seats – 4 outlets vs prior",
+        "<strong>Lieberman</strong> (<strong>Yisrael Beiteinu</strong>)[[party:Yisrael Beiteinu]] – avg up 1.7 seats – 3 outlets vs prior",
+        "<strong>Otzma Yehudit</strong>[[party:Otzma Yehudit]] – avg up 1.7 seats – 3 outlets vs prior",
+        "<strong>Bennett</strong>[[party:Bennett]] – avg up 1.3 seats – 4 outlets vs prior"
       ]
     },
     "he": {
       "background": "רקע: המרוץ לבחירות באוקטובר, תקציב שאושר, כנסת בפגרה עד מאי, וחדשות הביטחון יחד עם הדיון גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.",
       "trendBullets": [
-        "ברוב ערוצי התקשורת בחלון הזה האופוזיציה עולה מעט והקואליציה מתרככת לעומת הסקר הקודם של אותו ערוץ; <strong>i24</strong> יוצאת דופן לטובת הקואליציה, <strong>מעריב</strong> ו<strong>ערוץ 14</strong> כמעט לא זזו—מגמה, לא תזוזה אחידה.",
-        "ירידות ב<strong>ליכוד</strong>[[party:Likud]] בכמה ערוצים.",
-        "<strong>בנט</strong>[[party:Bennett]] עולה ב<strong>ערוצים 12</strong> ו־<strong>13</strong> וב<strong>מעריב</strong> אבל לא ב־<strong>i24</strong>.",
-        "<strong>יש עתיד</strong>[[party:Yesh Atid]] צונח—משמעותית ב־<strong>i24</strong>.",
-        "<strong>ליברמן</strong> (<strong>ישראל ביתנו</strong>)[[party:Yisrael Beiteinu]] ו<strong>עוצמה יהודית</strong>[[party:Otzma Yehudit]] לעיתים עולות (במיוחד <strong>i24</strong> / <strong>כאן</strong>).",
-        "ב<strong>ערוץ 12</strong> רוב השינוי ב<strong>רשימות ערביות</strong> הוא חלוקה מחדש בין מפלגות—לא בהכרח מהפך גושי."
+        "<strong>חריגים</strong> – קואליציה נגד כיוון הממוצע – i24 news",
+        "<strong>הליכוד</strong>[[party:Likud]] – ממוצע ירידה 2.5 מנדטים – 4 ערוצים מול קודם",
+        "<strong>יש עתיד</strong>[[party:Yesh Atid]] – ממוצע ירידה 1.8 מנדטים – 4 ערוצים מול קודם",
+        "<strong>ליברמן</strong> (<strong>ישראל ביתנו</strong>)[[party:Yisrael Beiteinu]] – ממוצע עלייה 1.7 מנדטים – 3 ערוצים מול קודם",
+        "<strong>עוצמה יהודית</strong>[[party:Otzma Yehudit]] – ממוצע עלייה 1.7 מנדטים – 3 ערוצים מול קודם",
+        "<strong>בנט</strong>[[party:Bennett]] – ממוצע עלייה 1.3 מנדטים – 4 ערוצים מול קודם"
       ]
     }
   }

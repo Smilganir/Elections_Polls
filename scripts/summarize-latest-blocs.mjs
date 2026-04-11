@@ -3,6 +3,9 @@
  * Run from repo root: node scripts/summarize-latest-blocs.mjs
  * Requires poll-tracker-app/.env with VITE_GOOGLE_SHEETS_API_KEY (Sheets API, sheet link viewable).
  *
+ * Also writes poll-tracker-app/src/content/poll-summary-narrative.json (data-driven bullets).
+ * Skip: node scripts/summarize-latest-blocs.mjs --no-narrative
+ *
  * Drops an outlet if its latest poll date is more than MAX_STALE_DAYS before today (UTC calendar days).
  * Override: MAX_STALE_DAYS=45 node scripts/summarize-latest-blocs.mjs
  *
@@ -38,6 +41,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { buildPollBlocHtml } from './poll-bloc-html.mjs'
+import { writePollSummaryNarrativeFromRolling } from './build-poll-summary-narrative.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const envPath = path.join(__dirname, '../poll-tracker-app/.env')
@@ -125,10 +129,16 @@ const [ph, ...pd] = parties
 const ui = Object.fromEntries(uh.map((h, i) => [h, i]))
 
 const segByParty = new Map()
+const partyHebByKey = new Map()
+const partyHebCol = ph.indexOf('Party_heb')
 for (const row of pd) {
   const party = (row[ph.indexOf('Party')] ?? '').trim()
   if (!party) continue
   segByParty.set(party, parseSegment(row[ph.indexOf('Segment')]))
+  if (partyHebCol >= 0) {
+    const heb = String(row[partyHebCol] ?? '').trim()
+    if (heb) partyHebByKey.set(party, heb)
+  }
 }
 
 const rows = ud
@@ -526,4 +536,20 @@ const htmlPath = path.join(__dirname, 'poll-bloc-summary.html')
 if (WRITE_HTML) {
   fs.writeFileSync(htmlPath, buildPollBlocHtml(report), 'utf8')
   console.error(`Wrote ${htmlPath}`)
+}
+
+const WRITE_NARRATIVE = !process.argv.includes('--no-narrative')
+if (WRITE_NARRATIVE) {
+  const narrativePath = writePollSummaryNarrativeFromRolling({
+    rollingRowsRaw,
+    partyHebByKey,
+    segByParty,
+    asOfDate: report.referenceDateUtc,
+    windowDays: ROLLING_WINDOW_DAYS,
+    avgRollC,
+    prevRollAvgC,
+    nRollPrior,
+    rn,
+  })
+  console.error(`Wrote ${narrativePath}`)
 }

@@ -26,18 +26,14 @@ function segmentForNarrativeParty(partyKey: string): Segment {
   return PARTY_SEGMENT_BY_KEY[partyKey] ?? 'Opposition'
 }
 
-type NarrativePartyTrendDir = 'up' | 'down' | null
-
 function NarrativePartyIcon({
   partyKey,
   displayParty,
   mergeArabsWithOpposition,
-  trendDir,
 }: {
   partyKey: string
   displayParty: (partyKey: string) => string
   mergeArabsWithOpposition: boolean
-  trendDir: NarrativePartyTrendDir
 }) {
   const src = PARTY_ICON_MAP[partyKey]
   const label = displayParty(partyKey)
@@ -53,30 +49,8 @@ function NarrativePartyIcon({
           <IconWithFallback src={src} label={label} />
         </span>
       </span>
-      {trendDir === 'up' ? (
-        <span
-          className="lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up"
-          aria-hidden
-        >
-          ↗
-        </span>
-      ) : trendDir === 'down' ? (
-        <span
-          className="lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down"
-          aria-hidden
-        >
-          ↘
-        </span>
-      ) : null}
     </span>
   )
-}
-
-function trendDirForAvgDelta(avg: number | undefined): NarrativePartyTrendDir {
-  if (avg === undefined) return null
-  if (avg > 0) return 'up'
-  if (avg < 0) return 'down'
-  return null
 }
 
 function parseNarrativeBullet(
@@ -84,7 +58,6 @@ function parseNarrativeBullet(
   displayParty: (partyKey: string) => string,
   bulletIndex: number,
   mergeArabsWithOpposition: boolean,
-  partyNarrativeAvgDeltaByKey: ReadonlyMap<string, number> | undefined,
 ): ReactNode[] {
   const re = /\[\[party:([^\]]+)\]\]/g
   const out: ReactNode[] = []
@@ -103,14 +76,12 @@ function parseNarrativeBullet(
       )
     }
     const resolved = resolvePartyKey(m[1])
-    const avgDelta = partyNarrativeAvgDeltaByKey?.get(resolved)
     out.push(
       <NarrativePartyIcon
         key={`${bulletIndex}-p-${part++}`}
         partyKey={resolved}
         displayParty={displayParty}
         mergeArabsWithOpposition={mergeArabsWithOpposition}
-        trendDir={trendDirForAvgDelta(avgDelta)}
       />,
     )
     last = re.lastIndex
@@ -132,22 +103,13 @@ export function PollSummaryNarrativeBulletLi({
   displayParty,
   index,
   mergeArabsWithOpposition,
-  partyNarrativeAvgDeltaByKey,
 }: {
   html: string
   displayParty: (partyKey: string) => string
   index: number
   mergeArabsWithOpposition: boolean
-  /** Mean seat delta vs prior per outlet (only outlets with a change for that party). */
-  partyNarrativeAvgDeltaByKey?: ReadonlyMap<string, number>
 }) {
-  const nodes = parseNarrativeBullet(
-    html,
-    displayParty,
-    index,
-    mergeArabsWithOpposition,
-    partyNarrativeAvgDeltaByKey,
-  )
+  const nodes = parseNarrativeBullet(html, displayParty, index, mergeArabsWithOpposition)
   return (
     <li>
       <span className="lpo-ps-narrative-trends-li-content">{nodes}</span>

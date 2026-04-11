@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
@@ -9,7 +9,6 @@ import {
   segmentRingColorForSummary,
 } from '../config/mappings'
 import {
-  averagePartySeatDeltaAcrossOutlets,
   type ChangedParty,
   type RollingPoll,
   type RollingWindowRow,
@@ -257,10 +256,6 @@ export function PollSummaryPanel({
   const trendBullets = narrativeTrendBullets
   const hasNarrativeTop = Boolean(narrativeAsOfDisplay) || Boolean(bgText)
   const hasNarrativeTrends = trendBullets.length > 0
-  const partyNarrativeAvgDeltaByKey = useMemo(
-    () => averagePartySeatDeltaAcrossOutlets(rows),
-    [rows],
-  )
   const hasAnyChips = rows.some((r) => r.changedParties.length > 0)
   const chipRowIdsKey = rows.map((r) => r.current.pollId).join(',')
   const leftRowByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
@@ -477,7 +472,6 @@ export function PollSummaryPanel({
                 displayParty={displayParty}
                 index={i}
                 mergeArabsWithOpposition={combineArabsWithOpposition}
-                partyNarrativeAvgDeltaByKey={partyNarrativeAvgDeltaByKey}
               />
             ))}
           </ul>
