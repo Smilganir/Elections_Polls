@@ -23,6 +23,7 @@ import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
+import { pickPollSummaryNarrative } from '../content/pickPollSummaryNarrative'
 import { buildRollingWindowReport } from '../lib/pollRollingWindow'
 import { PollSummaryPanel } from '../ui/PollSummaryPanel'
 type PollColumn = {
@@ -933,6 +934,14 @@ export function LatestPollsOverviewPage() {
     [polls, pollSummaryWindowDays],
   )
 
+  const pollSummaryNarrativePick = useMemo(() => pickPollSummaryNarrative(locale), [locale])
+  const pollSummaryNarrativeAsOfDisplay = useMemo(() => {
+    if (!pollSummaryNarrativePick?.asOfUtc) return undefined
+    return dayjs(pollSummaryNarrativePick.asOfUtc).format(
+      locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY',
+    )
+  }, [pollSummaryNarrativePick?.asOfUtc, locale])
+
   const minPollDateByOutlet = useMemo(() => {
     const m = new Map<string, string>()
     for (const p of polls) {
@@ -1578,6 +1587,9 @@ export function LatestPollsOverviewPage() {
           combineArabsWithOpposition={combineArabsWithOpposition}
           displayMediaOutlet={displayMediaOutlet}
           displayParty={displayParty}
+          narrativeBackground={pollSummaryNarrativePick?.background}
+          narrativeTrendBullets={pollSummaryNarrativePick?.trendBullets}
+          narrativeAsOfDisplay={pollSummaryNarrativeAsOfDisplay}
         />
       ) : visiblePolls.length === 0 ? (
         <p style={{ color: '#6b829e' }}>{t.noPolls}</p>

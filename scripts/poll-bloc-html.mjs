@@ -110,6 +110,7 @@ export function buildPollBlocHtml(r) {
   const v = r.vsPreviousPollSameOutlets
   const rw = r.rollingWindow30dCoO ?? {
     description: '',
+    windowDays: 10,
     outlets: 0,
     avgCoalition: 0,
     avgOpposition: 0,
@@ -120,6 +121,15 @@ export function buildPollBlocHtml(r) {
     deltaOpposition: 0,
     perOutlet: [],
   }
+  const rollDays = rw.windowDays ?? 10
+  const rollingNarrative =
+    rw.outlets > 0
+      ? `Poll summary window (<strong>${rollDays}</strong> days, same as the app default): <strong>${rw.outlets}</strong> outlets have a poll dated in that window. Mean coalition <strong>${rw.avgCoalition}</strong> vs mean opposition <strong>${rw.avgOpposition}</strong> (Arab lists excluded)—both near the 60-seat midpoint on 120 seats.${
+          rw.outletsWithPriorPoll
+            ? ` Versus each outlet’s previous poll, those means shifted <strong>${fmtDelta(rw.deltaCoalition)}</strong> coalition and <strong>${fmtDelta(rw.deltaOpposition)}</strong> opposition.`
+            : ''
+        }`
+      : ''
   const leadBloc =
     r.avgCoalition > r.avgAntiBloc
       ? 'Coalition'
@@ -240,7 +250,7 @@ export function buildPollBlocHtml(r) {
 
   const rollingHero = `
 <section class="mean-hero mean-hero--rolling" aria-label="Rolling window average coalition vs opposition">
-  <div class="mean-hero-kicker">${rw.outlets} outlets · poll date ≤ ${r.maxStaleDays}d</div>
+  <div class="mean-hero-kicker">${rw.outlets} outlets · poll date ≤ ${rollDays}d</div>
   <h2 class="mean-hero-title">Coalition vs opposition (mean)</h2>
   <p class="rolling-sub">Arab-segment seats are excluded from these headline averages (same rule as the web app poll summary).</p>
   <div class="mean-hero-bar-wrap">${coOppBar(rw.avgCoalition, rw.avgOpposition)}</div>
@@ -467,7 +477,7 @@ export function buildPollBlocHtml(r) {
       <button type="button" data-tab="latest" role="tab" aria-selected="false">Latest by outlet</button>
       <button type="button" data-tab="breakdown" role="tab" aria-selected="false">Outlet breakdown</button>
       <button type="button" data-tab="vsprev" role="tab" aria-selected="false">vs previous poll</button>
-      <button type="button" data-tab="rolling30" role="tab" aria-selected="false">30d · C vs O</button>
+      <button type="button" data-tab="rolling30" role="tab" aria-selected="false">${rollDays}d · C vs O</button>
       <button type="button" data-tab="excluded" role="tab" aria-selected="false">Excluded (stale)</button>
     </nav>
 
@@ -503,6 +513,7 @@ export function buildPollBlocHtml(r) {
 
     <div id="panel-rolling30" class="panel" role="tabpanel">
       <p class="sub" style="margin-top:0">${escapeHtml(rw.description)}</p>
+      ${rollingNarrative ? `<div class="narrative" style="margin-bottom:1rem">${rollingNarrative}</div>` : ''}
       ${rollingHero}
       <div class="dash-list">${rollingDashRows || '<p class="sub">No outlets with a poll in this date window.</p>'}</div>
     </div>
@@ -516,7 +527,7 @@ export function buildPollBlocHtml(r) {
     </div>
 
     <footer>
-      Regenerate: <code>node scripts/summarize-latest-blocs.mjs</code> · Optional: <code>POLL_SUMMARY_ICON_BASE=https://…/media/</code>
+      Regenerate: <code>node scripts/summarize-latest-blocs.mjs</code> · Rolling window: <code>ROLLING_WINDOW_DAYS</code> (default 10, matches app) · Optional: <code>POLL_SUMMARY_ICON_BASE=https://…/media/</code>
     </footer>
   </div>
   <script>

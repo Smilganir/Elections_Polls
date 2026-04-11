@@ -19,6 +19,40 @@ export const PARTY_ICON_MAP: Record<string, string> = {
   'Yisrael Beiteinu': '/parties/Parties-Heads-Cropped_0002_Layer-11.png',
 }
 
+/**
+ * Segment per canonical party key — for narrative icon rings when sheet rows aren’t loaded.
+ * Keep aligned with Parties Dim “Segment”.
+ */
+export const PARTY_SEGMENT_BY_KEY: Record<string, Segment> = {
+  Likud: 'Coalition',
+  Shas: 'Coalition',
+  UTJ: 'Coalition',
+  'Otzma Yehudit': 'Coalition',
+  'Religious Zionism': 'Coalition',
+  "Bennett's Party": 'Opposition',
+  'Blue & White': 'Opposition',
+  'The Democrats': 'Opposition',
+  'The Reservists': 'Opposition',
+  'Yashar!': 'Opposition',
+  'Yesh Atid': 'Opposition',
+  'Yisrael Beiteinu': 'Opposition',
+  Balad: 'Arabs',
+  "Hadash Ta'al": 'Arabs',
+  'Joint Arab List': 'Arabs',
+  "Ra'am": 'Arabs',
+}
+
+/** Chip + narrative icon ring stroke (Arabs → grey, or opposition white when merged). */
+export function segmentRingColorForSummary(
+  segment: Segment,
+  mergeArabsWithOpposition: boolean,
+): string {
+  if (segment === 'Arabs') {
+    return mergeArabsWithOpposition ? SEGMENT_COLORS.Opposition : SEGMENT_COLORS.Arabs
+  }
+  return SEGMENT_COLORS[segment]
+}
+
 /** Hebrew UI labels that override `Party_heb` from the sheet (canonical party key → display string). */
 export const HEBREW_PARTY_DISPLAY_OVERRIDES: Partial<Record<string, string>> = {
   'Joint Arab List': 'רשימה ערבית משותפת',

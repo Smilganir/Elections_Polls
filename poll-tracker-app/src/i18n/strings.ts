@@ -47,6 +47,12 @@ export type UiStrings = {
   pollSummaryChangedPartiesAria: string
   pollSummaryOpenAria: string
   pollSummaryCloseAria: string
+  /** Region label for general background sentence under poll summary hero */
+  pollSummaryNarrativeBackgroundAria: string
+  /** Region label for trend bullet list below channel rows */
+  pollSummaryNarrativeTrendsAria: string
+  /** One line; use {date} placeholder */
+  pollSummaryNarrativeAsOf: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -82,7 +88,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     blocArabsSeparate: 'Split',
     blocArabsCombined: 'Merge',
     pollSummaryOpenBtn: 'Poll summary',
-    pollSummaryPartiesDetailBtn: 'Party breakdown',
+    pollSummaryPartiesDetailBtn: 'All polls',
     pollSummaryWindowDaysLabel: 'Days in window',
     pollSummaryWindowDaysAria: 'Number of days to include in the poll summary rolling window',
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
@@ -93,7 +99,10 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryRowsAria: 'Latest poll per outlet in window',
     pollSummaryChangedPartiesAria: 'Parties with mandate changes vs previous poll',
     pollSummaryOpenAria: 'Show poll summary for the last {n} days',
-    pollSummaryCloseAria: 'Back to party breakdown table',
+    pollSummaryCloseAria: 'Back to all polls',
+    pollSummaryNarrativeBackgroundAria: 'General political context for this poll window',
+    pollSummaryNarrativeTrendsAria: 'Outlet and party trend notes',
+    pollSummaryNarrativeAsOf: 'Context as of {date}',
   },
   he: {
     titleLatest: '',
@@ -127,7 +136,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     blocArabsSeparate: 'נפרד',
     blocArabsCombined: 'מיזוג',
     pollSummaryOpenBtn: 'סיכום סקרים',
-    pollSummaryPartiesDetailBtn: 'פירוט מפלגות',
+    pollSummaryPartiesDetailBtn: 'כל הסקרים',
     pollSummaryWindowDaysLabel: 'ימים בחלון',
     pollSummaryWindowDaysAria: 'מספר הימים האחורה לכלול בסיכום הסקרים',
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
@@ -138,6 +147,9 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
     pollSummaryChangedPartiesAria: 'מפלגות עם שינוי במנדטים לעומת הסקר הקודם',
     pollSummaryOpenAria: 'הצג סיכום סקרים ל-{n} הימים האחרונים',
-    pollSummaryCloseAria: 'חזרה לטבלת פירוט המפלגות',
+    pollSummaryCloseAria: 'חזרה לכל הסקרים',
+    pollSummaryNarrativeBackgroundAria: 'רקע כללי לחלון הסקרים',
+    pollSummaryNarrativeTrendsAria: 'הערות מגמה לפי ערוצים ומפלגות',
+    pollSummaryNarrativeAsOf: 'הקשר מעודכן ל־{date}',
   },
 }

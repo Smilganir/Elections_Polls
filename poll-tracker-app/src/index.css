@@ -279,13 +279,15 @@ body {
   font-weight: 700;
   line-height: 1.2;
   align-self: start;
-  color: #ffffff;
+  color: #867b40;
   letter-spacing: 0.02em;
   text-align: center;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.45),
-    1px 0 0 rgba(59, 130, 246, 0.12),
-    -1px 0 0 rgba(248, 113, 113, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-heading-bar h2 strong {
+  color: inherit;
+  font-weight: 700;
 }
 
 .dashboard-heading-corner-spacer {
@@ -2994,6 +2996,164 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   line-height: 1.35;
 }
 
+/* Editorial narrative — poll-summary-narrative.json */
+.lpo-ps-hero .lpo-ps-narrative-top {
+  margin: 0.65rem 0 0;
+  padding: 0 0.25rem;
+  width: 100%;
+  text-align: center;
+}
+
+.lpo-ps-narrative-asof {
+  margin: 0 0 0.35rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5a6b82;
+  line-height: 1.35;
+}
+
+.lpo-ps-narrative-bg {
+  margin: 0;
+  font-size: 13.4px;
+  line-height: 1.5;
+  color: #7a8a9e;
+  font-weight: 700;
+}
+
+/* Auto-highlighted bloc terms (pollNarrativeHtml.ts) — hero is dark */
+.lpo-ps-narrative-top .lpo-ps-narrative-bloc {
+  font-weight: 700;
+}
+
+.lpo-ps-narrative-top .lpo-ps-narrative-bloc--coalition {
+  color: #0166df;
+}
+
+.lpo-ps-narrative-top .lpo-ps-narrative-bloc--opposition {
+  color: #f7f7f7;
+}
+
+.lpo-ps-narrative-trends {
+  margin: 1.25rem auto 0;
+  padding: 0;
+  max-width: 52rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.lpo-ps-narrative-trends-list {
+  margin: 0;
+  padding-inline-start: 1.15rem;
+  font-size: 13.4px;
+  line-height: 1.5;
+  /* Match .lpo-ps-narrative-bg (muted light blue-grey) */
+  color: #7a8a9e;
+}
+
+.lpo-ps-narrative-trends-list li {
+  margin-bottom: 0.5rem;
+}
+
+.lpo-ps-narrative-trends-list li:last-child {
+  margin-bottom: 0;
+}
+
+.lpo-ps-narrative-trends-list strong,
+.lpo-ps-narrative-trends-list b {
+  font-weight: 700;
+  /* Slightly lighter same family so emphasis reads vs body #7a8a9e */
+  color: #96a8bc;
+}
+
+/* Trends sit on light page: coalition blue; opposition readable grey (bar uses white fill) */
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-bloc {
+  font-weight: 700;
+}
+
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-bloc--coalition {
+  color: #0166df;
+}
+
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-bloc--opposition {
+  color: #55657a;
+}
+
+.lpo-ps-narrative-trends-li-content {
+  display: inline;
+}
+
+.lpo-ps-narrative-party-ico-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1em;
+  vertical-align: -0.28em;
+  margin-inline-start: 0.18em;
+  margin-inline-end: 0.04em;
+}
+
+.lpo-ps-narrative-party-trend-arrow {
+  font-weight: 700;
+  font-size: 0.92em;
+  line-height: 1;
+}
+
+.lpo-ps-narrative-party-trend-arrow--up {
+  color: #2ecc71;
+}
+
+.lpo-ps-narrative-party-trend-arrow--down {
+  color: #e74c3c;
+}
+
+.lpo-ps-narrative-party-ico {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Inset segment ring: 24×24px circle (stroke inside box) */
+.lpo-ps-narrative-party-ico-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  line-height: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* Face fills inner box; global .mapped-icon chrome still stripped */
+.lpo-ps-narrative-party-ico-ring .mapped-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  object-fit: contain;
+  display: block;
+  box-shadow: none;
+}
+
+.lpo-ps-narrative-party-ico-ring .icon-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 0.08em;
+  font-size: 0.58em;
+  font-weight: 800;
+  border-radius: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #a8b4c4;
+}
+
 .lpo-ps-bar-slot {
   position: relative;
   overflow: visible;
@@ -3027,7 +3187,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   background: #f7f7f7;
 }
 
-/* Golden 61 line — extends past bar like .lpo-threshold-line / party breakdown */
+/* Golden 60 line — same benchmark as party breakdown (.lpo-threshold-line / sixty marker) */
 .lpo-ps-maj-line {
   position: absolute;
   top: -4px;
@@ -3489,22 +3649,29 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   flex-shrink: 0;
 }
 
+/* Inset segment ring (same idea as .lpo-ps-narrative-party-ico-ring) */
 .lpo-ps-chip-ring {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 2px solid #717982;
   overflow: hidden;
   box-sizing: border-box;
-  background: rgba(20, 26, 38, 0.9);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .lpo-ps-chip-ring .mapped-icon,
 .lpo-ps-chip-ring .icon-fallback {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .lpo-ps-chip-ring .icon-fallback {

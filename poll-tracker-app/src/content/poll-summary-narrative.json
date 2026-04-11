@@ -1,0 +1,27 @@
+{
+  "asOfUtc": "2026-04-11",
+  "locales": {
+    "en": {
+      "background": "The big story in the background is still the run-up to the October vote—budget done, Knesset on break till May—plus the usual drumbeat of security news and the draft / Haredi parties debate, which helps explain why some polls show Likud and the far right a little softer.",
+      "trendBullets": [
+        "Most outlets in this window show <strong>opposition</strong> inching up and <strong>coalition</strong> easing vs. each outlet’s prior poll. <strong>i24</strong> is the outlier favoring the coalition; <strong>Maariv</strong> and <strong>Channel 14</strong> barely moved—a trend, not lockstep.",
+        "<strong>Likud</strong>[[party:Likud]] is down in several polls.",
+        "<strong>Bennett</strong>[[party:Bennett]] is up on <strong>Channels 12</strong> and <strong>13</strong> and in <strong>Maariv</strong>, but not on <strong>i24</strong>.",
+        "<strong>Yesh Atid</strong>[[party:Yesh Atid]] slips—most sharply on <strong>i24</strong>.",
+        "<strong>Lieberman</strong> (<strong>Yisrael Beiteinu</strong>)[[party:Yisrael Beiteinu]] and <strong>Otzma Yehudit</strong>[[party:Otzma Yehudit]] often pick up seats (notably <strong>i24</strong> / <strong>Kan</strong>).",
+        "On <strong>Channel 12</strong>, <strong>Arab lists</strong> mostly swap mandates between parties—read as a reshuffle, not a full bloc swing."
+      ]
+    },
+    "he": {
+      "background": "רקע: המרוץ לבחירות באוקטובר, תקציב שאושר, כנסת בפגרה עד מאי, וחדשות הביטחון יחד עם הדיון גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.",
+      "trendBullets": [
+        "ברוב ערוצי התקשורת בחלון הזה האופוזיציה עולה מעט והקואליציה מתרככת לעומת הסקר הקודם של אותו ערוץ; <strong>i24</strong> יוצאת דופן לטובת הקואליציה, <strong>מעריב</strong> ו<strong>ערוץ 14</strong> כמעט לא זזו—מגמה, לא תזוזה אחידה.",
+        "ירידות ב<strong>ליכוד</strong>[[party:Likud]] בכמה ערוצים.",
+        "<strong>בנט</strong>[[party:Bennett]] עולה ב<strong>ערוצים 12</strong> ו־<strong>13</strong> וב<strong>מעריב</strong> אבל לא ב־<strong>i24</strong>.",
+        "<strong>יש עתיד</strong>[[party:Yesh Atid]] צונח—משמעותית ב־<strong>i24</strong>.",
+        "<strong>ליברמן</strong> (<strong>ישראל ביתנו</strong>)[[party:Yisrael Beiteinu]] ו<strong>עוצמה יהודית</strong>[[party:Otzma Yehudit]] לעיתים עולות (במיוחד <strong>i24</strong> / <strong>כאן</strong>).",
+        "ב<strong>ערוץ 12</strong> רוב השינוי ב<strong>רשימות ערביות</strong> הוא חלוקה מחדש בין מפלגות—לא בהכרח מהפך גושי."
+      ]
+    }
+  }
+}

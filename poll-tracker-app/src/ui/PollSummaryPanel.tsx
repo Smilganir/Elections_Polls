@@ -1,26 +1,26 @@
 import dayjs from 'dayjs'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
-import { MEDIA_ICON_MAP, PARTY_ICON_MAP, SEGMENT_COLORS } from '../config/mappings'
-import type { Segment } from '../types/data'
-import type {
-  ChangedParty,
-  RollingPoll,
-  RollingWindowRow,
-  RollingWindowSummary,
+import {
+  MEDIA_ICON_MAP,
+  PARTY_ICON_MAP,
+  SEGMENT_COLORS,
+  segmentRingColorForSummary,
+} from '../config/mappings'
+import {
+  averagePartySeatDeltaAcrossOutlets,
+  type ChangedParty,
+  type RollingPoll,
+  type RollingWindowRow,
+  type RollingWindowSummary,
 } from '../lib/pollRollingWindow'
 import { IconWithFallback } from './IconWithFallback'
+import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
+import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
 
 const KNESSET = 120
-const MAJ_SEATS = 61
-
-function partySummaryRingColor(segment: Segment, mergeArabsWithOpposition: boolean): string {
-  if (segment === 'Arabs')
-    return mergeArabsWithOpposition ? SEGMENT_COLORS.Opposition : SEGMENT_COLORS.Arabs
-  if (segment === 'Coalition') return SEGMENT_COLORS.Coalition
-  return SEGMENT_COLORS.Opposition
-}
+const MAJ_SEATS = 60
 
 function PsSegmentBar({
   coalition,
@@ -72,7 +72,7 @@ function PsSegmentBar({
             className="lpo-ps-maj-line"
             style={{ left: `${majLeftPct}%` }}
             aria-hidden
-            title="61"
+            title="60"
           />
         ) : null}
       </div>
@@ -100,6 +100,10 @@ type PollSummaryPanelProps = {
   combineArabsWithOpposition: boolean
   displayMediaOutlet: (outlet: string) => string
   displayParty: (partyKey: string) => string
+  /** From poll-summary-narrative.json: general line below hero; HTML bullets below rows */
+  narrativeBackground?: string
+  narrativeTrendBullets?: string[]
+  narrativeAsOfDisplay?: string
 }
 
 function PollSummaryRowMain({
@@ -215,7 +219,7 @@ function PollSummaryChipsStrip({
             <div
               className="lpo-ps-chip-ring"
               style={{
-                borderColor: partySummaryRingColor(cp.segment, combineArabsWithOpposition),
+                boxShadow: `inset 0 0 0 2px ${segmentRingColorForSummary(cp.segment, combineArabsWithOpposition)}`,
               }}
             >
               <IconWithFallback
@@ -243,9 +247,20 @@ export function PollSummaryPanel({
   combineArabsWithOpposition,
   displayMediaOutlet,
   displayParty,
+  narrativeBackground = '',
+  narrativeTrendBullets = [],
+  narrativeAsOfDisplay,
 }: PollSummaryPanelProps) {
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY'
   const hasPrior = summary.nWithPrior > 0
+  const bgText = narrativeBackground.trim()
+  const trendBullets = narrativeTrendBullets
+  const hasNarrativeTop = Boolean(narrativeAsOfDisplay) || Boolean(bgText)
+  const hasNarrativeTrends = trendBullets.length > 0
+  const partyNarrativeAvgDeltaByKey = useMemo(
+    () => averagePartySeatDeltaAcrossOutlets(rows),
+    [rows],
+  )
   const hasAnyChips = rows.some((r) => r.changedParties.length > 0)
   const chipRowIdsKey = rows.map((r) => r.current.pollId).join(',')
   const leftRowByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
@@ -345,6 +360,25 @@ export function PollSummaryPanel({
             className="lpo-ps-hero-bar"
           />
         </div>
+        {hasNarrativeTop ? (
+          <div
+            className="lpo-ps-narrative-top"
+            dir={locale === 'he' ? 'rtl' : 'ltr'}
+            aria-label={t.pollSummaryNarrativeBackgroundAria}
+          >
+            {narrativeAsOfDisplay ? (
+              <p className="lpo-ps-narrative-asof">
+                {t.pollSummaryNarrativeAsOf.replace(/\{date\}/g, narrativeAsOfDisplay)}
+              </p>
+            ) : null}
+            {bgText ? (
+              <p
+                className="lpo-ps-narrative-bg"
+                dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(bgText) }}
+              />
+            ) : null}
+          </div>
+        ) : null}
         <p className="lpo-ps-hero-foot">
           {t.pollSummaryOutletsCount.replace(/\{n\}/g, String(summary.n))}
           {hasPrior ? ` · ${t.pollSummaryVsPriorNote.replace(/\{n\}/g, String(summary.nWithPrior))}` : null}
@@ -432,6 +466,27 @@ export function PollSummaryPanel({
           </ul>
         )}
       </div>
+
+      {hasNarrativeTrends ? (
+        <section
+          className="lpo-ps-narrative-trends"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
+          aria-label={t.pollSummaryNarrativeTrendsAria}
+        >
+          <ul className="lpo-ps-narrative-trends-list">
+            {trendBullets.map((html, i) => (
+              <PollSummaryNarrativeBulletLi
+                key={i}
+                html={html}
+                displayParty={displayParty}
+                index={i}
+                mergeArabsWithOpposition={combineArabsWithOpposition}
+                partyNarrativeAvgDeltaByKey={partyNarrativeAvgDeltaByKey}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }

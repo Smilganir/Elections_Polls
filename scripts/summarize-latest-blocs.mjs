@@ -6,13 +6,17 @@
  * Drops an outlet if its latest poll date is more than MAX_STALE_DAYS before today (UTC calendar days).
  * Override: MAX_STALE_DAYS=45 node scripts/summarize-latest-blocs.mjs
  *
+ * ROLLING_WINDOW_DAYS: matches the web app poll summary default (10). Per outlet, latest poll *dated*
+ * within this window; headline = coalition vs opposition only (Arabs excluded); prior = next-lower Poll ID.
+ * Override: ROLLING_WINDOW_DAYS=30 node scripts/summarize-latest-blocs.mjs
+ *
  * vsPreviousPollSameOutlets: for each remaining outlet, compares latest poll to the prior poll
  * (second-highest Poll ID for that outlet) and reports cross-outlet means + per-outlet deltas.
  *
- * rollingWindow30dCoO: matches the web app “poll summary” — per outlet, latest poll *dated* in the window;
- * headline = coalition vs opposition only (Arabs excluded); prior = next-lower Poll ID; changedParties vs prior.
+ * rollingWindow30dCoO: JSON key kept for compatibility; uses ROLLING_WINDOW_DAYS (default 10).
  */
 const MAX_STALE_DAYS = Number(process.env.MAX_STALE_DAYS) || 30
+const ROLLING_WINDOW_DAYS = Number(process.env.ROLLING_WINDOW_DAYS) || 10
 
 function utcDayStart(d) {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
@@ -218,7 +222,7 @@ const avgCoalOld =
 const momentum =
   avgCoalRecent > avgCoalOld + 0.5 ? 'upwards' : avgCoalRecent < avgCoalOld - 0.5 ? 'downwards' : 'flat'
 
-/** Latest (<30d) vs immediately prior poll, same outlets only (second-highest Poll ID per outlet). */
+/** Latest (within MAX_STALE_DAYS) vs immediately prior poll, same outlets only (second-highest Poll ID per outlet). */
 const vsPreviousRows = []
 for (const cur of latest) {
   const polls = byOutlet.get(cur.media)
@@ -306,13 +310,13 @@ function votesByPartyFromPoll(poll) {
 }
 
 /**
- * Rolling 30d window: per outlet, latest poll *dated* in window; C/O headline only (matches React poll summary).
- * Prior = next-lower Poll ID for that outlet.
+ * Rolling window (ROLLING_WINDOW_DAYS, default 10): per outlet, latest poll *dated* in window;
+ * C/O headline only (matches React poll summary default). Prior = next-lower Poll ID for that outlet.
  */
 const rollingRowsRaw = []
 for (const [media, pollsMap] of byOutlet) {
   const outletPolls = [...pollsMap.values()]
-  const inWindow = outletPolls.filter((p) => ageDaysPollToToday(p.date, today) <= MAX_STALE_DAYS)
+  const inWindow = outletPolls.filter((p) => ageDaysPollToToday(p.date, today) <= ROLLING_WINDOW_DAYS)
   if (inWindow.length === 0) continue
   inWindow.sort((a, b) => {
     const dc = b.date.localeCompare(a.date)
@@ -492,8 +496,9 @@ const report = {
     })),
   })),
   rollingWindow30dCoO: {
+    windowDays: ROLLING_WINDOW_DAYS,
     description:
-      `Latest poll per outlet dated within ${MAX_STALE_DAYS} days (not necessarily each outlet’s global latest poll). Headline averages use coalition vs opposition seats only (Arab-segment parties excluded). Prior poll = same outlet’s next-lower Poll ID.`,
+      `Latest poll per outlet dated within ${ROLLING_WINDOW_DAYS} days (not necessarily each outlet’s global latest poll). Headline averages use coalition vs opposition seats only (Arab-segment parties excluded). Prior poll = same outlet’s next-lower Poll ID.`,
     outlets: rn,
     avgCoalition: round1(avgRollC),
     avgOpposition: round1(avgRollO),

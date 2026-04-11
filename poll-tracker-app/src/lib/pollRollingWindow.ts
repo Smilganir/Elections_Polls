@@ -99,6 +99,28 @@ function changedPartiesBetween(current: RollingPoll, previous: RollingPoll | nul
 }
 
 /**
+ * Mean seat change vs prior poll per outlet, by canonical party key. Only outlets
+ * where the party appears in `changedParties` contribute (unchanged outlets are
+ * omitted for that party).
+ */
+export function averagePartySeatDeltaAcrossOutlets(rows: RollingWindowRow[]): Map<string, number> {
+  const sum = new Map<string, number>()
+  const count = new Map<string, number>()
+  for (const { changedParties } of rows) {
+    for (const cp of changedParties) {
+      sum.set(cp.party, (sum.get(cp.party) ?? 0) + cp.delta)
+      count.set(cp.party, (count.get(cp.party) ?? 0) + 1)
+    }
+  }
+  const out = new Map<string, number>()
+  for (const [party, s] of sum) {
+    const n = count.get(party) ?? 0
+    if (n > 0) out.set(party, s / n)
+  }
+  return out
+}
+
+/**
  * Latest poll per outlet whose date is within maxStaleDays; previous = next-older pollId for that outlet.
  */
 export function buildRollingWindowReport(
