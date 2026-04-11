@@ -68,8 +68,8 @@ function outlierTrendBullets(
 }
 
 function hePollsPhrase(nOutlets: number): string {
-  if (nOutlets === 1) return 'על פני סקר אחד'
-  return `על פני ${nOutlets} סקרים`
+  if (nOutlets === 1) return 'סקר אחד'
+  return `${nOutlets} סקרים`
 }
 
 function enPollsPhrase(nOutlets: number): string {

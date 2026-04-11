@@ -3184,6 +3184,12 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   --lpo-ps-narrative-party-label-w: 12.5rem;
   position: relative;
   box-sizing: border-box;
+  list-style: none;
+  padding-inline-start: 0;
+  /* Vertical rhythm between rows (no disc markers); gap beats margin when items wrap to 2+ lines */
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
   /* Shrink to longest bullet line; cap at available width; center the card (text dir unchanged) */
   width: fit-content;
   max-width: 100%;
@@ -3200,14 +3206,20 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   color: #7a8a9e;
 }
 
-.lpo-ps-narrative-trends-list li {
-  margin-bottom: 0.5rem;
-  width: 100%;
-  box-sizing: border-box;
+@media (max-width: 540px) {
+  .lpo-ps-narrative-trends-list {
+    gap: 0.75rem;
+  }
+
+  .lpo-ps-narrative-trends-list li:not(:last-child) {
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
 }
 
-.lpo-ps-narrative-trends-list li:last-child {
-  margin-bottom: 0;
+.lpo-ps-narrative-trends-list li {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .lpo-ps-narrative-trends-list strong,
@@ -3259,7 +3271,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   display: grid;
   grid-template-columns: min-content var(--lpo-ps-narrative-party-label-w) minmax(0, 1fr);
   column-gap: 0.45rem;
-  align-items: baseline;
+  /* start: first line alignment; avoid centering icon in a tall row */
+  align-items: start;
   width: 100%;
   box-sizing: border-box;
 }
@@ -3298,6 +3311,16 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   vertical-align: -0.28em;
   margin-inline-start: 0;
   margin-inline-end: 0.4em;
+}
+
+/*
+ * 24×24 ring: shift so its vertical center matches the first text line (list bullet aligns
+ * with that line). calc((line-height box − ring) / 2) with 1.5em = list line-height.
+ */
+.lpo-ps-narrative-trends-li-content > .lpo-ps-narrative-party-ico-wrap {
+  align-self: start;
+  vertical-align: 0;
+  transform: translateY(calc((1.5em - 24px) / 2));
 }
 
 .lpo-ps-narrative-party-trend-arrow {
