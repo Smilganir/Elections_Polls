@@ -379,10 +379,6 @@ export function PollSummaryPanel({
             ) : null}
           </div>
         ) : null}
-        <p className="lpo-ps-hero-foot">
-          {t.pollSummaryOutletsCount.replace(/\{n\}/g, String(summary.n))}
-          {hasPrior ? ` · ${t.pollSummaryVsPriorNote.replace(/\{n\}/g, String(summary.nWithPrior))}` : null}
-        </p>
       </section>
 
       <div className="lpo-ps-rows-unified">

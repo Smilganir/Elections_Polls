@@ -40,8 +40,6 @@ export type UiStrings = {
   pollSummaryWindowDaysAria: string
   pollSummarySubtitle: string
   pollSummaryNoOutlets: string
-  pollSummaryOutletsCount: string
-  pollSummaryVsPriorNote: string
   pollSummaryHeroAria: string
   pollSummaryRowsAria: string
   pollSummaryChangedPartiesAria: string
@@ -93,8 +91,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryWindowDaysAria: 'Number of days to include in the poll summary rolling window',
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
     pollSummaryNoOutlets: 'No polls from the last {n} days.',
-    pollSummaryOutletsCount: '{n} outlets',
-    pollSummaryVsPriorNote: 'vs prior poll ({n} outlets)',
     pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
     pollSummaryRowsAria: 'Latest poll per outlet in window',
     pollSummaryChangedPartiesAria: 'Parties with mandate changes vs previous poll',
@@ -141,8 +137,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryWindowDaysAria: 'מספר הימים האחורה לכלול בסיכום הסקרים',
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
     pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
-    pollSummaryOutletsCount: '{n} כלי תקשורת',
-    pollSummaryVsPriorNote: 'מול סקר קודם ({n} כלי תקשורת)',
     pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
     pollSummaryChangedPartiesAria: 'מפלגות עם שינוי במנדטים לעומת הסקר הקודם',

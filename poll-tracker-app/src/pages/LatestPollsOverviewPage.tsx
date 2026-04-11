@@ -793,6 +793,13 @@ export function LatestPollsOverviewPage() {
     setPollsPerPage((p) => (p > maxOpt ? maxOpt : p))
   }, [])
 
+  /** Sparkline mode (1 poll): show timeline event labels by default; skip on portrait mobile (crowded). */
+  useEffect(() => {
+    if (pollsPerPage !== 1) return
+    if (isPortraitMobileForEvents()) return
+    setShowEventLabels(true)
+  }, [pollsPerPage])
+
   const [eventViewportWidth, setEventViewportWidth] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth : 1200,
   )
