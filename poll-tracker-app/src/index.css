@@ -3282,8 +3282,14 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   grid-column: 1 / -1;
 }
 
+/* Trailing “מנדטים בממוצע (N סקרים)” / “seats on average …” slightly smaller; keep Δ run at list size */
 .lpo-ps-narrative-trends-li-clause {
   min-width: 0;
+  font-size: 11px;
+}
+
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-trends-li-clause .lpo-ps-narrative-seat-delta-run {
+  font-size: calc(13.4 / 11 * 1em);
 }
 
 /* Fills grid track; track width = max measured label + pad (see PollSummaryPanel) */
