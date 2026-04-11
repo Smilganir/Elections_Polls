@@ -2861,10 +2861,39 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 /* ── Poll summary (30d rolling window) ───────────── */
 
 .lpo-ps-wrap {
+  /* Max party icons in chip strip (changedParties); bump --lpo-ps-wrap-party-icons-max if UI shows more. */
+  --lpo-ps-wrap-party-icons-max: 8;
+  --lpo-ps-wrap-chip: 30px;
+  --lpo-ps-wrap-chip-gap: 0.5rem;
+  --lpo-ps-wrap-chips-pad-x: 4px;
+  /* .lpo-ps-chips row width: n×ring + (n−1)×gap + horizontal padding */
+  --lpo-ps-wrap-chips-w: calc(
+    var(--lpo-ps-wrap-party-icons-max) * var(--lpo-ps-wrap-chip) +
+      (var(--lpo-ps-wrap-party-icons-max) - 1) * var(--lpo-ps-wrap-chip-gap) + var(--lpo-ps-wrap-chips-pad-x)
+  );
+  /*
+   * Unified row: media cap + row-main gap (900px tier) + bar + fixed-column padding-end;
+   * parties column adds padding-start before chips (1200px tier). Omit 10rem pad — was over-wide.
+   */
+  --lpo-ps-wrap-fixed-w: calc(168px + 2.1rem + 238px + 1.85rem);
+  --lpo-ps-wrap-parties-gutter: 1.85rem;
+  /* 2× clamp max from 960px rule (3.25rem), not 1320px 5rem — keeps cap closer to real content */
+  --lpo-ps-wrap-outer-pad-x-max: 6.5rem;
+
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0;
+  min-width: min(100%, 600px);
+  max-width: min(
+    100%,
+    max(
+      600px,
+      calc(
+        var(--lpo-ps-wrap-fixed-w) + var(--lpo-ps-wrap-parties-gutter) + var(--lpo-ps-wrap-chips-w) +
+          var(--lpo-ps-wrap-outer-pad-x-max)
+      )
+    )
+  );
+  margin-inline: auto;
+  margin-block: 0;
   padding: 0 0.65rem 1.25rem;
   box-sizing: border-box;
 }
@@ -2872,15 +2901,12 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 /* Wide viewports: inset poll summary so the block centers in empty side space. */
 @media (min-width: 960px) {
   .lpo-ps-wrap {
-    max-width: min(1080px, 100%);
-    margin-inline: auto;
     padding-inline: clamp(1.25rem, 5vw, 3.25rem);
   }
 }
 
 @media (min-width: 1320px) {
   .lpo-ps-wrap {
-    max-width: min(1180px, 100%);
     padding-inline: clamp(1.75rem, 7vw, 5rem);
   }
 }
@@ -2959,11 +2985,14 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto 1.15rem;
   background: linear-gradient(165deg, rgba(28, 36, 51, 0.95) 0%, rgba(15, 20, 30, 0.98) 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
   padding: 1rem 1.15rem 0.95rem;
-  margin-bottom: 1.15rem;
   box-shadow: 0 10px 36px rgba(0, 0, 0, 0.4);
 }
 
@@ -3124,9 +3153,11 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   position: relative;
   box-sizing: border-box;
   width: 100%;
-  max-width: 63rem; /* ~1008px at 16px root; shrinks with viewport */
   margin: 1.25rem auto 0;
-  padding: 0;
+  /* Slight inset from screen / parent so centered card does not touch edges */
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  padding-block: 0;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -3135,9 +3166,12 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .lpo-ps-narrative-trends-list {
   position: relative;
   box-sizing: border-box;
-  width: 100%;
+  /* Shrink to longest bullet line; cap at available width; center the card (text dir unchanged) */
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   /* height grows with content (design ref ~233px) */
-  margin: 0;
+  margin-block: 0;
   padding: 1.1rem 1.35rem 1.15rem 1.5rem;
   font-size: 13.4px;
   line-height: 1.5;
@@ -3358,7 +3392,10 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  width: 100%;
+  /* Shrink to fixed + parties width, then center in .lpo-ps-rows-unified (avoids left-heavy block). */
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   min-width: 0;
   /* No gap — zebra + row lines read as one band across both columns. */
   gap: 0;
@@ -3404,8 +3441,10 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-unified-parties-wrap {
-  flex: 1 1 0;
+  /* Shrink-wrap chip column — do not grow with leftover flex space (was blank to the right of icons). */
+  flex: 0 1 auto;
   min-width: 0;
+  max-width: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -3417,6 +3456,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .lpo-ps-unified-parties-scroll {
   flex: 1 1 auto;
   min-height: 0;
+  width: max-content;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -3443,9 +3484,9 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .lpo-ps-unified-parties-track {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-start;
   width: max-content;
-  min-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   background: transparent;
 }
@@ -3455,10 +3496,13 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   flex-direction: row;
   align-items: center;
   flex: 0 0 auto;
-  align-self: stretch;
-  width: 100%;
-  min-width: 100%;
-  padding: 0.5rem 0 0.55rem 0.5rem;
+  align-self: flex-start;
+  width: max-content;
+  min-width: 0;
+  max-width: 100%;
+  padding-block: 0.5rem 0.55rem;
+  padding-inline-start: 0.5rem;
+  padding-inline-end: 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   box-sizing: border-box;
   background: transparent;
