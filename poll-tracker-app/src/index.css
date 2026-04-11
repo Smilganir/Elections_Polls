@@ -2,7 +2,7 @@
   font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: #e8ecf2;
   background: #121820;
-  /* Fixed slot between vote figure and ↗↘ (space U+0020 at this font size; width enforces 5px) */
+  /* Fixed slot between vote figure and +/- delta (space U+0020 at this font size; width enforces 5px) */
   --lpo-vote-diff-space-px: 5px;
   /* Offset LPO outlet header when a sticky topbar sits above the page (match topbar height). */
   --lpo-sticky-header-top: 0px;
@@ -1554,7 +1554,7 @@ html[lang='he'] .lpo-col-header-text-block {
   direction: ltr;
 }
 
-/* Shrink-wrapped inline block: avoids stretched abspos flex box pushing ↗/↘ away from the seat figure */
+/* Shrink-wrapped inline block: avoids stretched abspos flex box pushing +/- away from the seat figure */
 .lpo-bar-end-meta {
   display: inline-block;
   vertical-align: middle;
@@ -2919,6 +2919,22 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   line-height: 1.4;
 }
 
+/* Same visual language as .dashboard-heading .lpo-ps-subtitle--under-page-title */
+.lpo-ps-wrap .lpo-ps-subtitle.lpo-ps-subtitle--outlets-breakdown {
+  text-align: center;
+  margin: 0 auto 0.75rem;
+  max-width: 36rem;
+  text-decoration: underline;
+  text-decoration-color: rgba(141, 162, 190, 0.5);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.lpo-ps-wrap .lpo-ps-subtitle.lpo-ps-subtitle--outlets-breakdown strong {
+  font-weight: 700;
+  color: inherit;
+}
+
 .dashboard-heading .lpo-ps-window-days-row {
   display: flex;
   justify-content: flex-end;
@@ -3164,6 +3180,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-narrative-trends-list {
+  /* Overridden in px by PollSummaryPanel after measuring longest .lpo-ps-narrative-party-label */
+  --lpo-ps-narrative-party-label-w: 12.5rem;
   position: relative;
   box-sizing: border-box;
   /* Shrink to longest bullet line; cap at available width; center the card (text dir unchanged) */
@@ -3184,6 +3202,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
 .lpo-ps-narrative-trends-list li {
   margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .lpo-ps-narrative-trends-list li:last-child {
@@ -3210,7 +3230,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   color: #55657a;
 }
 
-/* Arrow + digits always LTR so ↗/↘ stays left of the number in RTL Hebrew */
+/* +/- + digits always LTR so the sign stays left of the number in RTL Hebrew */
 .lpo-ps-narrative-trends-list .lpo-ps-narrative-seat-delta-run {
   direction: ltr;
   unicode-bidi: isolate;
@@ -3230,24 +3250,54 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   font-weight: 700;
 }
 
+/*
+ * Party rows: icon | fixed party column | clause. Grid (not flex-wrap) keeps clause
+ * column start aligned across rows in both RTL and LTR; flex-wrap was letting the
+ * clause drop under the icon and zig-zag the deltas.
+ */
 .lpo-ps-narrative-trends-li-content {
-  display: inline;
+  display: grid;
+  grid-template-columns: min-content var(--lpo-ps-narrative-party-label-w) minmax(0, 1fr);
+  column-gap: 0.45rem;
+  align-items: baseline;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* ↗/↘ flush before seat magnitude in party clause (not beside the icon) */
+/* Outlier / prose bullets: single HTML span spans full row */
+.lpo-ps-narrative-trends-li-content > :only-child {
+  grid-column: 1 / -1;
+}
+
+.lpo-ps-narrative-trends-li-clause {
+  min-width: 0;
+}
+
+/* Fills grid track; track width = max measured label + pad (see PollSummaryPanel) */
+.lpo-ps-narrative-trends-list .lpo-ps-narrative-party-label {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  text-align: end;
+  box-sizing: border-box;
+}
+
+/* +/- flush before seat magnitude in party clause (not beside the icon) */
 .lpo-ps-narrative-trends-li-content .lpo-ps-narrative-party-trend-arrow {
   display: inline;
   margin-inline-end: 0;
   vertical-align: -0.04em;
 }
 
+/* Token is first in DOM: flush to line-start; gap after icon toward label/clause (RTL + LTR). */
 .lpo-ps-narrative-party-ico-wrap {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 0.1em;
   vertical-align: -0.28em;
-  margin-inline-start: 0.18em;
-  margin-inline-end: 0.04em;
+  margin-inline-start: 0;
+  margin-inline-end: 0.4em;
 }
 
 .lpo-ps-narrative-party-trend-arrow {
@@ -3311,6 +3361,15 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   color: #a8b4c4;
 }
 
+/* Fills .lpo-ps-row-bar-aligned / hero stack; keeps % widths and flex fill inside a definite box. */
+.lpo-ps-segbar {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .lpo-ps-bar-slot {
   position: relative;
   overflow: visible;
@@ -3324,11 +3383,13 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: #0a0e14;
+  /* Border must sit inside the slot width or the track overflows and the right edge looks cut (esp. 100px mobile bar). */
+  box-sizing: border-box;
 }
 
 .lpo-ps-seg {
   min-width: 0;
-  transition: width 0.2s ease;
+  transition: flex 0.2s ease, width 0.2s ease;
 }
 
 /* Match SEGMENT_COLORS (mappings.ts) / .lpo-threshold-fill */
@@ -3387,29 +3448,32 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   min-width: 0;
 }
 
-/* Media + blocs (fixed) | party icons (one horizontal scroll under the whole bloc). */
+/* Left: outlet + bloc bars | Right: one horizontal scroll for all party chip rows. Zebra: JS gradient on split. */
 .lpo-ps-unified-split {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  /* Shrink to fixed + parties width, then center in .lpo-ps-rows-unified (avoids left-heavy block). */
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
   min-width: 0;
-  /* No gap — zebra + row lines read as one band across both columns. */
   gap: 0;
   unicode-bidi: isolate;
+  background-repeat: no-repeat;
 }
 
 .lpo-ps-unified-fixed {
   flex: 0 0 auto;
-  min-width: 0;
+  /* min-content: never clip outlet + bar; min-width:0 let the column shrink and cut the bar at the seam. */
+  min-width: min-content;
   display: flex;
   flex-direction: column;
+  background: transparent;
 }
 
 .lpo-ps-unified-fixed-row {
+  display: flex;
+  align-items: center;
   padding: 0.5rem 0.65rem 0.55rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   box-sizing: border-box;
@@ -3417,7 +3481,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-unified-fixed-row--alt {
-  background: #1a222e;
+  background: transparent;
 }
 
 .lpo-ps-unified-fixed-row:hover {
@@ -3432,8 +3496,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   width: max-content;
   max-width: 100%;
   min-width: 0;
-  /* Vertically center media + bloc bar as a block; pairs with centered party strip. */
-  align-items: center;
+  align-items: flex-start;
 }
 
 .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
@@ -3441,29 +3504,26 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-unified-parties-wrap {
-  /* Shrink-wrap chip column — do not grow with leftover flex space (was blank to the right of icons). */
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  align-self: stretch;
   background: transparent;
   box-sizing: border-box;
 }
 
-/* Single scroll surface for all party rows; bar sits under the parties bloc. */
 .lpo-ps-unified-parties-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  width: max-content;
-  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
   scrollbar-width: thin;
-  padding-bottom: 8px;
+  /* No padding-bottom: it shrank the track vs the left column, threw off row sync/zebra, and sat the scrollbar below the fixed column. */
   box-sizing: border-box;
   background: transparent;
 }
@@ -3486,7 +3546,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   flex-direction: column;
   align-items: flex-start;
   width: max-content;
-  min-width: 0;
+  min-width: 100%;
   box-sizing: border-box;
   background: transparent;
 }
@@ -3508,10 +3568,21 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   background: transparent;
 }
 
-/* Optical nudge: chip stack slightly shorter than outlet row; aligns with centered row-main. */
+.lpo-ps-unified-parties-line--alt {
+  background: transparent;
+}
+
+.lpo-ps-unified-parties-line:hover {
+  background: rgba(58, 123, 213, 0.06);
+}
+
+.lpo-ps-unified-parties-line--alt:hover {
+  background: rgba(58, 123, 213, 0.08);
+}
+
 .lpo-ps-unified-parties-line .lpo-ps-chips,
 .lpo-ps-unified-parties-line .lpo-ps-combo-chips-placeholder {
-  transform: translateY(-1px);
+  flex-shrink: 0;
 }
 
 /* Larger screens: gutter (1) media+labels ↔ bloc bar via .lpo-ps-row-main gap (all poll rows). */
@@ -3533,7 +3604,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   }
 }
 
-/* Gutter (2) bloc bar ↔ party strip — both sides from 501px (501–639 had party-only padding before; fixed column needs matching inline-end). */
+/* Gutter (2) bloc bar ↔ party strip */
 @media (min-width: 501px) {
   .lpo-ps-unified-fixed-row {
     padding-inline-end: 0.95rem;
@@ -3572,18 +3643,6 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .lpo-ps-unified-parties-line {
     padding-inline-start: 1.85rem;
   }
-}
-
-.lpo-ps-unified-parties-line--alt {
-  background: #1a222e;
-}
-
-.lpo-ps-unified-parties-line:hover {
-  background: rgba(58, 123, 213, 0.06);
-}
-
-.lpo-ps-unified-parties-line--alt:hover {
-  background: rgba(58, 123, 213, 0.08);
 }
 
 .lpo-ps-combo-chips-placeholder {
@@ -3677,7 +3736,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .lpo-ps-row-name {
   display: block;
   font-weight: 700;
-  font-size: calc(0.88rem * 0.8);
+  /* Was 0.8× base; +10% → 0.88× (row height/zebra follow measured layout). */
+  font-size: calc(0.88rem * 0.88);
   color: #e1e8f2;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -3690,7 +3750,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   align-items: stretch;
   gap: 0.12rem;
   margin-top: 0.08rem;
-  font-size: calc(0.68rem * 0.8);
+  font-size: calc(0.68rem * 0.88);
   text-align: start;
   line-height: 1.25;
 }
@@ -3705,7 +3765,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
 .lpo-ps-row-date--prev {
   color: #6b7d94;
-  font-size: calc(0.64rem * 0.8);
+  font-size: 9.6px;
 }
 
 .lpo-ps-row-bar-stack {
@@ -3748,6 +3808,14 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     min-width: 100px;
     max-width: 100px;
   }
+
+  /* Keep bar column from flex-shrinking so the 100px bar + border stay inside layout (no clipped right cap). */
+  .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
+    flex: 0 0 100px;
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+  }
 }
 
 /* Unified 501–639: same indefinite-% issue as at 640+; use 200px cap (design max below large bump). */
@@ -3764,6 +3832,11 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     width: 100%;
     max-width: 100%;
   }
+}
+
+/* Nudge bloc bar slightly off the seam so the rounded cap and coalition numbers aren’t flush against the party column. */
+.lpo-ps-unified-fixed-row .lpo-ps-row-bar-aligned {
+  padding-inline-end: 4px;
 }
 
 .lpo-ps-row-nums-between {
@@ -3806,6 +3879,12 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   margin: 0;
   padding: 0 2px;
   width: max-content;
+}
+
+.lpo-ps-chips > li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .lpo-ps-chip {
@@ -3851,7 +3930,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-chip-delta {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 

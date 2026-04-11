@@ -95,8 +95,8 @@ function coOppBar(coal, opp, { mini = false } = {}) {
 
 function trendEl(n) {
   const x = Number(n)
-  if (x > 0) return `<span class="trend up">↗ ${fmtDelta(x)}</span>`
-  if (x < 0) return `<span class="trend down">↘ ${Math.abs(x)}</span>`
+  if (x > 0) return `<span class="trend up">+ ${x}</span>`
+  if (x < 0) return `<span class="trend down">- ${Math.abs(x)}</span>`
   return `<span class="trend flat">— 0</span>`
 }
 
@@ -274,7 +274,7 @@ export function buildPollBlocHtml(r) {
       const chips = (o.changedParties ?? [])
         .map(
           (cp) =>
-            `<span class="party-chip ${segmentPillClass(cp.segment)}">${escapeHtml(cp.party)} <span class="party-chip-d">${cp.delta > 0 ? '↗' : '↘'}${Math.abs(cp.delta)}</span></span>`,
+            `<span class="party-chip ${segmentPillClass(cp.segment)}">${escapeHtml(cp.party)} <span class="party-chip-d">${cp.delta > 0 ? '+' : '-'}${Math.abs(cp.delta)}</span></span>`,
         )
         .join('')
       const priorMeta = o.previous

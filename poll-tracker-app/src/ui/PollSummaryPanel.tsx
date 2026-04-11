@@ -21,6 +21,33 @@ import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
 const KNESSET = 120
 const MAJ_SEATS = 60
 
+/** Party column = max label width + pad so short names don’t leave a huge gutter before deltas. */
+const NARRATIVE_PARTY_LABEL_PAD_PX = 10
+
+function syncNarrativePartyLabelColumnWidth(ul: HTMLUListElement) {
+  const labels = ul.querySelectorAll<HTMLElement>('.lpo-ps-narrative-party-label')
+  if (labels.length === 0) {
+    ul.style.removeProperty('--lpo-ps-narrative-party-label-w')
+    return
+  }
+  const probe = document.createElement('span')
+  probe.className = 'lpo-ps-narrative-party-label'
+  probe.setAttribute('aria-hidden', 'true')
+  probe.style.cssText =
+    'position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;white-space:nowrap;width:max-content;max-width:none;box-sizing:border-box'
+  ul.appendChild(probe)
+  let maxW = 0
+  labels.forEach((label) => {
+    probe.innerHTML = label.innerHTML
+    maxW = Math.max(maxW, probe.scrollWidth)
+  })
+  ul.removeChild(probe)
+  ul.style.setProperty(
+    '--lpo-ps-narrative-party-label-w',
+    `${Math.ceil(maxW + NARRATIVE_PARTY_LABEL_PAD_PX)}px`,
+  )
+}
+
 function PsSegmentBar({
   coalition,
   opposition,
@@ -45,7 +72,6 @@ function PsSegmentBar({
   const a = mergeArabsWithOpposition ? 0 : aRaw
   const sum = c + o + a
   const denom = sum > 0 ? sum : 1
-  const wc = (c / denom) * 100
   const wa = (a / denom) * 100
   const wo = (o / denom) * 100
 
@@ -60,11 +86,12 @@ function PsSegmentBar({
       <div className="lpo-ps-bar-slot">
         <div className="lpo-ps-bar-track">
           {/* Same order as party breakdown multi-poll threshold: Opposition → Arabs → Coalition */}
-          <div className="lpo-ps-seg lpo-ps-seg--opp" style={{ width: `${wo}%` }} />
+          <div className="lpo-ps-seg lpo-ps-seg--opp" style={{ flex: `0 0 ${wo}%` }} />
           {!mergeArabsWithOpposition && a > 0 ? (
-            <div className="lpo-ps-seg lpo-ps-seg--arabs" style={{ width: `${wa}%` }} />
+            <div className="lpo-ps-seg lpo-ps-seg--arabs" style={{ flex: `0 0 ${wa}%` }} />
           ) : null}
-          <div className="lpo-ps-seg lpo-ps-seg--coal" style={{ width: `${wc}%` }} />
+          {/* flex-grow absorbs subpixel remainder so the track stays full and the rounded cap is not clipped */}
+          <div className="lpo-ps-seg lpo-ps-seg--coal" style={{ flex: '1 1 0' }} />
         </div>
         {showMajLine ? (
           <div
@@ -84,7 +111,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   const up = delta > 0
   return (
     <span className={`lpo-ps-delta ${up ? 'up' : 'down'}`}>
-      {up ? '↗' : '↘'}
+      {up ? '+' : '-'}
       {Math.abs(delta)}
     </span>
   )
@@ -232,7 +259,7 @@ function PollSummaryChipsStrip({
               />
             </div>
             <span className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`}>
-              {cp.delta > 0 ? '↗' : '↘'}
+              {cp.delta > 0 ? '+' : '-'}
               {Math.abs(cp.delta)}
             </span>
           </li>
@@ -263,13 +290,19 @@ export function PollSummaryPanel({
   const hasNarrativeTrends = trendBullets.length > 0
   const hasAnyChips = rows.some((r) => r.changedParties.length > 0)
   const chipRowIdsKey = rows.map((r) => r.current.pollId).join(',')
+  const unifiedSplitRef = useRef<HTMLDivElement | null>(null)
+  const narrativeTrendsListRef = useRef<HTMLUListElement | null>(null)
   const leftRowByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
   const partyLineByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
+  const trendBulletsKey = trendBullets.join('\n')
 
   useLayoutEffect(() => {
     if (!hasAnyChips) return
 
-    const matchRowHeights = () => {
+    const split = unifiedSplitRef.current
+    if (!split) return
+
+    const syncRowHeightsAndZebra = () => {
       for (const r of rows) {
         const id = r.current.pollId
         const left = leftRowByPollId.current.get(id)
@@ -279,23 +312,43 @@ export function PollSummaryPanel({
           line.style.minHeight = ''
         }
       }
+
+      const heightPxByPollId = new Map<number, number>()
       for (const r of rows) {
         const id = r.current.pollId
         const left = leftRowByPollId.current.get(id)
         const line = partyLineByPollId.current.get(id)
         if (left && line) {
-          const h = Math.max(left.offsetHeight, line.offsetHeight)
+          const h = Math.max(
+            Math.ceil(left.getBoundingClientRect().height),
+            Math.ceil(line.getBoundingClientRect().height),
+          )
+          heightPxByPollId.set(id, h)
           const px = `${h}px`
           left.style.minHeight = px
           line.style.minHeight = px
         }
       }
+
+      let acc = 0
+      const parts: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        const id = rows[i].current.pollId
+        const h = heightPxByPollId.get(id) ?? 0
+        if (h <= 0) continue
+        const color = i % 2 === 1 ? '#1a222e' : 'transparent'
+        parts.push(`${color} ${acc}px`, `${color} ${acc + h}px`)
+        acc += h
+      }
+      split.style.backgroundImage =
+        parts.length > 0 ? `linear-gradient(to bottom, ${parts.join(', ')})` : ''
     }
 
-    matchRowHeights()
+    syncRowHeightsAndZebra()
     const ro = new ResizeObserver(() => {
-      matchRowHeights()
+      syncRowHeightsAndZebra()
     })
+    ro.observe(split)
     for (const r of rows) {
       const left = leftRowByPollId.current.get(r.current.pollId)
       const line = partyLineByPollId.current.get(r.current.pollId)
@@ -304,6 +357,7 @@ export function PollSummaryPanel({
     }
     return () => {
       ro.disconnect()
+      split.style.backgroundImage = ''
       for (const r of rows) {
         const id = r.current.pollId
         const left = leftRowByPollId.current.get(id)
@@ -313,6 +367,25 @@ export function PollSummaryPanel({
       }
     }
   }, [hasAnyChips, chipRowIdsKey])
+
+  useLayoutEffect(() => {
+    if (!hasNarrativeTrends) return
+    const list = narrativeTrendsListRef.current
+    if (!list) return
+
+    const run = () => {
+      syncNarrativePartyLabelColumnWidth(list)
+    }
+    run()
+    const ro = new ResizeObserver(() => {
+      run()
+    })
+    ro.observe(list)
+    return () => {
+      ro.disconnect()
+      list.style.removeProperty('--lpo-ps-narrative-party-label-w')
+    }
+  }, [hasNarrativeTrends, trendBulletsKey, locale])
 
   if (rows.length === 0) {
     return (
@@ -386,9 +459,18 @@ export function PollSummaryPanel({
         ) : null}
       </section>
 
+      <p
+        className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
+        dir={locale === 'he' ? 'rtl' : 'ltr'}
+      >
+        <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
+        {t.pollSummaryOutletsBreakdownTail}
+      </p>
+
       <div className="lpo-ps-rows-unified">
         {hasAnyChips ? (
           <div
+            ref={unifiedSplitRef}
             className="lpo-ps-unified-split"
             dir="ltr"
             aria-label={t.pollSummaryRowsAria}
@@ -474,7 +556,7 @@ export function PollSummaryPanel({
           dir={locale === 'he' ? 'rtl' : 'ltr'}
           aria-label={t.pollSummaryNarrativeTrendsAria}
         >
-          <ul className="lpo-ps-narrative-trends-list">
+          <ul ref={narrativeTrendsListRef} className="lpo-ps-narrative-trends-list">
             {trendBullets.map((html, i) => (
               <PollSummaryNarrativeBulletLi
                 key={i}

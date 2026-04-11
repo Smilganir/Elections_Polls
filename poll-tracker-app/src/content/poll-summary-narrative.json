@@ -5,22 +5,22 @@
       "background": "The run-up to the October vote still dominates—budget passed, Knesset on recess until May—alongside steady security news and the Haredi draft debate, all of which can help explain why Likud and the far right look a little softer in some polls.",
       "trendBullets": [
         "<strong>Outliers</strong> – coalition moved vs mean direction – i24 News",
-        "<strong>Likud</strong>[[party:Likud]] – avg down 2.5 seats – 4 outlets vs prior",
-        "<strong>Yesh Atid</strong>[[party:Yesh Atid]] – avg down 1.8 seats – 4 outlets vs prior",
-        "<strong>Lieberman</strong> (<strong>Yisrael Beiteinu</strong>)[[party:Yisrael Beiteinu]] – avg up 1.7 seats – 3 outlets vs prior",
-        "<strong>Otzma Yehudit</strong>[[party:Otzma Yehudit]] – avg up 1.7 seats – 3 outlets vs prior",
-        "<strong>Bennett</strong>[[party:Bennett]] – avg up 1.3 seats – 4 outlets vs prior"
+        "[[party:Likud]]<span class=\"lpo-ps-narrative-party-label\"><strong>Likud</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down\">-</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--down\"><strong>2.5</strong></span></span> seats on average (across 4 polls)",
+        "[[party:Yesh Atid]]<span class=\"lpo-ps-narrative-party-label\"><strong>Yesh Atid</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down\">-</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--down\"><strong>1.8</strong></span></span> seats on average (across 4 polls)",
+        "[[party:Yisrael Beiteinu]]<span class=\"lpo-ps-narrative-party-label\"><strong>Yisrael Beiteinu</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up\">+</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--up\"><strong>1.7</strong></span></span> seats on average (across 3 polls)",
+        "[[party:Otzma Yehudit]]<span class=\"lpo-ps-narrative-party-label\"><strong>Otzma Yehudit</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up\">+</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--up\"><strong>1.7</strong></span></span> seats on average (across 3 polls)",
+        "[[party:Bennett]]<span class=\"lpo-ps-narrative-party-label\"><strong>Bennett</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up\">+</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--up\"><strong>1.3</strong></span></span> seats on average (across 4 polls)"
       ]
     },
     "he": {
       "background": "רקע: המרוץ לבחירות באוקטובר, תקציב שאושר, כנסת בפגרה עד מאי, וחדשות הביטחון יחד עם הדיון גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.",
       "trendBullets": [
         "<strong>חריגים</strong> – קואליציה נגד כיוון הממוצע – i24 news",
-        "<strong>הליכוד</strong>[[party:Likud]] – ממוצע ירידה 2.5 מנדטים – 4 ערוצים מול קודם",
-        "<strong>יש עתיד</strong>[[party:Yesh Atid]] – ממוצע ירידה 1.8 מנדטים – 4 ערוצים מול קודם",
-        "<strong>ליברמן</strong> (<strong>ישראל ביתנו</strong>)[[party:Yisrael Beiteinu]] – ממוצע עלייה 1.7 מנדטים – 3 ערוצים מול קודם",
-        "<strong>עוצמה יהודית</strong>[[party:Otzma Yehudit]] – ממוצע עלייה 1.7 מנדטים – 3 ערוצים מול קודם",
-        "<strong>בנט</strong>[[party:Bennett]] – ממוצע עלייה 1.3 מנדטים – 4 ערוצים מול קודם"
+        "[[party:Likud]]<span class=\"lpo-ps-narrative-party-label\"><strong>הליכוד</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down\">-</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--down\"><strong>2.5</strong></span></span> מנדטים בממוצע (על פני 4 סקרים)",
+        "[[party:Yesh Atid]]<span class=\"lpo-ps-narrative-party-label\"><strong>יש עתיד</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down\">-</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--down\"><strong>1.8</strong></span></span> מנדטים בממוצע (על פני 4 סקרים)",
+        "[[party:Yisrael Beiteinu]]<span class=\"lpo-ps-narrative-party-label\"><strong>ישראל ביתנו</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up\">+</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--up\"><strong>1.7</strong></span></span> מנדטים בממוצע (על פני 3 סקרים)",
+        "[[party:Otzma Yehudit]]<span class=\"lpo-ps-narrative-party-label\"><strong>עוצמה יהודית</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up\">+</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--up\"><strong>1.7</strong></span></span> מנדטים בממוצע (על פני 3 סקרים)",
+        "[[party:Bennett]]<span class=\"lpo-ps-narrative-party-label\"><strong>בנט</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--up\">+</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--up\"><strong>1.3</strong></span></span> מנדטים בממוצע (על פני 4 סקרים)"
       ]
     }
   }

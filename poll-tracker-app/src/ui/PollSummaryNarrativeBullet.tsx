@@ -6,7 +6,10 @@ import {
 } from '../config/mappings'
 import type { Segment } from '../types/data'
 import { IconWithFallback } from './IconWithFallback'
-import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
+import {
+  NARRATIVE_PARTY_LABEL_CLASS,
+  narrativeHtmlWithBlocHighlights,
+} from './pollNarrativeHtml'
 
 /** Map shorthand / display names in JSON tokens → canonical PARTY_ICON_MAP keys */
 const PARTY_TOKEN_ALIASES: Record<string, string> = {
@@ -53,6 +56,54 @@ function NarrativePartyIcon({
   )
 }
 
+const PARTY_LABEL_OPEN = `<span class="${NARRATIVE_PARTY_LABEL_CLASS}">`
+
+/** Split fixed-width party label + clause so flex can align deltas (see `.lpo-ps-narrative-party-label`). */
+function narrativeChunkToNodes(chunk: string, keyBase: string): ReactNode[] {
+  const t = chunk.trimStart()
+  if (!t.startsWith(PARTY_LABEL_OPEN)) {
+    return [
+      <span
+        key={keyBase}
+        dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(chunk) }}
+      />,
+    ]
+  }
+  const closeTag = '</span>'
+  const closeIdx = t.indexOf(closeTag, PARTY_LABEL_OPEN.length)
+  if (closeIdx === -1) {
+    return [
+      <span
+        key={keyBase}
+        dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(chunk) }}
+      />,
+    ]
+  }
+  const labelHtml = t.slice(0, closeIdx + closeTag.length)
+  let rest = t.slice(closeIdx + closeTag.length).trimStart()
+  const dash = /^[–-]\s*/u
+  if (!dash.test(rest)) {
+    return [
+      <span
+        key={keyBase}
+        dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(chunk) }}
+      />,
+    ]
+  }
+  rest = rest.replace(dash, '')
+  return [
+    <span
+      key={`${keyBase}-lab`}
+      dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(labelHtml) }}
+    />,
+    <span
+      key={`${keyBase}-clause`}
+      className="lpo-ps-narrative-trends-li-clause"
+      dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(rest) }}
+    />,
+  ]
+}
+
 function parseNarrativeBullet(
   html: string,
   displayParty: (partyKey: string) => string,
@@ -67,13 +118,9 @@ function parseNarrativeBullet(
   while ((m = re.exec(html)) !== null) {
     if (m.index > last) {
       const chunk = html.slice(last, m.index)
-      out.push(
-        <span
-          key={`${bulletIndex}-t-${part++}`}
-          // sanitized fragment; may include <strong> etc.
-          dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(chunk) }}
-        />,
-      )
+      if (chunk.length > 0) {
+        out.push(...narrativeChunkToNodes(chunk, `${bulletIndex}-t-${part++}`))
+      }
     }
     const resolved = resolvePartyKey(m[1])
     out.push(
@@ -87,17 +134,15 @@ function parseNarrativeBullet(
     last = re.lastIndex
   }
   if (last < html.length) {
-    out.push(
-      <span
-        key={`${bulletIndex}-t-${part++}`}
-        dangerouslySetInnerHTML={{ __html: narrativeHtmlWithBlocHighlights(html.slice(last)) }}
-      />,
-    )
+    const tail = html.slice(last)
+    if (tail.length > 0) {
+      out.push(...narrativeChunkToNodes(tail, `${bulletIndex}-t-${part++}`))
+    }
   }
   return out
 }
 
-/** One trend bullet: HTML + optional [[party:CanonicalOrAlias]] tokens (icon immediately after token position in source — place token right after the label). */
+/** One trend bullet: HTML + optional [[party:CanonicalOrAlias]] tokens. Place token first in the string so the icon sits at line-start (inline-end in RTL Hebrew, inline-start in LTR English). */
 export function PollSummaryNarrativeBulletLi({
   html,
   displayParty,

@@ -108,7 +108,7 @@ const SEAT_DELTA_RUN_CLASS = 'lpo-ps-narrative-seat-delta-run'
 
 function trendArrowSpanHtml(avg) {
   const cls = avg > 0 ? TREND_ARROW_CLASS_UP : TREND_ARROW_CLASS_DOWN
-  const ch = avg > 0 ? '↗' : '↘'
+  const ch = avg > 0 ? '+' : '-'
   return `<span class="${cls}">${ch}</span>`
 }
 
@@ -124,42 +124,46 @@ function seatDeltaLeadHtml(avg, n) {
 function partyTrendClauseEn(avg, n, nOutlets) {
   const seat = seatDeltaLeadHtml(avg, n)
   const scope = enPollsPhrase(nOutlets)
-  if (avg > 0) return `gaining ${seat} seats on average (${scope})`
-  return `losing ${seat} seats on average (${scope})`
+  return `${seat} seats on average (${scope})`
 }
 
 function partyTrendClauseHe(avg, n, nOutlets) {
   const seat = seatDeltaLeadHtml(avg, n)
   const scope = hePollsPhrase(nOutlets)
-  if (avg > 0) return `מוסיפה ${seat} מנדטים בממוצע (${scope})`
-  return `מאבדת ${seat} מנדטים בממוצע (${scope})`
+  return `${seat} מנדטים בממוצע (${scope})`
 }
 
-/** Party line with icon token; one token per party (skill). */
+const NARRATIVE_PARTY_LABEL_CLASS = 'lpo-ps-narrative-party-label'
+
+function partyLabelWrap(innerHtml) {
+  return `<span class="${NARRATIVE_PARTY_LABEL_CLASS}">${innerHtml}</span>`
+}
+
+/** Party line: [[party:…]] first (line-start icon in RTL/LTR); one token per party (skill). */
 function partyBulletEn(partyKey, avg, nOutlets) {
   const n = round1(Math.abs(avg))
   const clause = partyTrendClauseEn(avg, n, nOutlets)
   if (partyKey === 'Yisrael Beiteinu') {
-    return `<strong>Lieberman</strong> (<strong>Yisrael Beiteinu</strong>)[[party:Yisrael Beiteinu]] – ${clause}`
+    return `[[party:Yisrael Beiteinu]]${partyLabelWrap('<strong>Yisrael Beiteinu</strong>')} – ${clause}`
   }
   if (partyKey === "Bennett's Party") {
-    return `<strong>Bennett</strong>[[party:Bennett]] – ${clause}`
+    return `[[party:Bennett]]${partyLabelWrap('<strong>Bennett</strong>')} – ${clause}`
   }
   const name = partyDisplayEn(partyKey)
-  return `<strong>${name}</strong>[[party:${partyKey}]] – ${clause}`
+  return `[[party:${partyKey}]]${partyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
 }
 
 function partyBulletHe(partyKey, avg, nOutlets, partyHebByKey) {
   const n = round1(Math.abs(avg))
   const clause = partyTrendClauseHe(avg, n, nOutlets)
   if (partyKey === 'Yisrael Beiteinu') {
-    return `<strong>ליברמן</strong> (<strong>ישראל ביתנו</strong>)[[party:Yisrael Beiteinu]] – ${clause}`
+    return `[[party:Yisrael Beiteinu]]${partyLabelWrap('<strong>ישראל ביתנו</strong>')} – ${clause}`
   }
   if (partyKey === "Bennett's Party") {
-    return `<strong>בנט</strong>[[party:Bennett]] – ${clause}`
+    return `[[party:Bennett]]${partyLabelWrap('<strong>בנט</strong>')} – ${clause}`
   }
   const name = partyDisplayHe(partyKey, partyHebByKey)
-  return `<strong>${name}</strong>[[party:${partyKey}]] – ${clause}`
+  return `[[party:${partyKey}]]${partyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
 }
 
 function changedPartyOutletCount(rollingRowsRaw, partyKey) {

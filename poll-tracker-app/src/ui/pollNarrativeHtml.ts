@@ -15,8 +15,11 @@ const NARRATIVE_TREND_ARROW_CLASS_UP =
 const NARRATIVE_TREND_ARROW_CLASS_DOWN =
   'lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down'
 
-/** LTR isolate so ↗/↘ stays visually left of digits in RTL Hebrew (Unicode bidi). */
+/** LTR isolate so +/- stays visually left of digits in RTL Hebrew (Unicode bidi). */
 export const NARRATIVE_SEAT_DELTA_RUN_CLASS = 'lpo-ps-narrative-seat-delta-run'
+
+/** Fixed-width column for party name in trend bullets (tabular alignment of clause). */
+export const NARRATIVE_PARTY_LABEL_CLASS = 'lpo-ps-narrative-party-label'
 
 const ALLOWED_NARRATIVE_SPAN_CLASSES = new Set([
   NARRATIVE_SEAT_DELTA_RUN_CLASS,
@@ -24,7 +27,13 @@ const ALLOWED_NARRATIVE_SPAN_CLASSES = new Set([
   NARRATIVE_SEAT_SPAN_CLASS_UP,
   NARRATIVE_TREND_ARROW_CLASS_DOWN,
   NARRATIVE_TREND_ARROW_CLASS_UP,
+  NARRATIVE_PARTY_LABEL_CLASS,
 ])
+
+/** Wrap party display name for fixed-width column in trend bullets (must match sanitizer whitelist). */
+export function narrativePartyLabelWrap(innerHtml: string): string {
+  return `<span class="${NARRATIVE_PARTY_LABEL_CLASS}">${innerHtml}</span>`
+}
 
 /** Trend bullets: wrap rounded |Δ seats| for red/green styling (must match sanitizer whitelist). */
 export function narrativeSeatMagnitudeHtml(avg: number, magnitude: number): string {
@@ -32,14 +41,14 @@ export function narrativeSeatMagnitudeHtml(avg: number, magnitude: number): stri
   return `<span class="${cls}"><strong>${magnitude}</strong></span>`
 }
 
-/** ↗/↘ before the seat magnitude (same colors as `.lpo-ps-narrative-party-trend-arrow--up|down`). */
+/** +/- before the seat magnitude (same colors as `.lpo-ps-narrative-party-trend-arrow--up|down`). */
 export function narrativeTrendArrowHtml(avg: number): string {
   const cls = avg > 0 ? NARRATIVE_TREND_ARROW_CLASS_UP : NARRATIVE_TREND_ARROW_CLASS_DOWN
-  const ch = avg > 0 ? '↗' : '↘'
+  const ch = avg > 0 ? '+' : '-'
   return `<span class="${cls}">${ch}</span>`
 }
 
-/** Arrow immediately before seat number; wrapped in LTR isolate for correct order in RTL. */
+/** +/- immediately before seat number; wrapped in LTR isolate for correct order in RTL. */
 export function narrativeSeatDeltaLeadHtml(avg: number, magnitude: number): string {
   return `<span dir="ltr" class="${NARRATIVE_SEAT_DELTA_RUN_CLASS}">${narrativeTrendArrowHtml(avg)}${narrativeSeatMagnitudeHtml(avg, magnitude)}</span>`
 }

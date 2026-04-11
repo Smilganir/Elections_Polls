@@ -1743,7 +1743,7 @@ export function LatestPollsOverviewPage() {
                                   <>
                                     <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                     <span className={`lpo-change-badge ${coalChange > 0 ? 'up' : 'down'}`}>
-                                      {coalChange > 0 ? '↗' : '↘'}
+                                      {coalChange > 0 ? '+' : '-'}
                                       {Math.abs(coalChange)}
                                     </span>
                                   </>
@@ -1810,7 +1810,7 @@ export function LatestPollsOverviewPage() {
                                   <>
                                     <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                     <span className={`lpo-change-badge ${oppChange > 0 ? 'up' : 'down'}`}>
-                                      {oppChange > 0 ? '↗' : '↘'}
+                                      {oppChange > 0 ? '+' : '-'}
                                       {Math.abs(oppChange)}
                                     </span>
                                   </>
@@ -1819,7 +1819,7 @@ export function LatestPollsOverviewPage() {
                                   <>
                                     <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                     <span className={`lpo-change-badge ${combinedOppChange > 0 ? 'up' : 'down'}`}>
-                                      {combinedOppChange > 0 ? '↗' : '↘'}
+                                      {combinedOppChange > 0 ? '+' : '-'}
                                       {Math.abs(combinedOppChange)}
                                     </span>
                                   </>
@@ -1840,7 +1840,7 @@ export function LatestPollsOverviewPage() {
                                       <>
                                         <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                         <span className={`lpo-change-badge ${arabsChange > 0 ? 'up' : 'down'}`}>
-                                          {arabsChange > 0 ? '↗' : '↘'}
+                                          {arabsChange > 0 ? '+' : '-'}
                                           {Math.abs(arabsChange)}
                                         </span>
                                       </>
@@ -1940,7 +1940,7 @@ export function LatestPollsOverviewPage() {
                                       <>
                                         <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                         <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
-                                          {combinedOppChange > 0 ? '↗' : '↘'}
+                                          {combinedOppChange > 0 ? '+' : '-'}
                                           {Math.abs(combinedOppChange)}
                                         </span>
                                       </>
@@ -1949,7 +1949,7 @@ export function LatestPollsOverviewPage() {
                                       <>
                                         <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                         <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
-                                          {oppChange > 0 ? '↗' : '↘'}
+                                          {oppChange > 0 ? '+' : '-'}
                                           {Math.abs(oppChange)}
                                         </span>
                                       </>
@@ -1958,14 +1958,14 @@ export function LatestPollsOverviewPage() {
                                 </span>
                                 <span className="lpo-total coalition">
                                   <span className="lpo-total-label">{t.coalition}</span>
-                                  <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
+                                  <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '+' : '-'}{Math.abs(coalChange)}</span></> : null}</span>
                                 </span>
                               </>
                             ) : (
                               <>
                                 <span className="lpo-total coalition">
                                   <span className="lpo-total-label">{t.coalition}</span>
-                                  <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '↗' : '↘'}{Math.abs(coalChange)}</span></> : null}</span>
+                                  <span className="lpo-total-figures"><strong>{poll.coalitionTotal}</strong>{showDeltaVsPrior && coalChange !== null && coalChange !== 0 ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change ${coalChange > 0 ? 'up' : 'down'}`}>{coalChange > 0 ? '+' : '-'}{Math.abs(coalChange)}</span></> : null}</span>
                                 </span>
                                 <span className="lpo-total opposition">
                                   <span className="lpo-total-label">
@@ -1977,7 +1977,7 @@ export function LatestPollsOverviewPage() {
                                       <>
                                         <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                         <span className={`lpo-change ${combinedOppChange > 0 ? 'up' : 'down'}`}>
-                                          {combinedOppChange > 0 ? '↗' : '↘'}
+                                          {combinedOppChange > 0 ? '+' : '-'}
                                           {Math.abs(combinedOppChange)}
                                         </span>
                                       </>
@@ -1986,7 +1986,7 @@ export function LatestPollsOverviewPage() {
                                       <>
                                         <span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span>
                                         <span className={`lpo-change ${oppChange > 0 ? 'up' : 'down'}`}>
-                                          {oppChange > 0 ? '↗' : '↘'}
+                                          {oppChange > 0 ? '+' : '-'}
                                           {Math.abs(oppChange)}
                                         </span>
                                       </>
@@ -2160,7 +2160,7 @@ export function LatestPollsOverviewPage() {
                           <div
                             className="lpo-bar-end-meta"
                             style={{ left: `${barPct}%` }}
-                          ><strong className="lpo-votes" style={{ color: partyBarColor }}>{votes}</strong>{change ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change-badge ${change.direction}`}>{change.direction === 'up' ? '↗' : '↘'}{change.value}</span></> : null}</div>
+                          ><strong className="lpo-votes" style={{ color: partyBarColor }}>{votes}</strong>{change ? <><span className="lpo-vote-change-spacer" aria-hidden>{'\u0020'}</span><span className={`lpo-change-badge ${change.direction}`}>{change.direction === 'up' ? '+' : '-'}{change.value}</span></> : null}</div>
                         </div>
                       </div>
                     {showSparklines && partyHistory && partyHistory.length >= 2 && (

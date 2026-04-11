@@ -1,5 +1,5 @@
 import { PARTY_SEGMENT_BY_KEY } from '../config/mappings'
-import { narrativeSeatDeltaLeadHtml } from '../ui/pollNarrativeHtml'
+import { narrativePartyLabelWrap, narrativeSeatDeltaLeadHtml } from '../ui/pollNarrativeHtml'
 import type { AppLocale } from '../i18n/localeContext'
 import type { Segment } from '../types/data'
 import {
@@ -81,16 +81,10 @@ function partyTrendClause(locale: AppLocale, avg: number, n: number, nOutlets: n
   const seat = narrativeSeatDeltaLeadHtml(avg, n)
   if (locale === 'he') {
     const scope = hePollsPhrase(nOutlets)
-    if (avg > 0) {
-      return `מוסיפה ${seat} מנדטים בממוצע (${scope})`
-    }
-    return `מאבדת ${seat} מנדטים בממוצע (${scope})`
+    return `${seat} מנדטים בממוצע (${scope})`
   }
   const scope = enPollsPhrase(nOutlets)
-  if (avg > 0) {
-    return `gaining ${seat} seats on average (${scope})`
-  }
-  return `losing ${seat} seats on average (${scope})`
+  return `${seat} seats on average (${scope})`
 }
 
 function partyTrendBulletHtml(
@@ -103,24 +97,22 @@ function partyTrendBulletHtml(
   const n = round1(Math.abs(avg))
   const clause = partyTrendClause(locale, avg, n, nOutlets)
 
+  /* [[party:…]] first so icon sits at line-start (inline-end in RTL, inline-start in LTR). */
   if (partyKey === 'Yisrael Beiteinu') {
     if (locale === 'he') {
-      return `<strong>ליברמן</strong> (<strong>ישראל ביתנו</strong>)[[party:Yisrael Beiteinu]] – ${clause}`
+      return `[[party:Yisrael Beiteinu]]${narrativePartyLabelWrap('<strong>ישראל ביתנו</strong>')} – ${clause}`
     }
-    return `<strong>Lieberman</strong> (<strong>Yisrael Beiteinu</strong>)[[party:Yisrael Beiteinu]] – ${clause}`
+    return `[[party:Yisrael Beiteinu]]${narrativePartyLabelWrap('<strong>Yisrael Beiteinu</strong>')} – ${clause}`
   }
   if (partyKey === "Bennett's Party") {
     if (locale === 'he') {
-      return `<strong>בנט</strong>[[party:Bennett]] – ${clause}`
+      return `[[party:Bennett]]${narrativePartyLabelWrap('<strong>בנט</strong>')} – ${clause}`
     }
-    return `<strong>Bennett</strong>[[party:Bennett]] – ${clause}`
+    return `[[party:Bennett]]${narrativePartyLabelWrap('<strong>Bennett</strong>')} – ${clause}`
   }
 
   const name = displayParty(partyKey)
-  if (locale === 'he') {
-    return `<strong>${name}</strong>[[party:${partyKey}]] – ${clause}`
-  }
-  return `<strong>${name}</strong>[[party:${partyKey}]] – ${clause}`
+  return `[[party:${partyKey}]]${narrativePartyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
 }
 
 const MAX_BULLETS = 8

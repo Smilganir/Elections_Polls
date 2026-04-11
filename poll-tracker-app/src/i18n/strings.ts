@@ -39,6 +39,9 @@ export type UiStrings = {
   pollSummaryWindowDaysLabel: string
   pollSummaryWindowDaysAria: string
   pollSummarySubtitle: string
+  /** Bold lead + tail; shown above per-outlet rows in poll summary */
+  pollSummaryOutletsBreakdownLead: string
+  pollSummaryOutletsBreakdownTail: string
   pollSummaryNoOutlets: string
   pollSummaryHeroAria: string
   pollSummaryRowsAria: string
@@ -90,6 +93,9 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryWindowDaysLabel: 'Days in window',
     pollSummaryWindowDaysAria: 'Number of days to include in the poll summary rolling window',
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
+    pollSummaryOutletsBreakdownLead: 'Poll breakdown',
+    pollSummaryOutletsBreakdownTail:
+      ' (only parties with a seat change vs. the previous poll are shown)',
     pollSummaryNoOutlets: 'No polls from the last {n} days.',
     pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
     pollSummaryRowsAria: 'Latest poll per outlet in window',
@@ -136,6 +142,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryWindowDaysLabel: 'ימים בחלון',
     pollSummaryWindowDaysAria: 'מספר הימים האחורה לכלול בסיכום הסקרים',
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
+    pollSummaryOutletsBreakdownLead: 'פירוט הסקרים',
+    pollSummaryOutletsBreakdownTail: ' (מוצגות רק מפלגות שרשמו שינוי מול סקר קודם)',
     pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
     pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
