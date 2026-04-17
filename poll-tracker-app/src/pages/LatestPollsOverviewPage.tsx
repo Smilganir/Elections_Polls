@@ -23,11 +23,7 @@ import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
-import {
-  getLivePollSummaryBackground,
-  resolvePollSummaryNarrativeAsOfDisplay,
-} from '../content/pickPollSummaryNarrative'
-import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
+import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
 import { buildRollingWindowReport } from '../lib/pollRollingWindow'
 import { PollSummaryPanel } from '../ui/PollSummaryPanel'
 type PollColumn = {
@@ -953,29 +949,6 @@ export function LatestPollsOverviewPage() {
     [locale],
   )
 
-  const pollSummaryNarrativeAsOfDisplay = useMemo(
-    () => resolvePollSummaryNarrativeAsOfDisplay(pollRollingReport.rows, locale),
-    [pollRollingReport.rows, locale],
-  )
-
-  const pollSummaryTrendBullets = useMemo(
-    () =>
-      generatePollSummaryTrendBullets(pollRollingReport.rows, pollRollingReport.summary, {
-        locale,
-        windowDays: pollSummaryWindowDays,
-        displayMediaOutlet,
-        displayParty,
-      }),
-    [
-      pollRollingReport.rows,
-      pollRollingReport.summary,
-      locale,
-      pollSummaryWindowDays,
-      displayMediaOutlet,
-      displayParty,
-    ],
-  )
-
   const minPollDateByOutlet = useMemo(() => {
     const m = new Map<string, string>()
     for (const p of polls) {
@@ -1614,7 +1587,6 @@ export function LatestPollsOverviewPage() {
       ) : showPollSummary ? (
         <PollSummaryPanel
           rows={pollRollingReport.rows}
-          summary={pollRollingReport.summary}
           locale={locale}
           t={t}
           maxStaleDays={pollSummaryWindowDays}
@@ -1622,8 +1594,6 @@ export function LatestPollsOverviewPage() {
           displayMediaOutlet={displayMediaOutlet}
           displayParty={displayParty}
           narrativeBackground={pollSummaryNarrativeBackground}
-          narrativeTrendBullets={pollSummaryTrendBullets}
-          narrativeAsOfDisplay={pollSummaryNarrativeAsOfDisplay}
         />
       ) : visiblePolls.length === 0 ? (
         <p style={{ color: '#6b829e' }}>{t.noPolls}</p>

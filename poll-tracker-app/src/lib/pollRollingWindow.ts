@@ -164,6 +164,11 @@ export function buildRollingWindowReport(
     return b.current.pollId - a.current.pollId
   })
 
+  return { rows, summary: summaryFromRollingRows(rows) }
+}
+
+/** Cross-outlet averages + deltas for an arbitrary row set (e.g. after outlet filter). */
+export function summaryFromRollingRows(rows: RollingWindowRow[]): RollingWindowSummary {
   const n = Math.max(1, rows.length)
   const avgCoalition = rows.reduce((s, r) => s + r.current.coalitionTotal, 0) / n
   const avgOpposition = rows.reduce((s, r) => s + r.current.oppositionTotal, 0) / n
@@ -187,7 +192,7 @@ export function buildRollingWindowReport(
           0,
         ) / nv
 
-  const summary: RollingWindowSummary = {
+  return {
     n: rows.length,
     avgCoalition: round1(avgCoalition),
     avgOpposition: round1(avgOpposition),
@@ -205,6 +210,4 @@ export function buildRollingWindowReport(
       ? round1(avgOppositionPlusArabs - prevAvgOppositionPlusArabs)
       : 0,
   }
-
-  return { rows, summary }
 }

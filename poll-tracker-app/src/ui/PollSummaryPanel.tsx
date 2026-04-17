@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { useLayoutEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
@@ -12,8 +12,10 @@ import {
   type ChangedParty,
   type RollingPoll,
   type RollingWindowRow,
-  type RollingWindowSummary,
+  summaryFromRollingRows,
 } from '../lib/pollRollingWindow'
+import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
+import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSummaryNarrative'
 import { IconWithFallback } from './IconWithFallback'
 import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
 import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
@@ -119,7 +121,6 @@ function DeltaBadge({ delta }: { delta: number }) {
 
 type PollSummaryPanelProps = {
   rows: RollingWindowRow[]
-  summary: RollingWindowSummary
   locale: AppLocale
   t: UiStrings
   maxStaleDays: number
@@ -128,8 +129,100 @@ type PollSummaryPanelProps = {
   displayParty: (partyKey: string) => string
   /** From poll-summary-narrative.json: general line below hero; HTML bullets below rows */
   narrativeBackground?: string
-  narrativeTrendBullets?: string[]
-  narrativeAsOfDisplay?: string
+}
+
+function FilterIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M1.5 4h13M4 8h8M6.5 12h3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function OutletFilterDropdown({
+  allOutlets,
+  excludedOutlets,
+  onToggle,
+  onClear,
+  locale,
+  displayMediaOutlet,
+}: {
+  allOutlets: string[]
+  excludedOutlets: Set<string>
+  onToggle: (outlet: string) => void
+  onClear: () => void
+  locale: AppLocale
+  displayMediaOutlet: (outlet: string) => string
+}) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const hiddenCount = excludedOutlets.size
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div className="lpo-ps-outlet-filter" ref={wrapRef}>
+      <button
+        className={`lpo-ps-outlet-filter-btn${hiddenCount > 0 ? ' lpo-ps-outlet-filter-btn--active' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        title={locale === 'he' ? 'סנן ערוצים' : 'Filter outlets'}
+      >
+        <FilterIcon />
+        {hiddenCount > 0 && (
+          <span className="lpo-ps-outlet-filter-badge">{hiddenCount}</span>
+        )}
+      </button>
+      {open && (
+        <div className="lpo-ps-outlet-filter-panel">
+          {hiddenCount > 0 && (
+            <button className="lpo-ps-outlet-filter-all" onClick={onClear}>
+              {locale === 'he' ? 'הצג הכל' : 'Show all'}
+            </button>
+          )}
+          {allOutlets.map((outlet) => {
+            const included = !excludedOutlets.has(outlet)
+            return (
+              <label key={outlet} className="lpo-ps-outlet-filter-item">
+                <input
+                  type="checkbox"
+                  checked={included}
+                  onChange={() => onToggle(outlet)}
+                />
+                <span className="lpo-ps-outlet-filter-ico">
+                  <IconWithFallback
+                    src={MEDIA_ICON_MAP[outlet]}
+                    label={displayMediaOutlet(outlet)}
+                  />
+                </span>
+                <span className="lpo-ps-outlet-filter-name">{displayMediaOutlet(outlet)}</span>
+              </label>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function PollSummaryRowMain({
@@ -271,7 +364,6 @@ function PollSummaryChipsStrip({
 
 export function PollSummaryPanel({
   rows,
-  summary,
   locale,
   t,
   maxStaleDays,
@@ -279,22 +371,56 @@ export function PollSummaryPanel({
   displayMediaOutlet,
   displayParty,
   narrativeBackground = '',
-  narrativeTrendBullets = [],
-  narrativeAsOfDisplay,
 }: PollSummaryPanelProps) {
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY'
-  const hasPrior = summary.nWithPrior > 0
   const bgText = narrativeBackground.trim()
-  const trendBullets = narrativeTrendBullets
+
+  const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
+  const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
+  const visibleRows = useMemo(
+    () =>
+      excludedOutlets.size === 0
+        ? rows
+        : rows.filter((r) => !excludedOutlets.has(r.current.mediaOutlet)),
+    [rows, excludedOutlets],
+  )
+  const toggleOutlet = useCallback((outlet: string) => {
+    setExcludedOutlets((prev) => {
+      const next = new Set(prev)
+      if (next.has(outlet)) next.delete(outlet)
+      else next.add(outlet)
+      return next
+    })
+  }, [])
+  const clearExcluded = useCallback(() => setExcludedOutlets(new Set()), [])
+
+  const summary = useMemo(() => summaryFromRollingRows(visibleRows), [visibleRows])
+  const trendBullets = useMemo(
+    () =>
+      generatePollSummaryTrendBullets(visibleRows, summary, {
+        locale,
+        windowDays: maxStaleDays,
+        displayMediaOutlet,
+        displayParty,
+      }),
+    [visibleRows, summary, locale, maxStaleDays, displayMediaOutlet, displayParty],
+  )
+  const narrativeAsOfDisplay = useMemo(() => {
+    if (visibleRows.length === 0) return undefined
+    return resolvePollSummaryNarrativeAsOfDisplay(visibleRows, locale)
+  }, [visibleRows, locale])
+
+  const hasPrior = summary.nWithPrior > 0
   const hasNarrativeTop = Boolean(narrativeAsOfDisplay) || Boolean(bgText)
   const hasNarrativeTrends = trendBullets.length > 0
-  const hasAnyChips = rows.some((r) => r.changedParties.length > 0)
-  const chipRowIdsKey = rows.map((r) => r.current.pollId).join(',')
+  const trendBulletsKey = trendBullets.join('\n')
+
+  const hasAnyChips = visibleRows.some((r) => r.changedParties.length > 0)
+  const chipRowIdsKey = visibleRows.map((r) => r.current.pollId).join(',')
   const unifiedSplitRef = useRef<HTMLDivElement | null>(null)
   const narrativeTrendsListRef = useRef<HTMLUListElement | null>(null)
   const leftRowByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
   const partyLineByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
-  const trendBulletsKey = trendBullets.join('\n')
 
   useLayoutEffect(() => {
     if (!hasAnyChips) return
@@ -303,7 +429,7 @@ export function PollSummaryPanel({
     if (!split) return
 
     const syncRowHeightsAndZebra = () => {
-      for (const r of rows) {
+      for (const r of visibleRows) {
         const id = r.current.pollId
         const left = leftRowByPollId.current.get(id)
         const line = partyLineByPollId.current.get(id)
@@ -314,7 +440,7 @@ export function PollSummaryPanel({
       }
 
       const heightPxByPollId = new Map<number, number>()
-      for (const r of rows) {
+      for (const r of visibleRows) {
         const id = r.current.pollId
         const left = leftRowByPollId.current.get(id)
         const line = partyLineByPollId.current.get(id)
@@ -332,8 +458,8 @@ export function PollSummaryPanel({
 
       let acc = 0
       const parts: string[] = []
-      for (let i = 0; i < rows.length; i++) {
-        const id = rows[i].current.pollId
+      for (let i = 0; i < visibleRows.length; i++) {
+        const id = visibleRows[i].current.pollId
         const h = heightPxByPollId.get(id) ?? 0
         if (h <= 0) continue
         const color = i % 2 === 1 ? '#1a222e' : 'transparent'
@@ -349,7 +475,7 @@ export function PollSummaryPanel({
       syncRowHeightsAndZebra()
     })
     ro.observe(split)
-    for (const r of rows) {
+    for (const r of visibleRows) {
       const left = leftRowByPollId.current.get(r.current.pollId)
       const line = partyLineByPollId.current.get(r.current.pollId)
       if (left) ro.observe(left)
@@ -358,7 +484,7 @@ export function PollSummaryPanel({
     return () => {
       ro.disconnect()
       split.style.backgroundImage = ''
-      for (const r of rows) {
+      for (const r of visibleRows) {
         const id = r.current.pollId
         const left = leftRowByPollId.current.get(id)
         const line = partyLineByPollId.current.get(id)
@@ -396,6 +522,8 @@ export function PollSummaryPanel({
       </div>
     )
   }
+
+  const showEmptyFilterMsg = visibleRows.length === 0
 
   return (
     <div className="lpo-ps-wrap">
@@ -459,16 +587,30 @@ export function PollSummaryPanel({
         ) : null}
       </section>
 
-      <p
-        className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
-        dir={locale === 'he' ? 'rtl' : 'ltr'}
-      >
-        <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
-        {t.pollSummaryOutletsBreakdownTail}
-      </p>
+      <div className="lpo-ps-subtitle-bar" dir="ltr">
+        <OutletFilterDropdown
+          allOutlets={allOutletKeys}
+          excludedOutlets={excludedOutlets}
+          onToggle={toggleOutlet}
+          onClear={clearExcluded}
+          locale={locale}
+          displayMediaOutlet={displayMediaOutlet}
+        />
+        <p
+          className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
+        >
+          <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
+          {t.pollSummaryOutletsBreakdownTail}
+        </p>
+      </div>
 
       <div className="lpo-ps-rows-unified">
-        {hasAnyChips ? (
+        {showEmptyFilterMsg ? (
+          <p className="lpo-ps-empty" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+            {locale === 'he' ? 'לא נבחרו ערוצים' : 'No outlets selected'}
+          </p>
+        ) : hasAnyChips ? (
           <div
             ref={unifiedSplitRef}
             className="lpo-ps-unified-split"
@@ -476,7 +618,7 @@ export function PollSummaryPanel({
             aria-label={t.pollSummaryRowsAria}
           >
             <div className="lpo-ps-unified-fixed" role="presentation">
-              {rows.map(({ current, previous }, rowIdx) => (
+              {visibleRows.map(({ current, previous }, rowIdx) => (
                 <div
                   key={current.pollId}
                   ref={(el) => {
@@ -506,7 +648,7 @@ export function PollSummaryPanel({
             >
               <div className="lpo-ps-unified-parties-scroll">
                 <div className="lpo-ps-unified-parties-track">
-                  {rows.map(({ current, changedParties }, rowIdx) => (
+                  {visibleRows.map(({ current, changedParties }, rowIdx) => (
                     <div
                       key={current.pollId}
                       ref={(el) => {
@@ -530,7 +672,7 @@ export function PollSummaryPanel({
           </div>
         ) : (
           <ul className="lpo-ps-rows" aria-label={t.pollSummaryRowsAria}>
-            {rows.map(({ current, previous }, rowIdx) => (
+            {visibleRows.map(({ current, previous }, rowIdx) => (
               <li
                 key={current.pollId}
                 className={`lpo-ps-row${rowIdx % 2 === 1 ? ' lpo-ps-row--alt' : ''}`}
