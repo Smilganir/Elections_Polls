@@ -3,14 +3,14 @@ import type { AppLocale } from '../i18n/localeContext'
 import type { RollingWindowRow } from './pollRollingWindow'
 
 /**
- * Editorial frame — keep aligned with DEFAULT_BACKGROUND_* in scripts/build-poll-summary-narrative.mjs
- * and locales in poll-summary-narrative.json (sheet sync / drafts).
+ * Fallback hero text when `poll-summary-narrative.json` has no `background` for the locale.
+ * Keep aligned with DEFAULT_BACKGROUND_* in scripts/build-poll-summary-narrative.mjs.
  */
 export const EDITORIAL_BACKGROUND_EN =
-  'The run-up to the October vote still dominates—budget passed, Knesset on recess until May—alongside steady security news and the Haredi draft debate, all of which can help explain why Likud and the far right look a little softer in some polls.'
+  'The countdown toward the October 2026 vote, a passed state budget and a Knesset heading into spring recess, alongside ongoing security news and the Haredi conscription debate—all may help explain a slight softening for Likud and the right in some of the polls.'
 
 export const EDITORIAL_BACKGROUND_HE =
-  'רקע: המרוץ לבחירות באוקטובר, תקציב שאושר, כנסת בפגרה עד מאי, וחדשות הביטחון יחד עם הדיון גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.'
+  'רקע: ספירה לאחור לבחירות באוקטובר 2026, תקציב המדינה שאושר והכנסת לפני פגרת אביב, לצד חדשות ביטחון והמחלוקת על גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.'
 
 function maxIsoDateInRollingRows(rows: RollingWindowRow[]): string | null {
   if (rows.length === 0) return null
@@ -22,11 +22,16 @@ function maxIsoDateInRollingRows(rows: RollingWindowRow[]): string | null {
   return max
 }
 
+/** Latest poll date (ISO `YYYY-MM-DD`…) inside the rolling window; used with JSON `asOfUtc` fallback. */
+export function rollingWindowLatestPollDateIso(rows: RollingWindowRow[]): string | null {
+  return maxIsoDateInRollingRows(rows)
+}
+
 export function formatNarrativeSheetDateDisplay(iso: string, locale: AppLocale): string {
   return dayjs(iso).format(locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY')
 }
 
-/** Hero background under the aggregate bar: editorial frame only (locale). Sheet/window context stays in subtitle + as-of line. */
+/** Fallback hero background when JSON `locales.*.background` is empty (bundled defaults). */
 export function generatePollSummaryBackground(locale: AppLocale): string {
   return locale === 'he' ? EDITORIAL_BACKGROUND_HE : EDITORIAL_BACKGROUND_EN
 }

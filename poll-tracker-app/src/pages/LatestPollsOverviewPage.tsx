@@ -23,7 +23,10 @@ import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
-import { generatePollSummaryBackground, rollingWindowLatestDateDisplay } from '../lib/generatePollSummaryHeroNarrative'
+import {
+  getLivePollSummaryBackground,
+  resolvePollSummaryNarrativeAsOfDisplay,
+} from '../content/pickPollSummaryNarrative'
 import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
 import { buildRollingWindowReport } from '../lib/pollRollingWindow'
 import { PollSummaryPanel } from '../ui/PollSummaryPanel'
@@ -946,12 +949,12 @@ export function LatestPollsOverviewPage() {
   )
 
   const pollSummaryNarrativeBackground = useMemo(
-    () => generatePollSummaryBackground(locale),
+    () => getLivePollSummaryBackground(locale),
     [locale],
   )
 
   const pollSummaryNarrativeAsOfDisplay = useMemo(
-    () => rollingWindowLatestDateDisplay(pollRollingReport.rows, locale),
+    () => resolvePollSummaryNarrativeAsOfDisplay(pollRollingReport.rows, locale),
     [pollRollingReport.rows, locale],
   )
 

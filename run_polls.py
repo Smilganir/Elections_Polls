@@ -14,16 +14,40 @@ reputation), even with curl_cffi TLS impersonation. Practical options:
 """
 import json
 import os
+import time
+from io import StringIO
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import requests
-from io import StringIO
-import numpy as np
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 _SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+# Google sometimes returns 5xx on values.clear / values.update; retry before failing CI.
+_RETRYABLE_SHEETS_HTTP = frozenset({429, 500, 502, 503, 504})
+
+
+def _execute_sheets(request, *, what: str, max_attempts: int = 6) -> object:
+    """Call request.execute() with backoff on rate limits and transient server errors."""
+    delay = 1.5
+    for attempt in range(max_attempts):
+        try:
+            return request.execute()
+        except HttpError as e:
+            status = getattr(e.resp, 'status', None) or 0
+            last = attempt == max_attempts - 1
+            if status not in _RETRYABLE_SHEETS_HTTP or last:
+                raise
+            print(
+                f"  {what}: HTTP {status} (retryable). "
+                f'Sleeping {delay:.1f}s ({attempt + 1}/{max_attempts}) ...'
+            )
+            time.sleep(delay)
+            delay = min(60.0, delay * 2)
 
 
 def _load_credentials():
@@ -72,6 +96,42 @@ POLL_ID_1_DATA = {
     "Bennett's Party": [4], "Yashar!": [0], "The Reservists": [4],
     "Joint Arab List": [0]
 }
+
+
+def _apply_ch12_558_instead_of_559_wide(data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    One-time ETL from themadad → Sheets: חדשות 12 poll 559 on 2026-04-16 is superseded by 558.
+
+    If a scraped row for poll 558 exists for that outlet, copy its party / pollster /
+    respondents onto the 2026-04-16 row, set Poll ID to 558, and drop the other 558 row(s).
+    If poll 558 is missing from the scrape, drop the 559 row only.
+    """
+    out = data_df.copy()
+    mo = out['Media Outlet'].astype(str).str.strip()
+    day = pd.to_datetime(out['Date'], errors='coerce', dayfirst=True).dt.strftime('%Y-%m-%d')
+    bad = (mo == 'חדשות 12') & (out['Poll ID'] == 559) & (day == '2026-04-16')
+    if not bad.any():
+        return out
+    bad_ix = out.index[bad].tolist()
+    good = (mo == 'חדשות 12') & (out['Poll ID'] == 558)
+    if good.any():
+        src = out.loc[good].sort_values('Date', ascending=False).iloc[0]
+        copy_cols = ['Respondents', 'Pollster', *VALUE_VARS]
+        for ix in bad_ix:
+            out.loc[ix, 'Poll ID'] = 558
+            for c in copy_cols:
+                out.loc[ix, c] = src[c]
+        good_ix = out.index[good].tolist()
+        drop_ix = [i for i in good_ix if i not in bad_ix]
+        if drop_ix:
+            out = out.drop(index=drop_ix)
+        print(
+            '  One-time fix: Channel 12 (N12) — 2026-04-16 row now uses poll 558 from themadad; '
+            'removed duplicate 559 / spare 558 wide row(s).',
+        )
+        return out
+    print('  One-time fix: Channel 12 (N12) — dropped poll 559 (2026-04-16); no poll 558 in scrape.')
+    return out.loc[~bad].copy()
 
 
 def _request_proxies() -> dict | None:
@@ -163,6 +223,7 @@ def max_poll_id_from_html(html: str) -> int | None:
 
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
+    data_df = _apply_ch12_558_instead_of_559_wide(data_df)
 
     data_df = data_df[data_df['Poll ID'] > 1].copy()
 
@@ -211,6 +272,7 @@ def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
 
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
+    data_df = _apply_ch12_558_instead_of_559_wide(data_df)
 
     data_df = data_df[data_df['Poll ID'] > 1].copy()
 
@@ -301,25 +363,41 @@ def upload():
 
     # Clear existing data before writing
     print("Clearing existing sheet data ...")
-    sheet.values().clear(spreadsheetId=SPREADSHEET_ID,
-                         range="'Elections Polls Data'!A:Z").execute()
-    sheet.values().clear(spreadsheetId=SPREADSHEET_ID,
-                         range="'UnpivotData'!A:Z").execute()
+    _execute_sheets(
+        sheet.values().clear(
+            spreadsheetId=SPREADSHEET_ID, range="'Elections Polls Data'!A:Z"
+        ),
+        what="Clear 'Elections Polls Data'",
+    )
+    _execute_sheets(
+        sheet.values().clear(spreadsheetId=SPREADSHEET_ID, range="'UnpivotData'!A:Z"),
+        what="Clear 'UnpivotData'",
+    )
 
     # Upload wide data
     print(f"Uploading wide data to {ORIGINAL_SHEET_RANGE} ...")
-    sheet.values().update(
-        spreadsheetId=SPREADSHEET_ID, range=ORIGINAL_SHEET_RANGE,
-        valueInputOption='USER_ENTERED', body={'values': orig}
-    ).execute()
+    _execute_sheets(
+        sheet.values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=ORIGINAL_SHEET_RANGE,
+            valueInputOption='USER_ENTERED',
+            body={'values': orig},
+        ),
+        what='Update wide sheet',
+    )
     print("  Wide data done.")
 
     # Upload unpivot data
     print(f"Uploading unpivot data to {UNPIVOT_SHEET_RANGE} ...")
-    result = sheet.values().update(
-        spreadsheetId=SPREADSHEET_ID, range=UNPIVOT_SHEET_RANGE,
-        valueInputOption='USER_ENTERED', body={'values': unpivot}
-    ).execute()
+    result = _execute_sheets(
+        sheet.values().update(
+            spreadsheetId=SPREADSHEET_ID,
+            range=UNPIVOT_SHEET_RANGE,
+            valueInputOption='USER_ENTERED',
+            body={'values': unpivot},
+        ),
+        what='Update unpivot sheet',
+    )
     print(f"  Unpivot done. Cells updated: {result.get('updatedCells')}")
     print("\nAll done!")
 

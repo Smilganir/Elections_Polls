@@ -6,7 +6,7 @@
  * per-outlet lines; no per-party bullets for Arab-segment lists (treat list-to-list moves as
  * structural). Outliers vs mean direction + non-Arab party averages only.
  *
- * Background is a fixed editorial one-liner—revise DEFAULT_BACKGROUND_* when the public story shifts.
+ * Background defaults mirror TS fallbacks; the app prefers JSON `locales.*.background` when set—revise DEFAULT_BACKGROUND_* when the public story shifts.
  */
 import fs from 'fs'
 import path from 'path'
@@ -36,9 +36,9 @@ const HEBREW_PARTY_OVERRIDES = {
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
 const DEFAULT_BACKGROUND_EN =
-  'The run-up to the October vote still dominates—budget passed, Knesset on recess until May—alongside steady security news and the Haredi draft debate, all of which can help explain why Likud and the far right look a little softer in some polls.'
+  'The countdown toward the October 2026 vote, a passed state budget and a Knesset heading into spring recess, alongside ongoing security news and the Haredi conscription debate—all may help explain a slight softening for Likud and the right in some of the polls.'
 const DEFAULT_BACKGROUND_HE =
-  'רקע: המרוץ לבחירות באוקטובר, תקציב שאושר, כנסת בפגרה עד מאי, וחדשות הביטחון יחד עם הדיון גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.'
+  'רקע: ספירה לאחור לבחירות באוקטובר 2026, תקציב המדינה שאושר והכנסת לפני פגרת אביב, לצד חדשות ביטחון והמחלוקת על גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.'
 
 function round1(x) {
   return Math.round(x * 10) / 10

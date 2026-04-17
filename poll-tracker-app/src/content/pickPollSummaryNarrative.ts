@@ -1,10 +1,15 @@
 import type { AppLocale } from '../i18n/localeContext'
+import {
+  formatNarrativeSheetDateDisplay,
+  generatePollSummaryBackground,
+  rollingWindowLatestPollDateIso,
+} from '../lib/generatePollSummaryHeroNarrative'
+import type { RollingWindowRow } from '../lib/pollRollingWindow'
 import doc from './poll-summary-narrative.json'
 
 /**
- * Draft / tooling: reads `poll-summary-narrative.json` for sync scripts and parity checks.
- * The live hero paragraph uses `generatePollSummaryBackground(locale)` only; sheet date is the separate as-of line.
- * Trend bullets are always in-app (`generatePollSummaryTrendBullets`).
+ * Live hero reads `locales.*.background` from `poll-summary-narrative.json` when non-empty;
+ * otherwise `generatePollSummaryBackground` (TS fallbacks). Trend bullets stay in-app only.
  */
 export type PollSummaryNarrativePick = {
   background: string
@@ -16,20 +21,41 @@ function localeBlock(locale: AppLocale) {
   return locale === 'he' ? loc.he : loc.en
 }
 
-/**
- * JSON pick for scripts or future tooling — not wired into PollSummaryPanel in production.
- * When refreshing the editorial frame, update `EDITORIAL_BACKGROUND_*` in
- * `generatePollSummaryHeroNarrative.ts` and mirror in `build-poll-summary-narrative.mjs` DEFAULT_BACKGROUND_*.
- */
-export function pickPollSummaryNarrative(locale: AppLocale): PollSummaryNarrativePick | null {
+function narrativeAsOfIsoFromJson(): string | undefined {
+  const raw = typeof doc.asOfUtc === 'string' ? doc.asOfUtc.trim() : ''
+  return raw || undefined
+}
+
+/** Hero paragraph for PollSummaryPanel: JSON first, then bundled editorial defaults. */
+export function getLivePollSummaryBackground(locale: AppLocale): string {
   const primary = localeBlock(locale)
   const fallback = localeBlock('en')
-  const background =
-    (primary?.background ?? '').trim() || (fallback?.background ?? '').trim()
-  if (!background) return null
-  const asOf = typeof doc.asOfUtc === 'string' ? doc.asOfUtc.trim() : ''
+  const fromJson = (primary?.background ?? '').trim() || (fallback?.background ?? '').trim()
+  if (fromJson) return fromJson
+  return generatePollSummaryBackground(locale)
+}
+
+/**
+ * “Context as of …” line: latest poll date in the rolling window when present; otherwise
+ * `asOfUtc` from narrative JSON (e.g. after sheet sync before polls load).
+ */
+export function resolvePollSummaryNarrativeAsOfDisplay(
+  rows: RollingWindowRow[],
+  locale: AppLocale,
+): string | undefined {
+  const iso = rollingWindowLatestPollDateIso(rows) ?? narrativeAsOfIsoFromJson()
+  if (!iso) return undefined
+  return formatNarrativeSheetDateDisplay(iso, locale)
+}
+
+/**
+ * JSON pick for tooling / tests — same background resolution as `getLivePollSummaryBackground`.
+ */
+export function pickPollSummaryNarrative(locale: AppLocale): PollSummaryNarrativePick | null {
+  const bg = getLivePollSummaryBackground(locale)
+  if (!bg.trim()) return null
   return {
-    background,
-    asOfUtc: asOf || undefined,
+    background: bg,
+    asOfUtc: narrativeAsOfIsoFromJson(),
   }
 }
