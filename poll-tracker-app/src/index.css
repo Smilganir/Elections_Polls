@@ -2957,7 +2957,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
  * the flex item sizes to content and Hebrew wraps to a second line on narrow phones.
  */
 .lpo-ps-subtitle-bar > .lpo-ps-subtitle.lpo-ps-subtitle--outlets-breakdown {
-  text-align: start;
+  text-align: center;
   max-width: none;
   margin-bottom: 0;
 }
