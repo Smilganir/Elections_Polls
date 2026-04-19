@@ -124,13 +124,13 @@ function seatDeltaLeadHtml(avg, n) {
 function partyTrendClauseEn(avg, n, nOutlets) {
   const seat = seatDeltaLeadHtml(avg, n)
   const scope = enPollsPhrase(nOutlets)
-  return `${seat} seats on average (${scope})`
+  return `${seat} seats on average (<strong>${scope}</strong>)`
 }
 
 function partyTrendClauseHe(avg, n, nOutlets) {
   const seat = seatDeltaLeadHtml(avg, n)
   const scope = hePollsPhrase(nOutlets)
-  return `${seat} מנדטים בממוצע (${scope})`
+  return `${seat} מנדטים בממוצע (<strong>${scope}</strong>)`
 }
 
 const NARRATIVE_PARTY_LABEL_CLASS = 'lpo-ps-narrative-party-label'

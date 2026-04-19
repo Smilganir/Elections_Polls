@@ -133,11 +133,11 @@ type PollSummaryPanelProps = {
 
 function FilterIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden>
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
       <path
         d="M1.5 4h13M4 8h8M6.5 12h3"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.55"
         strokeLinecap="round"
       />
     </svg>

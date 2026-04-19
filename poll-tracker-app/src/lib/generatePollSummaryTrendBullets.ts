@@ -81,10 +81,10 @@ function partyTrendClause(locale: AppLocale, avg: number, n: number, nOutlets: n
   const seat = narrativeSeatDeltaLeadHtml(avg, n)
   if (locale === 'he') {
     const scope = hePollsPhrase(nOutlets)
-    return `${seat} מנדטים בממוצע (${scope})`
+    return `${seat} מנדטים בממוצע (<strong>${scope}</strong>)`
   }
   const scope = enPollsPhrase(nOutlets)
-  return `${seat} seats on average (${scope})`
+  return `${seat} seats on average (<strong>${scope}</strong>)`
 }
 
 function partyTrendBulletHtml(

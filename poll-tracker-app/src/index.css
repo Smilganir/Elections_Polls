@@ -2939,47 +2939,71 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .lpo-ps-subtitle-bar {
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.3rem;
   margin-bottom: 0.75rem;
+  min-width: 0;
 }
 
 .lpo-ps-subtitle-bar > .lpo-ps-subtitle {
-  flex: 1;
+  flex: 1 1 0;
   margin: 0;
+  min-width: 0;
+}
+
+/*
+ * In the bar, kill horizontal margin:auto + max-width from .outlets-breakdown — otherwise
+ * the flex item sizes to content and Hebrew wraps to a second line on narrow phones.
+ */
+.lpo-ps-subtitle-bar > .lpo-ps-subtitle.lpo-ps-subtitle--outlets-breakdown {
+  text-align: start;
+  max-width: none;
+  margin-bottom: 0;
+}
+
+@media (max-width: 420px) {
+  .lpo-ps-subtitle-bar > .lpo-ps-subtitle {
+    font-size: clamp(0.72rem, 3.4vw, 0.85rem);
+    line-height: 1.35;
+  }
 }
 
 .lpo-ps-outlet-filter {
   position: relative;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .lpo-ps-outlet-filter-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.22rem 0.45rem;
+  justify-content: center;
+  gap: 0.15rem;
+  box-sizing: border-box;
+  padding: 0.2rem 0.26rem;
   background: #202c3d;
-  border: 1px solid #2d3340;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 6px;
-  color: #7a8a9e;
+  color: #f2f6fa;
   cursor: pointer;
   font-size: 11px;
   line-height: 1;
   white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .lpo-ps-outlet-filter-btn:hover {
-  color: #b0c4d8;
-  border-color: #3d4f66;
-  background: #243040;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.38);
+  background: #283548;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .lpo-ps-outlet-filter-btn--active {
-  color: #5a9ef8;
-  border-color: #2a5090;
+  color: #ffffff;
+  border-color: #3d6ec4;
   background: #1a2d4a;
+  box-shadow: 0 0 0 1px rgba(90, 158, 248, 0.25);
 }
 
 .lpo-ps-outlet-filter-badge {
