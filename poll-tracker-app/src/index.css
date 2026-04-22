@@ -373,7 +373,14 @@ body {
 /* Narrow viewports: keep locale | title | actions grid (no overlapping layers). */
 @media (max-width: 520px) {
   .dashboard-heading-sync-grid {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     column-gap: 0.45rem;
+  }
+
+  .dashboard-heading-bar h2 {
+    width: auto;
+    justify-self: center;
+    text-align: center;
   }
 }
 
