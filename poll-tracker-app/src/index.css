@@ -1226,7 +1226,7 @@ html[lang='he'] .lpo-col-header-text-block {
 .lpo-col-media-name {
   font-weight: 700;
   font-size: 0.9rem;
-  color: #e1e8f2;
+  color: #8da2be;
   min-width: 0;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -3934,7 +3934,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   font-weight: 700;
   /* Was 0.8× base; +10% → 0.88× (row height/zebra follow measured layout). */
   font-size: calc(0.88rem * 0.88);
-  color: #e1e8f2;
+  color: #8da2be;
   line-height: 1.2;
   overflow-wrap: anywhere;
   word-break: break-word;
