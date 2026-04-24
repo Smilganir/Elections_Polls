@@ -7,10 +7,10 @@ import type { RollingWindowRow } from './pollRollingWindow'
  * Keep aligned with DEFAULT_BACKGROUND_* in scripts/build-poll-summary-narrative.mjs.
  */
 export const EDITORIAL_BACKGROUND_EN =
-  'The countdown toward the October 2026 vote, a passed state budget and a Knesset heading into spring recess, alongside ongoing security news and the Haredi conscription debate—all may help explain a slight softening for Likud and the right in some of the polls.'
+  'The countdown to the October 2026 election, alongside fallout from the war with Iran and a divisive ceasefire, keeps the coalition stuck below a majority in most polls, with a slight softening for Likud and the right.'
 
 export const EDITORIAL_BACKGROUND_HE =
-  'רקע: ספירה לאחור לבחירות באוקטובר 2026, תקציב המדינה שאושר והכנסת לפני פגרת אביב, לצד חדשות ביטחון והמחלוקת על גיוס חרדים—כולם עשויים להסביר ריכוך קל בליכוד ובימין בחלק מהסקרים.'
+  'רקע: ספירה לאחור לבחירות אוקטובר 2026, לצד הדי המלחמה מול איראן והפסקת אש שנויה במחלוקת—רוב הסקרים ממשיכים להציב את הקואליציה מתחת לרוב, עם ריכוך קל בליכוד ובימין.'
 
 function maxIsoDateInRollingRows(rows: RollingWindowRow[]): string | null {
   if (rows.length === 0) return null
