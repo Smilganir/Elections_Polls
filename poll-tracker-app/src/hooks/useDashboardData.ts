@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { fetchSheet } from '../services/sheetsApi'
-import type { EventRow, MajorEventRow, PartyDimRow, Segment, UnpivotRow } from '../types/data'
+import type { EventRow, MajorEventRow, MediaOutletDimRow, PartyDimRow, Segment, UnpivotRow } from '../types/data'
 
 function rowsToObjects(rows: string[][]): Record<string, string>[] {
   if (!rows.length) return []
@@ -37,6 +37,7 @@ type DashboardDataState = {
   events: EventRow[]
   majorEvents: MajorEventRow[]
   partiesDim: PartyDimRow[]
+  mediaOutletsDim: MediaOutletDimRow[]
   loading: boolean
   error: string | null
   refresh: (options?: RefreshOptions) => Promise<void>
@@ -47,6 +48,7 @@ export function useDashboardData(): DashboardDataState {
   const [events, setEvents] = useState<EventRow[]>([])
   const [majorEvents, setMajorEvents] = useState<MajorEventRow[]>([])
   const [partiesDim, setPartiesDim] = useState<PartyDimRow[]>([])
+  const [mediaOutletsDim, setMediaOutletsDim] = useState<MediaOutletDimRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -54,10 +56,11 @@ export function useDashboardData(): DashboardDataState {
     const showLoading = options?.background !== true
     if (showLoading) setLoading(true)
     try {
-      const [unpivotData, eventsData, partiesDimData] = await Promise.all([
+      const [unpivotData, eventsData, partiesDimData, mediaOutletsDimData] = await Promise.all([
         fetchSheet('UnpivotData'),
         fetchSheet('Events Dates per Media Outlet'),
         fetchSheet('Parties Dim'),
+        fetchSheet('Media Outlets Dim'),
       ])
 
       let majorEventsRows: string[][] = []
@@ -71,6 +74,7 @@ export function useDashboardData(): DashboardDataState {
       const unpivotObjects = rowsToObjects(unpivotData.rows)
       const eventObjects = rowsToObjects(eventsData.rows)
       const partiesDimObjects = rowsToObjects(partiesDimData.rows)
+      const mediaOutletsDimObjects = rowsToObjects(mediaOutletsDimData.rows)
       const majorEventsObjects = rowsToObjects(majorEventsRows)
 
       const nextUnpivot: UnpivotRow[] = unpivotObjects
@@ -111,6 +115,17 @@ export function useDashboardData(): DashboardDataState {
         imageUrl: row['Image URL'] ?? '',
       }))
 
+      // Column names match the sheet header row in "Media Outlets Dim".
+      // Adjust the key strings here if the actual sheet uses different header labels.
+      const nextMediaOutletsDim: MediaOutletDimRow[] = mediaOutletsDimObjects
+        .filter((row) => (row['Media Outlet'] ?? '').trim())
+        .map((row) => ({
+          mediaOutlet: (row['Media Outlet'] ?? '').trim(),
+          enMediaOutlet: (row['English Media Outlet'] ?? row['Media Outlet EN'] ?? '').trim(),
+          shortDescription: (row['Short Description'] ?? '').trim(),
+          biasNote: (row['Political / Bias Note'] ?? row['Bias Note'] ?? '').trim(),
+        }))
+
       const nextMajorEvents: MajorEventRow[] = Array.from(
         new Map(
           majorEventsObjects
@@ -128,6 +143,7 @@ export function useDashboardData(): DashboardDataState {
       setEvents(nextEvents)
       setMajorEvents(nextMajorEvents)
       setPartiesDim(nextPartiesDim)
+      setMediaOutletsDim(nextMediaOutletsDim)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed loading data')
@@ -153,5 +169,5 @@ export function useDashboardData(): DashboardDataState {
     }
   }, [refresh])
 
-  return { unpivot, events, majorEvents, partiesDim, loading, error, refresh }
+  return { unpivot, events, majorEvents, partiesDim, mediaOutletsDim, loading, error, refresh }
 }

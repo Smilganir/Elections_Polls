@@ -54,6 +54,42 @@ export type UiStrings = {
   pollSummaryNarrativeTrendsAria: string
   /** One line; use {date} placeholder */
   pollSummaryNarrativeAsOf: string
+
+  // ── Media Bias Panel ──────────────────────────────────────────────────────
+  mediaBiasOpenBtn: string
+  mediaBiasTitle: string
+  mediaBiasHouseEffect: string
+  mediaBiasCoalitionTilt: string
+  mediaBiasOppositionTilt: string
+  mediaBiasPAdj: string
+  mediaBiasAnomalies: string
+  mediaBiasOutletDropdownLabel: string
+  mediaBiasZThresholdLabel: string
+  mediaBiasMinPollsLabel: string
+  mediaBiasWindowDaysLabel: string
+  mediaBiasSplitArabsLabel: string
+  mediaBiasIncludeSubthresholdLabel: string
+  mediaBiasBlocTiltTitle: string
+  mediaBiasHeatmapTitle: string
+  mediaBiasAnomalyTableTitle: string
+  mediaBiasAnomalyDate: string
+  mediaBiasAnomalyParty: string
+  mediaBiasAnomalySeats: string
+  mediaBiasAnomalyBaseline: string
+  mediaBiasAnomalyRawResid: string
+  mediaBiasAnomalyZ: string
+  /** Tooltip label lines */
+  mediaBiasTooltipN: string
+  mediaBiasTooltipRawMean: string
+  mediaBiasTooltipDampenedMean: string
+  mediaBiasTooltipPValue: string
+  mediaBiasTooltipPAdj: string
+  mediaBiasTooltipPAdjExcluded: string
+  /** 2022 Track Record badge */
+  trackRecord2022Label: string
+  trackRecordMaeLabel: string
+  trackRecordBlocErrorLabel: string
+  trackRecordNoData: string
 }
 
 export const UI: Record<AppLocale, UiStrings> = {
@@ -105,6 +141,39 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryNarrativeBackgroundAria: 'General political context for this poll window',
     pollSummaryNarrativeTrendsAria: 'Outlet and party trend notes',
     pollSummaryNarrativeAsOf: 'Context as of {date}',
+    // ── Media Bias Panel ────────────────────────────────────────────────────
+    mediaBiasOpenBtn: 'Media bias',
+    mediaBiasTitle: 'Media Bias',
+    mediaBiasHouseEffect: 'House Effect (seats)',
+    mediaBiasCoalitionTilt: 'Coalition tilt',
+    mediaBiasOppositionTilt: 'Opposition tilt',
+    mediaBiasPAdj: 'p (FDR)',
+    mediaBiasAnomalies: 'Anomalies',
+    mediaBiasOutletDropdownLabel: 'Outlet',
+    mediaBiasZThresholdLabel: 'z threshold',
+    mediaBiasMinPollsLabel: 'Min polls',
+    mediaBiasWindowDaysLabel: 'Window (days)',
+    mediaBiasSplitArabsLabel: 'Split Arab parties',
+    mediaBiasIncludeSubthresholdLabel: 'Include sub-threshold parties',
+    mediaBiasBlocTiltTitle: 'Bloc Tilt per Outlet',
+    mediaBiasHeatmapTitle: 'House Effects Heatmap',
+    mediaBiasAnomalyTableTitle: 'Per-Outlet Anomalies',
+    mediaBiasAnomalyDate: 'Date',
+    mediaBiasAnomalyParty: 'Party',
+    mediaBiasAnomalySeats: 'Seats',
+    mediaBiasAnomalyBaseline: 'Baseline',
+    mediaBiasAnomalyRawResid: 'Raw Δ',
+    mediaBiasAnomalyZ: 'z',
+    mediaBiasTooltipN: 'N',
+    mediaBiasTooltipRawMean: 'Raw Mean',
+    mediaBiasTooltipDampenedMean: 'Dampened Mean',
+    mediaBiasTooltipPValue: 'p-value',
+    mediaBiasTooltipPAdj: 'pAdj (FDR)',
+    mediaBiasTooltipPAdjExcluded: '— (n below threshold)',
+    trackRecord2022Label: '2022 Track Record',
+    trackRecordMaeLabel: 'MAE',
+    trackRecordBlocErrorLabel: 'Bloc Error',
+    trackRecordNoData: 'N/A — No 2022 Data',
   },
   he: {
     titleLatest: '',
@@ -153,5 +222,38 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryNarrativeBackgroundAria: 'רקע כללי לחלון הסקרים',
     pollSummaryNarrativeTrendsAria: 'הערות מגמה לפי ערוצים ומפלגות',
     pollSummaryNarrativeAsOf: 'הקשר מעודכן ל־{date}',
+    // ── פאנל הטיית מדיה ─────────────────────────────────────────────────────
+    mediaBiasOpenBtn: 'הטיית מדיה',
+    mediaBiasTitle: 'הטיית מדיה',
+    mediaBiasHouseEffect: 'אפקט בית (מנדטים)',
+    mediaBiasCoalitionTilt: 'הטיה לקואליציה',
+    mediaBiasOppositionTilt: 'הטיה לאופוזיציה',
+    mediaBiasPAdj: 'p (FDR)',
+    mediaBiasAnomalies: 'חריגות',
+    mediaBiasOutletDropdownLabel: 'ערוץ',
+    mediaBiasZThresholdLabel: 'סף z',
+    mediaBiasMinPollsLabel: 'מינ׳ סקרים',
+    mediaBiasWindowDaysLabel: 'חלון (ימים)',
+    mediaBiasSplitArabsLabel: 'פיצול מפלגות ערביות',
+    mediaBiasIncludeSubthresholdLabel: 'כלול מפלגות מתחת לאחוז חסימה',
+    mediaBiasBlocTiltTitle: 'הטיית גוש לפי ערוץ',
+    mediaBiasHeatmapTitle: 'מפת חום — אפקטי בית',
+    mediaBiasAnomalyTableTitle: 'חריגות לפי ערוץ',
+    mediaBiasAnomalyDate: 'תאריך',
+    mediaBiasAnomalyParty: 'מפלגה',
+    mediaBiasAnomalySeats: 'מנדטים',
+    mediaBiasAnomalyBaseline: 'קו בסיס',
+    mediaBiasAnomalyRawResid: 'סטייה',
+    mediaBiasAnomalyZ: 'z',
+    mediaBiasTooltipN: 'N',
+    mediaBiasTooltipRawMean: 'ממוצע גולמי',
+    mediaBiasTooltipDampenedMean: 'ממוצע מרוסן',
+    mediaBiasTooltipPValue: 'ערך p',
+    mediaBiasTooltipPAdj: 'pAdj (FDR)',
+    mediaBiasTooltipPAdjExcluded: '— (N מתחת לסף)',
+    trackRecord2022Label: 'רקורד 2022',
+    trackRecordMaeLabel: 'MAE',
+    trackRecordBlocErrorLabel: 'שגיאת גוש',
+    trackRecordNoData: 'אין נתוני 2022',
   },
 }

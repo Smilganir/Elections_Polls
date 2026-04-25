@@ -26,6 +26,14 @@ import { trackMergeArabsToggle } from '../lib/gtagEvents'
 import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
 import { buildRollingWindowReport } from '../lib/pollRollingWindow'
 import { PollSummaryPanel } from '../ui/PollSummaryPanel'
+import {
+  harmonizeArabList,
+  computeResiduals,
+  computeHouseEffects,
+  computeBlocTilt,
+  computeOutletAnomalies,
+  computeHistoricalAccuracy,
+} from '../lib/mediaBiasAnalysis'
 type PollColumn = {
   pollId: number
   date: string
@@ -41,8 +49,6 @@ type PollColumn = {
   oppositionTotal: number
   arabsTotal: number
 }
-
-type PreviousPollMap = Map<string, Map<string, number>>
 
 type BlocPollPoint = { date: string; pollId: number; coalition: number; opposition: number; arabs: number }
 
@@ -710,7 +716,7 @@ function BlocArabsToggle({
 export function LatestPollsOverviewPage() {
   const { locale, setLocale } = useLocale()
   const t = UI[locale]
-  const { unpivot, events, majorEvents, partiesDim, loading, error } = useDashboardData()
+  const { unpivot, events, majorEvents, partiesDim, mediaOutletsDim, loading, error } = useDashboardData()
   const [pageIndex, setPageIndex] = useState(0)
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
   const [sparklineFocusedParty, setSparklineFocusedParty] = useState<string | null>(null)
@@ -778,6 +784,89 @@ export function LatestPollsOverviewPage() {
       cancelled = true
     }
   }, [locale])
+
+  // ── Media Bias validation console log (Phase 3 — remove before shipping) ──
+  useEffect(() => {
+    if (unpivot.length === 0 || partiesDim.length === 0) return
+
+    const harmonized = harmonizeArabList(unpivot, { combine: true })
+
+    // LOO residuals — no separate baseline-building step needed.
+    const residuals = computeResiduals(harmonized, 30)
+    const houseEffects = computeHouseEffects(residuals, partiesDim, { minN: 10 })
+    const blocTilt = computeBlocTilt(houseEffects)
+    const anomalies = computeOutletAnomalies(residuals, { zThreshold: 2.5, minN: 6 })
+
+    // Historical accuracy per outlet present in 2022 data.
+    const outlets2022 = ['חדשות 12', 'חדשות 13', 'כאן חדשות', 'ערוץ 14', 'מעריב', 'ישראל היום']
+    const accuracy2022 = outlets2022.map(computeHistoricalAccuracy)
+
+    // ── Bloc tilt summary ──────────────────────────────────────────────────
+    console.group('%c[MediaBias] Bloc Tilt per Outlet (sorted by |tilt|)', 'color:#6366f1;font-weight:bold')
+    console.table(
+      blocTilt.map(b => ({
+        outlet: b.outlet,
+        coalition: +b.coalitionSum.toFixed(2),
+        opposition: +b.oppositionSum.toFixed(2),
+        tilt: +b.tilt.toFixed(2),
+      })),
+    )
+    console.groupEnd()
+
+    // ── Top-3 positive and negative house effects per outlet ───────────────
+    console.group('%c[MediaBias] Top ±3 House Effects per Outlet', 'color:#6366f1;font-weight:bold')
+    const outletNames = [...new Set(houseEffects.map(c => c.outlet))]
+    for (const outlet of outletNames) {
+      const cells = houseEffects
+        .filter(c => c.outlet === outlet)
+        .sort((a, b) => b.meanRawResid - a.meanRawResid)
+      const top3pos = cells.slice(0, 3)
+      const top3neg = cells.slice(-3).reverse()
+      console.group(outlet)
+      console.log('  Top +3 (over-reports):')
+      console.table(top3pos.map(c => ({ party: c.party, meanRawResid: +c.meanRawResid.toFixed(2), n: c.n, pAdj: c.pAdj !== null ? +c.pAdj.toFixed(3) : null })))
+      console.log('  Top −3 (under-reports):')
+      console.table(top3neg.map(c => ({ party: c.party, meanRawResid: +c.meanRawResid.toFixed(2), n: c.n, pAdj: c.pAdj !== null ? +c.pAdj.toFixed(3) : null })))
+      console.groupEnd()
+    }
+    console.groupEnd()
+
+    // ── Anomalies ──────────────────────────────────────────────────────────
+    console.group('%c[MediaBias] Anomalies (|z| ≥ 2.5, outlet minN=6)', 'color:#f59e0b;font-weight:bold')
+    console.table(
+      anomalies
+        .sort((a, b) => Math.abs(b.z) - Math.abs(a.z))
+        .slice(0, 30)
+        .map(a => ({
+          outlet: a.outlet,
+          party: a.party,
+          date: a.date,
+          seats: a.seats,
+          baseline: +a.baseline.toFixed(1),
+          rawΔ: +a.rawResidual.toFixed(1),
+          z: +a.z.toFixed(2),
+        })),
+    )
+    console.groupEnd()
+
+    // ── 2022 Track Record ──────────────────────────────────────────────────
+    console.group('%c[MediaBias] 2022 Historical Accuracy', 'color:#10b981;font-weight:bold')
+    console.table(
+      accuracy2022.map(r =>
+        r.hasData
+          ? { outlet: r.outlet, mae: +r.mae.toFixed(1), coalitionPred: r.coalitionPred, blocError: r.coalitionBlocError }
+          : { outlet: r.outlet, mae: 'N/A', coalitionPred: 'N/A', blocError: 'N/A' },
+      ),
+    )
+    console.groupEnd()
+
+    console.log(
+      '%c[MediaBias] mediaOutletsDim rows loaded: %d',
+      'color:#94a3b8',
+      mediaOutletsDim.length,
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unpivot, partiesDim, mediaOutletsDim])
 
   function getDefaultPollsPerPage() {
     const w = window.innerWidth
@@ -867,7 +956,7 @@ export function LatestPollsOverviewPage() {
     [locale, segmentMap],
   )
 
-  const { polls, previousVotes } = useMemo(() => {
+  const { polls, previousByPollId } = useMemo(() => {
     const grouped = new Map<string, PollColumn>()
 
     for (const row of unpivot) {
@@ -916,27 +1005,24 @@ export function LatestPollsOverviewPage() {
       return b.pollId - a.pollId
     })
 
-    const prevVotes: PreviousPollMap = new Map()
-    const outletLatestPollId = new Map<string, number>()
-    for (const poll of list) {
-      const existing = outletLatestPollId.get(poll.mediaOutlet)
-      if (existing === undefined || poll.pollId > existing) {
-        outletLatestPollId.set(poll.mediaOutlet, poll.pollId)
-      }
+    // Each poll's predecessor is the same outlet's next-lower Poll ID, regardless of
+    // which page the user is on. Anchoring previous-poll deltas to the visible
+    // column (not to the outlet's globally-latest poll) keeps "Previous" labels
+    // and Δ arrows correct across pagination.
+    const byOutletAsc = new Map<string, PollColumn[]>()
+    for (const p of list) {
+      if (!byOutletAsc.has(p.mediaOutlet)) byOutletAsc.set(p.mediaOutlet, [])
+      byOutletAsc.get(p.mediaOutlet)!.push(p)
     }
-    for (const poll of list) {
-      const latestId = outletLatestPollId.get(poll.mediaOutlet)
-      if (latestId !== undefined && poll.pollId < latestId) {
-        if (!prevVotes.has(poll.mediaOutlet)) {
-          prevVotes.set(poll.mediaOutlet, new Map())
-          for (const p of poll.parties) {
-            prevVotes.get(poll.mediaOutlet)!.set(p.party, p.votes)
-          }
-        }
+    const prevByPollId = new Map<number, PollColumn>()
+    for (const arr of byOutletAsc.values()) {
+      arr.sort((a, b) => a.pollId - b.pollId)
+      for (let i = 1; i < arr.length; i++) {
+        prevByPollId.set(arr[i]!.pollId, arr[i - 1]!)
       }
     }
 
-    return { polls: list, previousVotes: prevVotes }
+    return { polls: list, previousByPollId: prevByPollId }
   }, [unpivot, segmentMap])
 
   const pollRollingReport = useMemo(
@@ -949,20 +1035,9 @@ export function LatestPollsOverviewPage() {
     [locale],
   )
 
-  const minPollDateByOutlet = useMemo(() => {
-    const m = new Map<string, string>()
-    for (const p of polls) {
-      const cur = m.get(p.mediaOutlet)
-      if (cur === undefined || p.date.localeCompare(cur) < 0) m.set(p.mediaOutlet, p.date)
-    }
-    return m
-  }, [polls])
-
-  /** False when this column is that outlet's earliest poll — deltas vs `previousVotes` are vs latest, not a real prior. */
+  /** False when this column is that outlet's earliest poll — there is no prior poll to diff against. */
   function hasPriorPollInSeries(poll: PollColumn): boolean {
-    const minD = minPollDateByOutlet.get(poll.mediaOutlet)
-    if (minD === undefined) return false
-    return poll.date.localeCompare(minD) > 0
+    return previousByPollId.has(poll.pollId)
   }
 
   const totalPages = Math.max(1, Math.ceil(polls.length / pollsPerPage))
@@ -1285,25 +1360,19 @@ export function LatestPollsOverviewPage() {
   ])
 
   function getChange(
-    mediaOutlet: string,
+    poll: PollColumn,
     party: string,
     currentVotes: number,
   ): { value: number; direction: 'up' | 'down' | 'none' } | null {
-    const prev = previousVotes.get(mediaOutlet)?.get(party)
-    if (prev === undefined) return null
-    const diff = currentVotes - prev
+    const prevPoll = previousByPollId.get(poll.pollId)
+    if (!prevPoll) return null
+    const prevVotes = prevPoll.parties.find((p) => p.party === party)?.votes
+    if (prevVotes === undefined) return null
+    const diff = currentVotes - prevVotes
     if (diff === 0) return null
     return { value: Math.abs(diff), direction: diff > 0 ? 'up' : 'down' }
   }
 
-  function getPreviousDate(mediaOutlet: string): string | null {
-    for (const poll of polls) {
-      if (poll.mediaOutlet === mediaOutlet && poll !== visiblePolls.find((v) => v.mediaOutlet === mediaOutlet)) {
-        return poll.date
-      }
-    }
-    return null
-  }
 
   const syncLpoHorizontalScrollMetrics = useCallback(() => {
     const el = lpoBodyHScrollRef.current
@@ -1647,25 +1716,14 @@ export function LatestPollsOverviewPage() {
               </div>
             )}
             {visiblePolls.map((poll) => {
-              const prevDate = getPreviousDate(poll.mediaOutlet)
-              const showDeltaVsPrior = hasPriorPollInSeries(poll)
-              const prevCoalition = previousVotes.get(poll.mediaOutlet)
-                ? Array.from(previousVotes.get(poll.mediaOutlet)!.entries())
-                    .filter(([p]) => segmentMap.get(p)?.segment === 'Coalition')
-                    .reduce((s, [, v]) => s + v, 0)
-                : null
-              const prevOpposition = previousVotes.get(poll.mediaOutlet)
-                ? Array.from(previousVotes.get(poll.mediaOutlet)!.entries())
-                    .filter(([p]) => segmentMap.get(p)?.segment !== 'Coalition' && segmentMap.get(p)?.segment !== 'Arabs')
-                    .reduce((s, [, v]) => s + v, 0)
-                : null
+              const prevPoll = previousByPollId.get(poll.pollId) ?? null
+              const prevDate = prevPoll?.date ?? null
+              const showDeltaVsPrior = prevPoll !== null
+              const prevCoalition = prevPoll ? prevPoll.coalitionTotal : null
+              const prevOpposition = prevPoll ? prevPoll.oppositionTotal : null
               const coalChange = prevCoalition !== null ? poll.coalitionTotal - prevCoalition : null
               const oppChange = prevOpposition !== null ? poll.oppositionTotal - prevOpposition : null
-              const prevArabs = previousVotes.get(poll.mediaOutlet)
-                ? Array.from(previousVotes.get(poll.mediaOutlet)!.entries())
-                    .filter(([p]) => segmentMap.get(p)?.segment === 'Arabs')
-                    .reduce((s, [, v]) => s + v, 0)
-                : null
+              const prevArabs = prevPoll ? prevPoll.arabsTotal : null
               const arabsChange = prevArabs !== null ? poll.arabsTotal - prevArabs : null
               const prevCombinedAnti =
                 prevOpposition !== null && prevArabs !== null
@@ -2112,7 +2170,7 @@ export function LatestPollsOverviewPage() {
                   const votes = partyData?.votes ?? 0
                   const segment = partyData?.segment ?? partyInfo.segment
                   const change = hasPriorPollInSeries(poll)
-                    ? getChange(poll.mediaOutlet, partyInfo.party, votes)
+                    ? getChange(poll, partyInfo.party, votes)
                     : null
 
                   const partyHistory = showSparklines ? sparklineData.history.get(partyInfo.party) : undefined
