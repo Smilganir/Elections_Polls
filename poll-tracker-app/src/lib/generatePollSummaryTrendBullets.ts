@@ -105,10 +105,8 @@ function partyTrendBulletHtml(
     return `[[party:Yisrael Beiteinu]]${narrativePartyLabelWrap('<strong>Yisrael Beiteinu</strong>')} – ${clause}`
   }
   if (partyKey === "Bennett's Party") {
-    if (locale === 'he') {
-      return `[[party:Bennett]]${narrativePartyLabelWrap('<strong>בנט</strong>')} – ${clause}`
-    }
-    return `[[party:Bennett]]${narrativePartyLabelWrap('<strong>Bennett</strong>')} – ${clause}`
+    const name = displayParty(partyKey)
+    return `[[party:Bennett]]${narrativePartyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
   }
 
   const name = displayParty(partyKey)

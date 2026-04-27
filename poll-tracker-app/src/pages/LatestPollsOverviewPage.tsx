@@ -8,6 +8,7 @@ import {
   maxEventLabelsForViewportWidth,
   MEDIA_ICON_MAP,
   PARTY_ICON_MAP,
+  ENGLISH_PARTY_DISPLAY_OVERRIDES,
   HEBREW_PARTY_DISPLAY_OVERRIDES,
   formatEventLabelForDisplay,
   selectEventsForViewportDisplay,
@@ -947,11 +948,13 @@ export function LatestPollsOverviewPage() {
 
   const displayParty = useCallback(
     (partyKey: string) => {
-      if (locale !== 'he') return partyKey
-      const override = HEBREW_PARTY_DISPLAY_OVERRIDES[partyKey]
-      if (override) return override
-      const he = segmentMap.get(partyKey)?.partyHeb?.trim()
-      return he || partyKey
+      if (locale === 'he') {
+        const override = HEBREW_PARTY_DISPLAY_OVERRIDES[partyKey]
+        if (override) return override
+        const he = segmentMap.get(partyKey)?.partyHeb?.trim()
+        return he || partyKey
+      }
+      return ENGLISH_PARTY_DISPLAY_OVERRIDES[partyKey] ?? partyKey
     },
     [locale, segmentMap],
   )

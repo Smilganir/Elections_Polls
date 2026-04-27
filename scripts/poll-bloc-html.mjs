@@ -31,6 +31,12 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;')
 }
 
+/** Match poll-tracker ENGLISH_PARTY_DISPLAY_OVERRIDES — sheet key → English UI label */
+function partyDisplayEn(partyKey) {
+  if (partyKey === "Bennett's Party") return 'Yahad'
+  return partyKey
+}
+
 function fmtDelta(n) {
   if (n === 0) return '0'
   return (n > 0 ? '+' : '') + n
@@ -176,7 +182,7 @@ export function buildPollBlocHtml(r) {
       const partyRows = (o.parties ?? [])
         .map(
           (p) =>
-            `<tr><td>${escapeHtml(p.party)}</td><td><span class="segment-pill ${segmentPillClass(p.segment)}">${escapeHtml(p.segment)}</span></td><td class="num">${p.votes}</td></tr>`,
+            `<tr><td>${escapeHtml(partyDisplayEn(p.party))}</td><td><span class="segment-pill ${segmentPillClass(p.segment)}">${escapeHtml(p.segment)}</span></td><td class="num">${p.votes}</td></tr>`,
         )
         .join('')
       return `<section class="outlet-block">
@@ -274,7 +280,7 @@ export function buildPollBlocHtml(r) {
       const chips = (o.changedParties ?? [])
         .map(
           (cp) =>
-            `<span class="party-chip ${segmentPillClass(cp.segment)}">${escapeHtml(cp.party)} <span class="party-chip-d">${cp.delta > 0 ? '+' : '-'}${Math.abs(cp.delta)}</span></span>`,
+            `<span class="party-chip ${segmentPillClass(cp.segment)}">${escapeHtml(partyDisplayEn(cp.party))} <span class="party-chip-d">${cp.delta > 0 ? '+' : '-'}${Math.abs(cp.delta)}</span></span>`,
         )
         .join('')
       const priorMeta = o.previous

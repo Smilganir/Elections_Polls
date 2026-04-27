@@ -1,4 +1,5 @@
 # Deploy poll-tracker-app to https://<user>.github.io/<repo>/
+# Deploy media-bias-app  to https://<user>.github.io/<repo>/media-bias/
 #
 # FIRST-TIME SETUP (otherwise deploy job fails with 404 "Failed to create deployment"):
 #   1. Repo → Settings → Pages → Build and deployment → Source: "GitHub Actions" (not "Deploy from a branch").
@@ -34,7 +35,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: poll-tracker-app/package-lock.json
+          cache-dependency-path: |
+            poll-tracker-app/package-lock.json
+            media-bias-app/package-lock.json
 
       - name: Require VITE_GOOGLE_SHEETS_API_KEY secret
         env:
@@ -45,16 +48,33 @@ jobs:
             exit 1
           fi
 
-      - name: Install and build
+      # ── Build poll-tracker-app (served at /<repo>/) ──────────────────────
+      - name: Install and build poll-tracker-app
         working-directory: poll-tracker-app
         run: |
           npm ci
           npm run build
         env:
-          # Use the same name as the GitHub repo (e.g. Elections_Polls → /Elections_Polls/)
           VITE_BASE: /${{ github.event.repository.name }}/
           VITE_GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
           VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+
+      # ── Build media-bias-app (served at /<repo>/media-bias/) ─────────────
+      - name: Install and build media-bias-app
+        working-directory: media-bias-app
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/media-bias/
+          VITE_GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
+          VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+
+      # ── Merge outputs into a single artifact ─────────────────────────────
+      - name: Merge dist directories
+        run: |
+          mkdir -p poll-tracker-app/dist/media-bias
+          cp -r media-bias-app/dist/. poll-tracker-app/dist/media-bias/
 
       - uses: actions/upload-pages-artifact@v3
         with:

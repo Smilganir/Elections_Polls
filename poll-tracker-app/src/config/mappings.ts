@@ -53,9 +53,15 @@ export function segmentRingColorForSummary(
   return SEGMENT_COLORS[segment]
 }
 
+/** English UI labels that override the canonical sheet `party` key (same keys as unpivot data). */
+export const ENGLISH_PARTY_DISPLAY_OVERRIDES: Partial<Record<string, string>> = {
+  "Bennett's Party": 'Yahad',
+}
+
 /** Hebrew UI labels that override `Party_heb` from the sheet (canonical party key → display string). */
 export const HEBREW_PARTY_DISPLAY_OVERRIDES: Partial<Record<string, string>> = {
   'Joint Arab List': 'רשימה ערבית משותפת',
+  "Bennett's Party": 'יחד',
 }
 
 /** Inclusive first poll date for sparklines: drop earlier sheet rows (often 0) before the party was polled. */

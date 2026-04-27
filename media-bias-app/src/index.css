@@ -1,0 +1,1516 @@
+/* ── Design tokens (match poll-tracker-app palette) ───────────────────────── */
+:root {
+  font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #e8ecf2;
+  background: #121820;
+
+  --col-bg: #121820;
+  --col-surface: #1a2236;
+  --col-surface-hi: #1f2d44;
+  --col-border: rgba(255, 255, 255, 0.07);
+  --col-text: #e8ecf2;
+  --col-muted: #6a7f9a;
+  --col-link: #7fa0c4;
+
+  --col-coalition: #0166DF;  /* coalition blue — matches poll-tracker-app */
+  --col-opposition: #e8ecf2; /* opposition white — matches poll-tracker-app */
+  --col-sig: rgba(251, 191, 36, 0.85); /* gold for significance border */
+  --col-excl: rgba(100, 116, 139, 0.3);
+
+  --radius: 0.4rem;
+  --radius-sm: 0.25rem;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+/* ── App shell ──────────────────────────────────────────────────────────────── */
+
+.mb-app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(172deg, #0f1520 0%, #171e2c 40%, #1a2236 100%);
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────────────── */
+
+.mb-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(90deg, #141c2a 0%, #1a2538 50%, #1f2d44 100%);
+  border-bottom: 1px solid var(--col-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.mb-topbar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mb-topbar-brand {
+  grid-column: 2;
+  justify-self: center;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.mb-topbar-brand h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.mb-topbar-sub {
+  font-size: 0.8rem;
+  color: var(--col-muted);
+  font-weight: 400;
+}
+
+.mb-topbar-nav {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mb-nav-link {
+  font-size: 0.85rem;
+  color: var(--col-link);
+  text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--col-border);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+}
+.mb-nav-link:hover { background: rgba(255,255,255,0.06); color: #c4d6ec; }
+
+/* ── Locale toggle (same as poll-tracker-app) ──────────────────────────────── */
+.locale-toggle {
+  display: flex;
+  border-radius: 0.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.locale-toggle-btn {
+  border: none;
+  background: rgba(30, 40, 56, 0.9);
+  color: #8da2be;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.locale-toggle-btn + .locale-toggle-btn {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.locale-toggle-btn:hover { color: #e1e8f2; }
+
+.locale-toggle-btn.active {
+  background: rgba(58, 123, 213, 0.35);
+  color: #fff;
+}
+
+/* Stacked variant (Bias / Seats in heatmap header) */
+.locale-toggle--vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.locale-toggle--vertical .locale-toggle-btn + .locale-toggle-btn {
+  border-left: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.locale-toggle--vertical .locale-toggle-btn {
+  padding: 0.22rem 0.45rem;
+  font-size: 0.68rem;
+}
+
+/* ── Page content ─────────────────────────────────────────────────────────── */
+
+.mb-page-content {
+  flex: 1;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2rem;
+}
+
+/* ── Loading / error ──────────────────────────────────────────────────────── */
+
+.mb-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+  color: var(--col-muted);
+  gap: 1rem;
+}
+
+.mb-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #0166DF;
+  border-radius: 50%;
+  animation: mb-spin 0.75s linear infinite;
+}
+@keyframes mb-spin { to { transform: rotate(360deg); } }
+
+.mb-error {
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: 1.5rem;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: var(--radius);
+  color: #fca5a5;
+}
+.mb-error h2 { margin: 0 0 0.75rem; color: #ef4444; }
+.mb-error pre { font-size: 0.8rem; overflow-x: auto; }
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+
+.mb-footer {
+  border-top: 1px solid var(--col-border);
+  background: rgba(14,19,28,0.7);
+  padding: 0.65rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #5d6f85;
+}
+.mb-footer a { color: var(--col-link); text-decoration: none; }
+.mb-footer a:hover { color: #b0cdef; text-decoration: underline; }
+.mb-footer strong { color: #8aa0b8; }
+.mb-footer-divider { width: 1px; height: 0.9em; background: rgba(255,255,255,0.12); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDIA BIAS PANEL  —  .lpo-mb-*
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.lpo-mb-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 90rem; /* match mb-page-content; centers when parent is wider */
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+/* ── Global controls bar ──────────────────────────────────────────────────── */
+
+.lpo-mb-global-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--col-surface);
+  border: 1px solid var(--col-border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  border-bottom: none;
+}
+
+.lpo-mb-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lpo-mb-settings-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  /* Above heatmap outlet filter (30) so dropdown + infotips stack correctly */
+  z-index: 35;
+}
+
+.lpo-mb-settings-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: var(--col-surface-hi);
+  color: var(--col-muted);
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.lpo-mb-settings-btn:hover {
+  color: var(--col-text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lpo-mb-settings-btn--open,
+.lpo-mb-settings-btn[aria-expanded='true'] {
+  color: #fff;
+  border-color: rgba(1, 102, 223, 0.55);
+  background: rgba(58, 123, 213, 0.22);
+}
+
+/* Settings popover — slate-style premium dark panel (Tailwind-equivalent tokens) */
+.lpo-mb-settings-dropdown {
+  position: absolute;
+  /* Physical edges: with dir=rtl on this node, inset-inline-start maps to right:0 and
+     the panel grows left from the gear, clipping off-screen. Always hug the wrap's left. */
+  left: 0;
+  right: auto;
+  top: calc(100% + 6px);
+  width: fit-content;
+  max-width: min(26rem, calc(100vw - 2rem));
+  /* visible: infotip popups extend past the box; overflow:auto clips them */
+  overflow: visible;
+  padding: 1.15rem 1.25rem;
+  text-align: start;
+  background: rgba(16, 24, 36, 1);
+  color: #6a7f9a;
+  border: 1px solid #334155; /* slate-700 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  box-sizing: border-box;
+  unicode-bidi: isolate;
+  color-scheme: dark;
+}
+
+@media (max-height: 520px) {
+  .lpo-mb-settings-dropdown {
+    max-height: min(60vh, 26rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #475569 transparent;
+  }
+}
+
+.lpo-mb-settings-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lpo-mb-settings-dropdown::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.lpo-mb-settings-gear-svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Settings form: grid grid-cols-[auto_auto_auto] gap-x-4 gap-y-3 items-center */
+.lpo-mb-settings-form {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  column-gap: 1rem; /* gap-x-4 */
+  row-gap: 0.75rem; /* gap-y-3 */
+  align-items: center;
+  width: max-content;
+  box-sizing: border-box;
+}
+
+.lpo-mb-settings-form__label {
+  justify-self: start;
+  text-align: start;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: #6a7f9a;
+  font-weight: 500;
+  cursor: default;
+}
+
+label.lpo-mb-settings-form__label {
+  cursor: default;
+}
+
+.lpo-mb-settings-form__combine-label {
+  cursor: pointer;
+}
+
+.lpo-mb-settings-dropdown .lpo-mb-settings-form__label .lpo-mb-ctrl-text span {
+  color: inherit;
+}
+
+/* Settings control column — select + number inputs 80px */
+.lpo-mb-settings-form__control {
+  box-sizing: border-box;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lpo-mb-settings-form__control--checkbox {
+  justify-content: flex-start;
+}
+
+.lpo-mb-settings-form__control--checkbox input[type='checkbox'] {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.lpo-mb-settings-form__icon-slot {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 25px;
+  overflow: visible;
+}
+
+.lpo-mb-settings-form__icon-slot--empty {
+  pointer-events: none;
+}
+
+.lpo-mb-settings-form__control .lpo-mb-select--settings-field,
+.lpo-mb-settings-form__control .lpo-mb-number--settings-field {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Uniform dark inputs inside settings popover */
+.lpo-mb-settings-dropdown .lpo-mb-select--settings-field,
+.lpo-mb-settings-dropdown .lpo-mb-number--settings-field {
+  background: #1e2838;
+  border: 1px solid #334155;
+  border-radius: 0.375rem; /* rounded-md */
+  color: #6a7f9a;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0.32rem 0.45rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lpo-mb-settings-dropdown .lpo-mb-number--settings-field {
+  text-align: center;
+  cursor: text;
+  font-variant-numeric: tabular-nums;
+}
+
+.lpo-mb-settings-dropdown .lpo-mb-select--settings-field:hover,
+.lpo-mb-settings-dropdown .lpo-mb-number--settings-field:hover {
+  border-color: #475569;
+}
+
+.lpo-mb-settings-dropdown .lpo-mb-select--settings-field:focus,
+.lpo-mb-settings-dropdown .lpo-mb-number--settings-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Match methodology bar ⓘ (.lpo-mb-infotip-btn) */
+.lpo-mb-settings-dropdown .lpo-mb-infotip-btn {
+  color: #5a9ef8;
+  opacity: 0.7;
+}
+
+.lpo-mb-settings-dropdown .lpo-mb-infotip-btn:hover {
+  opacity: 1;
+}
+
+/* LTR: align popup left edge to ⓘ so it opens rightward — inset-inline-end would open left and clip */
+.lpo-mb-settings-dropdown[dir='ltr'] .lpo-mb-infotip-popup {
+  left: 0;
+  right: auto;
+  z-index: 80;
+  width: min(280px, calc(100vw - 1.25rem));
+  box-sizing: border-box;
+}
+
+/* RTL: anchor to inline-end so the bubble grows into the panel, not off the viewport left */
+.lpo-mb-settings-dropdown[dir='rtl'] .lpo-mb-infotip-popup {
+  left: auto;
+  right: auto;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  z-index: 80;
+  width: min(280px, calc(100vw - 1.25rem));
+  box-sizing: border-box;
+}
+
+.lpo-mb-control-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--col-muted);
+  cursor: default;
+}
+.lpo-mb-control-label--inline { cursor: pointer; }
+.lpo-mb-control-label strong { color: var(--col-text); }
+
+/* Two-line stacked control label text */
+.lpo-mb-ctrl-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  font-size: 0.72rem;
+  color: var(--col-muted);
+  font-weight: 400;
+}
+
+.lpo-mb-select {
+  background: var(--col-surface-hi);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  color: var(--col-text);
+  font-size: 0.82rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+.lpo-mb-select:focus { outline: 2px solid #0166DF; outline-offset: 1px; }
+
+.lpo-mb-number {
+  width: 3.5rem;
+  background: var(--col-surface-hi);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  color: var(--col-text);
+  font-size: 0.82rem;
+  padding: 0.25rem 0.4rem;
+  text-align: center;
+}
+.lpo-mb-number:focus { outline: 2px solid #0166DF; outline-offset: 1px; }
+
+.lpo-mb-slider {
+  width: 100px;
+  accent-color: #0166DF;
+  cursor: pointer;
+}
+
+.lpo-mb-stats-summary {
+  font-size: 0.78rem;
+  color: var(--col-muted);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* ── Section tabs ─────────────────────────────────────────────────────────── */
+
+.lpo-mb-tabs {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+  background: var(--col-surface);
+  border: 1px solid var(--col-border);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: none;
+}
+
+.lpo-mb-tab {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--col-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.lpo-mb-tab:hover { color: var(--col-text); }
+.lpo-mb-tab--active {
+  color: var(--col-text);
+  border-bottom-color: #0166DF;
+}
+
+/* ── Section content ──────────────────────────────────────────────────────── */
+
+.lpo-mb-section-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--col-surface);
+  border: 1px solid var(--col-border);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Capped width + parent align-items:center centers the block in the tab content on wide viewports */
+.lpo-mb-section-content > .lpo-mb-section {
+  width: 100%;
+  max-width: min(100%, 82rem);
+  margin-inline: auto;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.lpo-mb-section {
+  padding: 1rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Full-width tab bodies; heatmap uses an inner wrapper to center the frozen+scroll block */
+.lpo-mb-section > .lpo-mb-heatmap-wrap {
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+}
+
+.lpo-mb-section > .lpo-mb-tilt-section,
+.lpo-mb-section > .lpo-mb-anomaly-section,
+.lpo-mb-section > .lpo-mb-empty {
+  width: 100%;
+  align-self: stretch;
+}
+
+.lpo-mb-section-subtitle {
+  margin: 0 auto 1rem;
+  max-width: 42rem;
+  font-size: 0.8rem;
+  color: var(--col-muted);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.lpo-mb-empty {
+  color: var(--col-muted);
+  text-align: center;
+  padding: 2.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* ── Heatmap ──────────────────────────────────────────────────────────────── */
+
+.lpo-mb-heatmap-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 0.5rem;
+}
+
+/* Full-width row; centers the natural-width split (party column + data) as a single block */
+.lpo-mb-heatmap-split-outer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Natural width: frozen + outlet table; caps at 100% on narrow so scroll region can shrink + pan */
+.lpo-mb-heatmap-split {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+  gap: 0;
+  unicode-bidi: isolate;
+}
+
+.lpo-mb-heatmap-frozen {
+  flex: 0 0 auto;
+  min-width: min-content;
+  background: var(--col-surface);
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 4px 0 12px -4px rgba(0, 0, 0, 0.35);
+  z-index: 1;
+}
+
+.lpo-mb-heatmap-scroll-wrap {
+  /* Grow only when the split hits max-width: 100% (narrow viewports) */
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  min-height: 0;
+}
+
+.lpo-mb-heatmap-scroll-x {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Table starts at the frozen edge; do not use text-align:center (creates a gap) */
+  text-align: start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
+  box-sizing: border-box;
+}
+
+.lpo-mb-heatmap-scroll-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.lpo-mb-heatmap-scroll-x::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.lpo-mb-heatmap-frozen-table,
+.lpo-mb-heatmap-scroll-table {
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+
+.lpo-mb-heatmap-scroll-table {
+  min-width: max-content;
+}
+
+/*
+ * Header + data row heights: scroll table is source of truth; JS copies thead height
+ * onto the frozen thead row and sets --mb-heatmap-data-row on .lpo-mb-heatmap-split
+ * from the first scroll data row so both tables share identical geometry.
+ */
+.lpo-mb-heatmap-frozen-table tbody tr,
+.lpo-mb-heatmap-scroll-table tbody tr {
+  height: var(--mb-heatmap-data-row, 2.95rem);
+  box-sizing: border-box;
+}
+
+.lpo-mb-heatmap-frozen-table tbody td,
+.lpo-mb-heatmap-scroll-table tbody td {
+  vertical-align: middle;
+}
+
+.lpo-mb-th-outlet {
+  min-width: 7rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.5rem;
+  text-align: right;
+  font-size: 0.72rem;
+  color: var(--col-muted);
+  font-weight: 400;
+  vertical-align: bottom;   /* match outlet column headers so legend aligns with pills */
+}
+
+.lpo-mb-th-outlet-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.lpo-mb-th-party {
+  padding: 0.3rem 0.2rem 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-align: center;
+  max-width: 5rem;
+  min-width: 3.2rem;
+  vertical-align: bottom;
+}
+.lpo-mb-th-party--coalition { color: #5ba8ff; }
+.lpo-mb-th-party--opposition { color: #e8ecf2; }
+
+/* Party row label colours (parties are now rows) */
+.lpo-mb-td-outlet--coalition { color: #5ba8ff; }
+.lpo-mb-td-outlet--opposition { color: #e8ecf2; }
+
+
+/* Outlet score pills — two stacked colour chips in column headers */
+.lpo-mb-outlet-score-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.lpo-mb-outlet-pill {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: 2px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Bloc labels in the top-left corner cell — right-aligned to sit above party names */
+.lpo-mb-bloc-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;  /* push labels to the right edge of the corner cell */
+  gap: 3px;          /* matches .lpo-mb-outlet-score-pills gap */
+  margin-top: 5px;   /* matches .lpo-mb-outlet-score-pills margin-top */
+}
+
+.lpo-mb-bloc-legend-label {
+  font-size: 0.7rem;  /* matches pill font-size */
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.4;   /* matches pill line-height */
+  padding: 2px 0;     /* matches pill vertical padding */
+}
+
+.lpo-mb-bloc-legend-label--coalition { color: #0166DF; }
+.lpo-mb-bloc-legend-label--opposition { color: #e8ecf2; }
+
+/* Bias / Seats sort toggle (last column header) */
+.lpo-mb-bias-sort-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.28rem;
+}
+
+.lpo-mb-bias-sort-caption {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #6a7f9a;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.lpo-mb-th-bias-col {
+  cursor: default;
+  text-transform: none;
+  max-width: 4.5rem;
+  min-width: 3.4rem;
+  padding: 4px 4px 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  vertical-align: bottom;
+}
+
+/* Thin gap row between coalition and opposition party rows */
+.lpo-mb-tr-bloc-sep td {
+  height: 0.55rem;
+  padding: 0;
+  background: transparent;
+}
+
+/* Slightly heavier separator above the Σ summary rows */
+.lpo-mb-tr-bloc-sep--thick td {
+  height: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Bloc sum cells — same colour scale, dashed outline to distinguish from data cells */
+.lpo-mb-cell--total {
+  outline: 1px dashed rgba(255, 255, 255, 0.22);
+  outline-offset: -1px;
+  font-style: italic;
+  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Σ row label */
+.lpo-mb-td-total-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Vertical stack: icon on top, short label below */
+.lpo-mb-th-party-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.lpo-mb-th-party-abbr {
+  display: block;
+  max-width: 4.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  font-size: 11px;
+  color: #6a7f9a;
+}
+
+.lpo-mb-th-sep { width: 0.5rem; }
+
+.lpo-mb-td-outlet {
+  padding: 0.15rem 0.5rem 0.15rem 0;
+  font-size: 0.8rem;
+  color: var(--col-text);
+  white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+/* Side-by-side: icon + outlet name */
+.lpo-mb-td-outlet-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.lpo-mb-td-outlet-name {
+  font-size: 11px;
+  color: #6a7f9a;
+}
+
+/* Shared icon styles (party + outlet) */
+.lpo-mb-icon {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  display: block;
+  flex-shrink: 0;
+}
+
+.lpo-mb-icon-fallback {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: rgba(180, 200, 230, 0.55);
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+}
+
+.lpo-mb-cell {
+  width: 3.5rem;
+  height: 2rem;
+  padding: 0;
+  text-align: center;
+  font-size: 0.73rem;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: default;
+  transition: filter 0.1s;
+}
+.lpo-mb-cell:hover { filter: brightness(1.2); }
+
+.lpo-mb-cell--empty {
+  background: rgba(255,255,255,0.02);
+}
+
+.lpo-mb-cell--excluded {
+  background: rgba(100,116,139,0.18) !important;
+  color: rgba(148,163,184,0.5) !important;
+}
+
+/* Inset ring so the significance highlight stays inside the square (outline sits outside). */
+.lpo-mb-cell--sig {
+  box-shadow: inset 0 0 0 2px var(--col-sig);
+  position: relative;
+}
+
+.lpo-mb-td-sep { width: 0.5rem; }
+
+/* ── Heatmap legend ───────────────────────────────────────────────────────── */
+
+.lpo-mb-heatmap-legend {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  color: var(--col-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  text-align: center;
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Diverging legend bar */
+.lpo-mb-legend-bar-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  vertical-align: middle;
+}
+
+.lpo-mb-legend-bar-outer {
+  position: relative;
+  width: 7rem;
+}
+
+.lpo-mb-legend-bar {
+  display: block;
+  width: 100%;
+  height: 1.1rem;
+  border-radius: 4px;
+  /* pink → dark-neutral → turquoise */
+  background: linear-gradient(
+    to right,
+    rgb(224, 102, 160),
+    rgb(26, 34, 54) 50%,
+    rgb(0, 196, 180)
+  );
+}
+
+.lpo-mb-legend-bar-zero {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* End cap: value on top, label below */
+.lpo-mb-legend-bar-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.lpo-mb-legend-bar-endval {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lpo-mb-legend-bar-endlabel {
+  font-size: 0.62rem;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.lpo-mb-legend-bar-end--under .lpo-mb-legend-bar-endval,
+.lpo-mb-legend-bar-end--under .lpo-mb-legend-bar-endlabel { color: rgb(224, 102, 160); }
+
+.lpo-mb-legend-bar-end--over .lpo-mb-legend-bar-endval,
+.lpo-mb-legend-bar-end--over .lpo-mb-legend-bar-endlabel  { color: rgb(0, 196, 180); }
+
+.lpo-mb-legend-sig-box {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 2px var(--col-sig);
+  background: rgba(255,255,255,0.08);
+  vertical-align: middle;
+}
+
+.lpo-mb-legend-excl {
+  opacity: 0.4;
+  font-style: italic;
+}
+
+/* ── Cell tooltip ─────────────────────────────────────────────────────────── */
+
+.lpo-mb-tooltip {
+  background: #0f1724;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.8rem;
+  min-width: 200px;
+  max-width: 260px;
+  font-size: 0.8rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  pointer-events: none;
+  z-index: 1000;
+  line-height: 1.6;
+}
+
+.lpo-mb-tooltip-header {
+  font-weight: 700;
+  color: #c4d6ec;
+  margin-bottom: 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.lpo-mb-tooltip-rule {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 0.35rem 0;
+}
+
+.lpo-mb-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--col-text);
+}
+.lpo-mb-tooltip-row span:first-child { color: var(--col-muted); }
+.lpo-mb-tooltip-row--muted { color: var(--col-muted); }
+.lpo-mb-tooltip-row--muted span { color: var(--col-muted) !important; }
+
+/* ── Bloc tilt section ────────────────────────────────────────────────────── */
+
+/* Parent grid + subgrid rows: one shared track so bar column width (and 50% zero) aligns vertically */
+.lpo-mb-tilt-section {
+  display: grid;
+  grid-template-columns: 12rem 1fr 4rem auto;
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
+  align-items: stretch;
+}
+
+.lpo-mb-tilt-axis-labels {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--col-muted);
+  padding: 0 0 0.25rem 12rem;
+  box-sizing: border-box;
+}
+.lpo-mb-tilt-label--coal { color: rgba(252,165,165,0.7); }
+.lpo-mb-tilt-label--opp { color: rgba(147,197,253,0.7); }
+
+.lpo-mb-tilt-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  padding: 0.45rem 0.25rem;
+  border-bottom: 1px solid var(--col-border);
+}
+.lpo-mb-tilt-row:last-child { border-bottom: none; }
+
+.lpo-mb-tilt-outlet-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+/* Icon + label pair inside a tilt row */
+.lpo-mb-tilt-outlet-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.lpo-mb-tilt-outlet-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+/* Inline icon+name cell used in anomaly table */
+.lpo-mb-icon-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.lpo-mb-tilt-outlet-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--col-text);
+  unicode-bidi: plaintext;
+}
+.lpo-mb-tilt-outlet-en {
+  font-size: 0.72rem;
+  color: var(--col-muted);
+}
+.lpo-mb-tilt-bias-note {
+  font-size: 0.7rem;
+  color: rgba(147,197,253,0.55);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lpo-mb-tilt-bar-area {
+  position: relative;
+  height: 1.2rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 2px;
+}
+
+.lpo-mb-tilt-center-rule {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.15);
+}
+
+.lpo-mb-tilt-bar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 2px;
+  min-width: 2px;
+}
+.lpo-mb-tilt-bar--coalition {
+  background: linear-gradient(90deg, rgba(1,102,223,0.45) 0%, rgba(1,102,223,0.85) 100%);
+}
+.lpo-mb-tilt-bar--opposition {
+  background: linear-gradient(270deg, rgba(148,163,184,0.35) 0%, rgba(200,213,225,0.75) 100%);
+}
+
+.lpo-mb-tilt-value-col { text-align: right; }
+.lpo-mb-tilt-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--col-muted);
+}
+.lpo-mb-tilt-value--pos { color: #5ba8ff; }
+.lpo-mb-tilt-value--neg { color: #c8d7eb; }
+
+/* ── 2022 Track Record badge ──────────────────────────────────────────────── */
+
+.lpo-mb-track-record {
+  font-size: 0.73rem;
+  color: var(--col-muted);
+  white-space: nowrap;
+}
+
+.lpo-mb-tr-label { color: rgba(148,163,184,0.65); }
+.lpo-mb-tr-mae { color: #94a3b8; }
+
+.lpo-mb-tr-bloc { font-weight: 600; }
+.lpo-mb-tr-bloc--pos { color: #5ba8ff; }
+.lpo-mb-tr-bloc--neg { color: #c8d7eb; }
+
+.lpo-mb-tr-na { color: rgba(148,163,184,0.4); font-style: italic; }
+
+/* ── Anomaly section ──────────────────────────────────────────────────────── */
+
+.lpo-mb-anomaly-section { display: flex; flex-direction: column; gap: 1rem; }
+
+.lpo-mb-anomaly-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.lpo-mb-anomaly-count {
+  font-size: 0.78rem;
+  color: var(--col-muted);
+  margin-left: auto;
+}
+
+.lpo-mb-anomaly-table-wrap { overflow-x: auto; }
+
+.lpo-mb-anomaly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+/* No borders anywhere in this table */
+.lpo-mb-anomaly-table th,
+.lpo-mb-anomaly-table td {
+  border: none !important;
+}
+
+.lpo-mb-anomaly-table th {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--col-muted);
+  white-space: nowrap;
+}
+
+.lpo-mb-anomaly-table td {
+  padding: 0.35rem 0.6rem;
+  color: var(--col-text);
+  vertical-align: middle;
+}
+
+.lpo-mb-anomaly-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+/* All columns left-aligned */
+.lpo-mb-td-num { text-align: left; font-variant-numeric: tabular-nums; }
+
+.lpo-mb-td-z { font-weight: 700; color: #fbbf24; }
+
+.lpo-mb-val--pos { color: #5ba8ff; }
+.lpo-mb-val--neg { color: #c8d7eb; }
+
+/* Raw Δ column in anomaly table — dot + number */
+.lpo-mb-td-delta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+}
+
+.lpo-mb-delta-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lpo-mb-anomaly-row--high td { background: rgba(251,191,36,0.04); }
+
+/* ── Outlet filter dropdown (mirrors poll-tracker-app conventions) ─────────── */
+
+.lpo-ps-outlet-filter {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.lpo-ps-outlet-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  box-sizing: border-box;
+  padding: 0.2rem 0.26rem;
+  background: #202c3d;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  color: #f2f6fa;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.lpo-ps-outlet-filter-btn:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.38);
+  background: #283548;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.lpo-ps-outlet-filter-btn--active {
+  color: #ffffff;
+  border-color: #3d6ec4;
+  background: #1a2d4a;
+  box-shadow: 0 0 0 1px rgba(90, 158, 248, 0.25);
+}
+
+.lpo-ps-outlet-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: #0166df;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lpo-ps-outlet-filter-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 30;
+  min-width: 165px;
+  background: #151e2b;
+  border: 1px solid #2d3340;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  padding: 0.3rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lpo-ps-outlet-filter-all {
+  all: unset;
+  display: block;
+  padding: 0.28rem 0.7rem 0.35rem;
+  font-size: 11px;
+  color: #5a9ef8;
+  cursor: pointer;
+  border-bottom: 1px solid #232f3e;
+  margin-bottom: 0.2rem;
+}
+
+.lpo-ps-outlet-filter-all:hover { color: #80bfff; }
+
+.lpo-ps-outlet-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.28rem 0.7rem;
+  cursor: pointer;
+  font-size: 12px;
+  color: #96a8bc;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.lpo-ps-outlet-filter-item:hover { background: rgba(255, 255, 255, 0.045); }
+
+.lpo-ps-outlet-filter-item input[type='checkbox'] {
+  accent-color: #0166df;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.lpo-ps-outlet-filter-ico {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.lpo-ps-outlet-filter-ico img {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+}
+
+.lpo-ps-outlet-filter-name {
+  flex: 1;
+  white-space: nowrap;
+}
+
+/* ── Info tip ─────────────────────────────────────────────────────────────── */
+
+.lpo-mb-infotip {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lpo-mb-infotip-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  font-size: calc(13px * 25 / 16);
+  line-height: 1;
+  color: #5a9ef8;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+
+.lpo-mb-infotip-btn:hover { opacity: 1; }
+
+.lpo-mb-infotip-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  width: 280px;
+  background: #101824;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Keep popup inside the viewport when close to left edge */
+.lpo-mb-methodology-info .lpo-mb-infotip-popup {
+  left: auto;
+  right: 0;
+  width: 320px;
+}
+
+.lpo-mb-infotip-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #f2f6fa;
+  margin-bottom: 0.45rem;
+}
+
+.lpo-mb-infotip-para {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #96a8bc;
+}
+
+.lpo-mb-infotip-para:last-child { margin-bottom: 0; }
+
+/* Push methodology button to the far right of the controls bar */
+.lpo-mb-methodology-info {
+  margin-inline-start: auto;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .mb-topbar-sub { display: none; }
+  .mb-page-content { padding: 1rem 0.75rem 2rem; }
+  /* Narrow: stacked track record — subgrid not used */
+  .lpo-mb-tilt-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .lpo-mb-tilt-row {
+    display: grid;
+    grid-column: auto;
+    grid-template-columns: 8rem 1fr 3.5rem;
+    grid-template-rows: auto auto;
+    gap: 0.75rem;
+  }
+  .lpo-mb-track-record { grid-column: 1 / -1; }
+  .lpo-mb-tilt-axis-labels { padding-left: 8rem; }
+  .lpo-mb-stats-summary { display: none; }
+}

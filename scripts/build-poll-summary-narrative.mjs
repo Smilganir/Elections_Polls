@@ -32,6 +32,12 @@ const ENGLISH_MEDIA_NAMES = {
 /** Match HEBREW_PARTY_DISPLAY_OVERRIDES */
 const HEBREW_PARTY_OVERRIDES = {
   'Joint Arab List': 'רשימה ערבית משותפת',
+  "Bennett's Party": 'יחד',
+}
+
+/** Match ENGLISH_PARTY_DISPLAY_OVERRIDES */
+const ENGLISH_PARTY_OVERRIDES = {
+  "Bennett's Party": 'Yahad',
 }
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
@@ -53,7 +59,7 @@ function mediaHe(mediaKey) {
 }
 
 function partyDisplayEn(partyKey) {
-  return partyKey
+  return ENGLISH_PARTY_OVERRIDES[partyKey] ?? partyKey
 }
 
 function partyDisplayHe(partyKey, partyHebByKey) {
@@ -147,7 +153,7 @@ function partyBulletEn(partyKey, avg, nOutlets) {
     return `[[party:Yisrael Beiteinu]]${partyLabelWrap('<strong>Yisrael Beiteinu</strong>')} – ${clause}`
   }
   if (partyKey === "Bennett's Party") {
-    return `[[party:Bennett]]${partyLabelWrap('<strong>Bennett</strong>')} – ${clause}`
+    return `[[party:Bennett]]${partyLabelWrap(`<strong>${partyDisplayEn(partyKey)}</strong>`)} – ${clause}`
   }
   const name = partyDisplayEn(partyKey)
   return `[[party:${partyKey}]]${partyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
@@ -160,7 +166,7 @@ function partyBulletHe(partyKey, avg, nOutlets, partyHebByKey) {
     return `[[party:Yisrael Beiteinu]]${partyLabelWrap('<strong>ישראל ביתנו</strong>')} – ${clause}`
   }
   if (partyKey === "Bennett's Party") {
-    return `[[party:Bennett]]${partyLabelWrap('<strong>בנט</strong>')} – ${clause}`
+    return `[[party:Bennett]]${partyLabelWrap(`<strong>${partyDisplayHe(partyKey, partyHebByKey)}</strong>`)} – ${clause}`
   }
   const name = partyDisplayHe(partyKey, partyHebByKey)
   return `[[party:${partyKey}]]${partyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
