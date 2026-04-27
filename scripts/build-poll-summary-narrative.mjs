@@ -197,8 +197,8 @@ function outlierBulletHe(outliers, namesHe) {
   const strengthening = d0 > 0
   const subject = hebrewOutletsSubjectOutlier(namesHe)
   const verb = namesHe.length === 1 ? 'מצביע' : 'מצביעים'
-  const noun = strengthening ? 'התחזקות' : 'התחלשות'
-  return `<strong>חריגים:</strong> ${subject} ${verb} על ${noun} לקואליציה.`
+  const phrase = strengthening ? 'התחזקות הקואליציה' : 'היחלשות הקואליציה'
+  return `<strong>חריגים:</strong> ${subject} ${verb} על ${phrase}.`
 }
 
 function outlierBulletEn(outliers, namesEn) {

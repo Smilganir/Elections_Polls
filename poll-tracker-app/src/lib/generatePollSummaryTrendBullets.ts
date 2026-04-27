@@ -57,8 +57,8 @@ function outlierTrendBullets(
   if (locale === 'he') {
     const subject = hebrewOutletsSubjectOutlier(names)
     const verb = outliers.length === 1 ? 'מצביע' : 'מצביעים'
-    const noun = strengthening ? 'התחזקות' : 'התחלשות'
-    return `<strong>חריגים:</strong> ${subject} ${verb} על ${noun} לקואליציה.`
+    const phrase = strengthening ? 'התחזקות הקואליציה' : 'היחלשות הקואליציה'
+    return `<strong>חריגים:</strong> ${subject} ${verb} על ${phrase}.`
   }
 
   const list = englishOutletsListOutlier(names)
