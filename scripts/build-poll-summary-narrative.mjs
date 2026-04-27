@@ -42,9 +42,9 @@ const ENGLISH_PARTY_OVERRIDES = {
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
 const DEFAULT_BACKGROUND_EN =
-  'The countdown to the October 2026 election, alongside fallout from the war with Iran and a divisive ceasefire, keeps the coalition stuck below a majority in most polls, with a slight softening for Likud and the right.'
+  'The October 2026 election approaches amid the Iran war’s aftermath and a disputed US-brokered ceasefire, as Bennett and Lapid turn Yahad into a Bennett-led joint ticket that folds Yesh Atid into the anti-Netanyahu consolidation while the coalition remains under majority pressure.'
 const DEFAULT_BACKGROUND_HE =
-  'רקע: ספירה לאחור לבחירות אוקטובר 2026, לצד הדי המלחמה מול איראן והפסקת אש שנויה במחלוקת—רוב הסקרים ממשיכים להציב את הקואליציה מתחת לרוב, עם ריכוך קל בליכוד ובימין.'
+  'רקע: ספירה לאחור לבחירות אוקטובר 2026 על רקע המלחמה מול איראן והפסקת האש האמריקאית שנויה במחלוקת, כשבנט ולפיד הופכים את יחד לרשימה משותפת בראשות בנט שמכניסה את יש עתיד למהלך איחוד נגד נתניהו, בזמן שהקואליציה נותרת תחת לחץ רוב.'
 
 function round1(x) {
   return Math.round(x * 10) / 10

@@ -2878,6 +2878,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     var(--lpo-ps-wrap-party-icons-max) * var(--lpo-ps-wrap-chip) +
       (var(--lpo-ps-wrap-party-icons-max) - 1) * var(--lpo-ps-wrap-chip-gap) + var(--lpo-ps-wrap-chips-pad-x)
   );
+  /* Minimum width for unified Δ strip (scroll column); max() below keeps wrap wide enough when chips-w is smaller. */
+  --lpo-ps-unified-parties-col-min-w: 400px;
   /*
    * Unified row: media cap + row-main gap (900px tier) + bar + fixed-column padding-end;
    * parties column adds padding-start before chips (1200px tier). Omit 10rem pad — was over-wide.
@@ -2885,7 +2887,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   --lpo-ps-wrap-fixed-w: calc(168px + 2.1rem + 238px + 1.85rem);
   --lpo-ps-wrap-parties-gutter: 1.85rem;
   /* 2× clamp max from 960px rule (3.25rem), not 1320px 5rem — keeps cap closer to real content */
-  --lpo-ps-wrap-outer-pad-x-max: 6.5rem;
+  --lpo-ps-wrap-outer-pad-x-max: 7rem;
 
   width: 100%;
   min-width: min(100%, 600px);
@@ -2894,7 +2896,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     max(
       600px,
       calc(
-        var(--lpo-ps-wrap-fixed-w) + var(--lpo-ps-wrap-parties-gutter) + var(--lpo-ps-wrap-chips-w) +
+        var(--lpo-ps-wrap-fixed-w) + var(--lpo-ps-wrap-parties-gutter) +
+          max(var(--lpo-ps-wrap-chips-w), var(--lpo-ps-unified-parties-col-min-w)) +
           var(--lpo-ps-wrap-outer-pad-x-max)
       )
     )
@@ -3713,6 +3716,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
 .lpo-ps-unified-parties-scroll {
   flex: 1 1 auto;
+  min-width: var(--lpo-ps-unified-parties-col-min-w);
   min-height: 0;
   overflow-x: auto;
   overflow-y: hidden;
@@ -3742,7 +3746,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   flex-direction: column;
   align-items: flex-start;
   width: max-content;
-  min-width: 100%;
+  min-width: max(100%, var(--lpo-ps-unified-parties-col-min-w));
   box-sizing: border-box;
   background: transparent;
 }
