@@ -108,7 +108,7 @@ def _apply_ch12_558_instead_of_559_wide(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     out = data_df.copy()
     mo = out['Media Outlet'].astype(str).str.strip()
-    day = pd.to_datetime(out['Date'], errors='coerce', dayfirst=True).dt.strftime('%Y-%m-%d')
+    day = pd.to_datetime(out['Date'], errors='coerce', dayfirst=True, format='mixed').dt.strftime('%Y-%m-%d')
     bad = (mo == 'חדשות 12') & (out['Poll ID'] == 559) & (day == '2026-04-16')
     if not bad.any():
         return out
@@ -151,7 +151,7 @@ def _prefer_n12_split_arabs_on_same_day(data_df: pd.DataFrame) -> pd.DataFrame:
     """
     out = data_df.copy()
     mo = out['Media Outlet'].astype(str).str.strip()
-    day_iso = pd.to_datetime(out['Date'], errors='coerce', dayfirst=True).dt.strftime('%Y-%m-%d')
+    day_iso = pd.to_datetime(out['Date'], errors='coerce', dayfirst=True, format='mixed').dt.strftime('%Y-%m-%d')
     sel = mo == 'חדשות 12'
     if not sel.any():
         return out
@@ -269,7 +269,9 @@ def max_poll_id_from_html(html: str) -> int | None:
     """
     dataframes = pd.read_html(StringIO(html), encoding='utf-8')
     data_df = max(dataframes, key=lambda df: len(df.columns)).copy()
-    data_df = data_df.iloc[1:].copy()
+    # No iloc[1:] skip: site now serves newest-first with a proper <thead>, so row 0 is
+    # the latest poll. The old skip was only safe when Poll ID 1 was always at row 0.
+    # Poll ID 1 is prepended manually below and then filtered out by 'Poll ID > 1'.
 
     expected_cols = len(HEADERS)
     if len(data_df.columns) > expected_cols:
@@ -283,7 +285,7 @@ def max_poll_id_from_html(html: str) -> int | None:
     data_df = pd.concat([poll_1_df, data_df], ignore_index=True)
 
     data_df['Poll ID'] = pd.to_numeric(data_df['Poll ID'], errors='coerce')
-    data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce')
+    data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce', dayfirst=True, format='mixed')
 
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
@@ -317,7 +319,9 @@ def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
 
     dataframes = pd.read_html(StringIO(html), encoding='utf-8')
     data_df = max(dataframes, key=lambda df: len(df.columns)).copy()
-    data_df = data_df.iloc[1:].copy()
+    # No iloc[1:] skip: site now serves newest-first with a proper <thead>, so row 0 is
+    # the latest poll. The old skip was only safe when Poll ID 1 was always at row 0.
+    # Poll ID 1 is prepended manually below and then filtered out by 'Poll ID > 1'.
 
     expected_cols = len(HEADERS)
     if len(data_df.columns) > expected_cols:
@@ -333,7 +337,7 @@ def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
     data_df = pd.concat([poll_1_df, data_df], ignore_index=True)
 
     data_df['Poll ID'] = pd.to_numeric(data_df['Poll ID'], errors='coerce')
-    data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce')
+    data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce', dayfirst=True, format='mixed')
 
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
