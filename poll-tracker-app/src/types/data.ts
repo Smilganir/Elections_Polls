@@ -52,6 +52,27 @@ export type ResidualRow = UnpivotRow & {
   statResidual: number
 }
 
+/** One harmonized row with LOO residual pipeline outcome (see `listResidualDiagnostics`). */
+export type ResidualDiagnosticStatus =
+  | 'included'
+  | 'skipped_non_finite_votes'
+  | 'skipped_no_baseline'
+
+export type ResidualDiagnosticRow = {
+  pollId: number
+  date: string
+  mediaOutlet: string
+  party: string
+  votes: number
+  respondents: number
+  pollster: string
+  status: ResidualDiagnosticStatus
+  /** Set only when status is `included` */
+  baseline: number | null
+  rawResidual: number | null
+  statResidual: number | null
+}
+
 export type OutletAnomaly = {
   outlet: string
   party: string

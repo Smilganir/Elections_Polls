@@ -10,3 +10,8 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Local sheet dumps from npm run export-harmonized
+harmonized-export.csv
+harmonized-export-split-arabs.csv
+residual-diagnostics-export.csv

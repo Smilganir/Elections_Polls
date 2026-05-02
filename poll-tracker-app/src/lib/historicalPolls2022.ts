@@ -40,6 +40,16 @@ export const knesset2022Actual: Record<string, number> = {
 }
 
 /**
+ * Certified coalition bloc seats for Knesset 25 (Likud + Religious Zionism alliance + Shas + UTJ).
+ * Matches `computeHistoricalAccuracy` bloc comparison (error = poll sum − this value).
+ */
+export const KNESSET25_COALITION_BLOC_SEATS_ACTUAL =
+  knesset2022Actual.Likud +
+  knesset2022Actual['Religious Zionism'] +
+  knesset2022Actual.Shas +
+  knesset2022Actual.UTJ
+
+/**
  * Each outlet's final published poll before Knesset 25 (Oct 28–31 2022).
  *
  * Party keys use the same convention as the live app (e.g. "Blue & White",

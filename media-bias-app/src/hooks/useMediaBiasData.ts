@@ -6,6 +6,7 @@ import {
   harmonizeArabList,
   computeHistoricalAccuracy,
 } from '@shared/lib/mediaBiasAnalysis'
+import { mergeYeshAtidIntoBennettParty } from '../utils/mergeYeshAtidIntoBennettParty'
 
 // ─── Row parsers (mirror useDashboardData logic) ─────────────────────────────
 
@@ -136,7 +137,9 @@ export function useMediaBiasData(combineArabs = true): State {
 
       // Phase 2: harmonize (pure, cheap — no network).
       const raw = rawRef.current
-      const harmonized = harmonizeArabList(raw.unpivot, { combine: combineArabs })
+      const harmonized = mergeYeshAtidIntoBennettParty(
+        harmonizeArabList(raw.unpivot, { combine: combineArabs }),
+      )
 
       // Pre-compute 2022 accuracy for all outlets present in the sheet data.
       const allOutlets = [...new Set(raw.unpivot.map(r => r.mediaOutlet))]

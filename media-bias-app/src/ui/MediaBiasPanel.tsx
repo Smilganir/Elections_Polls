@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, useId } from 'react'
+import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, useId, type ReactNode } from 'react'
 import type { UnpivotRow, ResidualRow, PartyDimRow, MediaOutletDimRow, HouseEffectCell } from '@shared/types/data'
 import type { HistoricalAccuracyResult } from '@shared/types/data'
 import {
@@ -6,8 +6,10 @@ import {
   computeHouseEffects,
   computeBlocTilt,
   computeOutletAnomalies,
+  listResidualDiagnostics,
   ARAB_COMBINED,
 } from '@shared/lib/mediaBiasAnalysis'
+import { KNESSET25_COALITION_BLOC_SEATS_ACTUAL } from '@shared/lib/historicalPolls2022'
 import {
   PARTY_ICON_MAP,
   MEDIA_ICON_MAP,
@@ -19,6 +21,19 @@ import { sharedPublicUrl } from '../utils/sharedPublicUrl'
 import type { MediaBiasData } from '../hooks/useMediaBiasData'
 import { useLocale } from '../i18n/useLocale'
 import { MB, type MbUiStrings } from '../i18n/strings'
+import { MbCsvExportMenu } from './MbCsvExportMenu'
+import { downloadHarmonizedCsv } from '../utils/exportHarmonizedCsv'
+import { downloadResidualDiagnosticsCsv } from '../utils/exportResidualDiagnosticsCsv'
+
+/** Benjamini–Hochberg FDR threshold — must match gold border on heatmap cells. */
+const MB_FDR_ALPHA = 0.05
+
+/** Faint cell labels when |mean raw residual| is tiny — keep in sync with legend copy in `strings.ts`. */
+const MB_NEAR_ZERO_TEXT_RESID_THRESHOLD = 0.5
+
+function isHouseEffectFdrSignificant(c: HouseEffectCell): boolean {
+  return c.pAdj !== null && c.pAdj < MB_FDR_ALPHA
+}
 
 // ─── Latest-poll party seats (same poll ordering as LatestPollsOverviewPage) ─
 
@@ -119,7 +134,7 @@ function OutletFilterDropdown({
 }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
-  const hiddenCount = excludedOutlets.size
+  const hiddenCount = allOutlets.filter(o => excludedOutlets.has(o)).length
 
   useEffect(() => {
     if (!open) return
@@ -244,7 +259,7 @@ function residualColor(resid: number, maxAbs = 6): string {
 }
 
 function cellTextColor(resid: number): string {
-  if (Math.abs(resid) < 0.5) return 'rgba(180,200,230,0.35)'
+  if (Math.abs(resid) < MB_NEAR_ZERO_TEXT_RESID_THRESHOLD) return 'rgba(180,200,230,0.35)'
   // Both turquoise and pink get bright at high magnitudes → dark text for readability.
   if (Math.abs(resid) > 3.5) return '#0f1520'
   return '#ffffff'
@@ -384,17 +399,13 @@ function HeatmapSection({
     return m
   }, [houseEffects])
 
-  // n-weighted mean raw residual per party across all outlets
-  const partyWeightedMean = useMemo(() => {
-    const byParty = new Map<string, HouseEffectCell[]>()
-    for (const c of houseEffects) {
-      if (!byParty.has(c.party)) byParty.set(c.party, [])
-      byParty.get(c.party)!.push(c)
-    }
+  // Sum of raw mean residuals for FDR-significant outlet cells in this party's row only
+  const partySignificantResidualSum = useMemo(() => {
     const m = new Map<string, number>()
-    for (const [party, cells] of byParty) {
-      const totalN = cells.reduce((s, c) => s + c.n, 0)
-      if (totalN > 0) m.set(party, cells.reduce((s, c) => s + c.meanRawResid * c.n, 0) / totalN)
+    for (const c of houseEffects) {
+      if (!isHouseEffectFdrSignificant(c)) continue
+      const prev = m.get(c.party) ?? 0
+      m.set(c.party, prev + c.meanRawResid)
     }
     return m
   }, [houseEffects])
@@ -404,7 +415,8 @@ function HeatmapSection({
     const sortFn =
       partySortBy === 'bias'
         ? (a: string, b: string) =>
-            Math.abs(partyWeightedMean.get(b) ?? 0) - Math.abs(partyWeightedMean.get(a) ?? 0)
+            Math.abs(partySignificantResidualSum.get(b) ?? 0) -
+            Math.abs(partySignificantResidualSum.get(a) ?? 0)
         : (a: string, b: string) => {
             const sb = latestPollSeats.get(b) ?? 0
             const sa = latestPollSeats.get(a) ?? 0
@@ -416,7 +428,7 @@ function HeatmapSection({
     const coalition = all.filter(p => segMap.get(p) === 'Coalition')
     const opposition = all.filter(p => segMap.get(p) === 'Opposition' || segMap.get(p) === 'Arabs')
     return { allParties: all, coalitionParties: coalition, oppositionParties: opposition }
-  }, [houseEffects, segMap, latestPollSeats, partyIdByParty, partyWeightedMean, partySortBy])
+  }, [houseEffects, segMap, latestPollSeats, partyIdByParty, partySignificantResidualSum, partySortBy])
 
   // Per-outlet sum of meanRawResid across coalition parties
   const outletCoalitionSum = useMemo(() => {
@@ -632,7 +644,7 @@ function HeatmapSection({
                         />
                       )
                     })}
-                    <TotalCell value={partyWeightedMean.get(party) ?? null} />
+                    <TotalCell value={partySignificantResidualSum.get(party) ?? null} />
                   </tr>
                 ))}
               </tbody>
@@ -664,7 +676,8 @@ function HeatmapSection({
             &emsp;
             <span className="lpo-mb-legend-sig-box" /> {t.legendFdr}
             &emsp;
-            <span className="lpo-mb-legend-excl">{t.legendDimmed}</span> {t.legendDimmedExplain}
+            <span className="lpo-mb-legend-excl">{t.legendFaintDigits}</span>{' '}
+            {t.legendFaintDigitsExplain}
           </p>
         </div>
         </div>
@@ -689,7 +702,7 @@ function HeatmapCell({
   }
 
   const isExcluded = cell.pAdj === null
-  const isSig = !isExcluded && cell.pAdj !== null && cell.pAdj < 0.05
+  const isSig = !isExcluded && isHouseEffectFdrSignificant(cell)
   const bg = isExcluded ? undefined : residualColor(cell.meanRawResid)
   const textColor = isExcluded ? undefined : cellTextColor(cell.meanRawResid)
   const label = fmtSigned(cell.meanRawResid, 1)
@@ -735,6 +748,20 @@ function BlocTiltSection({
     return m
   }, [blocTilt])
 
+  const maxAbsTilt = Math.max(
+    1,
+    ...outletOrder.map(o => Math.abs(tiltByOutlet.get(o)?.tilt ?? 0)),
+  )
+
+  const coalitionScaleMax = useMemo(() => {
+    let m = KNESSET25_COALITION_BLOC_SEATS_ACTUAL
+    for (const o of outletOrder) {
+      const r = accuracy[o]
+      if (r && r.hasData) m = Math.max(m, r.coalitionPred)
+    }
+    return Math.max(68, Math.ceil(m / 4) * 4 + 4)
+  }, [outletOrder, accuracy])
+
   const biasNote = useMemo(() => {
     const m = new Map<string, string>()
     for (const o of mediaOutletsDim) if (o.biasNote) m.set(o.mediaOutlet, o.biasNote)
@@ -744,23 +771,72 @@ function BlocTiltSection({
   const { locale } = useLocale()
   const outletLabel = useOutletLabel(mediaOutletsDim, locale)
 
-  const maxAbs = Math.max(1, ...blocTilt.map(b => Math.abs(b.tilt)))
+  const actualPct = Math.min(
+    100,
+    (KNESSET25_COALITION_BLOC_SEATS_ACTUAL / coalitionScaleMax) * 100,
+  )
 
   if (outletOrder.length === 0) return null
 
   return (
     <div className="lpo-mb-tilt-section">
       <div className="lpo-mb-tilt-axis-labels">
-        <span className="lpo-mb-tilt-label--opp">{t.tiltLabelOpposition}</span>
-        <span className="lpo-mb-tilt-label--coal">{t.tiltLabelCoalition}</span>
+        <div aria-hidden className="lpo-mb-tilt-axis-corner" />
+        <div className="lpo-mb-tilt-axis-tilt-span">
+          <span className="lpo-mb-tilt-label--opp">{t.tiltLabelOpposition}</span>
+          <span className="lpo-mb-tilt-label--coal">{t.tiltLabelCoalition}</span>
+        </div>
+        <div aria-hidden className="lpo-mb-tilt-axis-num-spacer" />
+        <div className="lpo-mb-tilt-axis-coal-head">
+          <span className="lpo-mb-coal-chart-col-caption">{t.tiltCoalPollVsActualCaption}</span>
+          <span className="lpo-mb-coal-chart-col-legend" aria-hidden>
+            {t.tiltCoalGaugeLegendBlurb}
+          </span>
+        </div>
+        <div aria-hidden className="lpo-mb-tilt-axis-tr-head" />
       </div>
       {outletOrder.map(outlet => {
         const b = tiltByOutlet.get(outlet)
         const tilt = b?.tilt ?? 0
-        const barPct = (Math.abs(tilt) / maxAbs) * 48
+        const barPct = (Math.abs(tilt) / maxAbsTilt) * 48
         const acc = accuracy[outlet]
         const en = ENGLISH_MEDIA_NAMES[outlet] ?? outlet
         const note = biasNote.get(outlet)
+
+        let coalBody: ReactNode
+        if (acc && acc.hasData) {
+          const pollSeats = acc.coalitionPred
+          const predPct = Math.min(100, (pollSeats / coalitionScaleMax) * 100)
+          coalBody = (
+            <div
+              className="lpo-mb-coal-gauge-wrap"
+              dir="ltr"
+              role="group"
+              aria-label={t.tiltCoalPollGaugeAria(
+                Math.round(pollSeats),
+                KNESSET25_COALITION_BLOC_SEATS_ACTUAL,
+              )}
+            >
+              <div className="lpo-mb-coal-gauge-track">
+                <div className="lpo-mb-coal-gauge-fill" style={{ width: `${predPct}%` }} />
+                <div className="lpo-mb-coal-gauge-target" style={{ left: `${actualPct}%` }}>
+                  <span className="lpo-mb-coal-gauge-target-pin" aria-hidden />
+                </div>
+              </div>
+              <div className="lpo-mb-coal-gauge-stats">
+                <span className="lpo-mb-coal-gauge-pred">{Math.round(pollSeats)}</span>
+                <span className="lpo-mb-coal-gauge-sep" aria-hidden>
+                  /
+                </span>
+                <span className="lpo-mb-coal-gauge-actual-num">
+                  {KNESSET25_COALITION_BLOC_SEATS_ACTUAL}
+                </span>
+              </div>
+            </div>
+          )
+        } else {
+          coalBody = <span className="lpo-mb-coal-gauge-na">—</span>
+        }
 
         return (
           <div key={outlet} className="lpo-mb-tilt-row">
@@ -799,6 +875,8 @@ function BlocTiltSection({
                 {fmtSigned(tilt, 1)}
               </span>
             </div>
+
+            <div className="lpo-mb-coal-chart-cell">{coalBody}</div>
 
             <div className="lpo-mb-track-record">
               {acc && acc.hasData ? (
@@ -1104,18 +1182,17 @@ export function MediaBiasPanel({
     })
   }, [harmonized, totalPollsMin, excludedOutlets])
 
-  // Outlets eligible for the manual filter = those that pass the totalPollsMin threshold.
-  const eligibleOutlets = useMemo(() => {
-    const pollsPerOutlet = new Map<string, Set<number>>()
-    for (const r of harmonized) {
-      if (!pollsPerOutlet.has(r.mediaOutlet)) pollsPerOutlet.set(r.mediaOutlet, new Set())
-      pollsPerOutlet.get(r.mediaOutlet)!.add(r.pollId)
-    }
-    return [...pollsPerOutlet.entries()]
-      .filter(([, s]) => s.size >= totalPollsMin)
-      .map(([o]) => o)
-      .sort()
-  }, [harmonized, totalPollsMin])
+  const onExportResidualDiagnostics = useCallback(() => {
+    const rows = listResidualDiagnostics(filteredHarmonized, windowDays)
+    downloadResidualDiagnosticsCsv(rows, 'residual-diagnostics')
+  }, [filteredHarmonized, windowDays])
+
+  const onExportHarmonizedCsv = useCallback(() => {
+    if (!harmonized.length) return
+    downloadHarmonizedCsv(harmonized, combineArabs ? 'harmonized' : 'harmonized-split-arabs')
+  }, [harmonized, combineArabs])
+
+  const harmonizedExportReady = harmonized.length > 0
 
   // Step 2: compute LOO residuals from the already-filtered rows.
   // windowDays changes re-run this memo cheaply (pure JS, no network).
@@ -1129,117 +1206,155 @@ export function MediaBiasPanel({
     [residuals, partiesDim, fdrMinN],
   )
 
+  // All outlets meeting min poll count — always listed in the filter; unchecked = excluded from analysis.
+  const eligibleOutlets = useMemo(() => {
+    const pollsPerOutlet = new Map<string, Set<number>>()
+    for (const r of harmonized) {
+      if (!pollsPerOutlet.has(r.mediaOutlet)) pollsPerOutlet.set(r.mediaOutlet, new Set())
+      pollsPerOutlet.get(r.mediaOutlet)!.add(r.pollId)
+    }
+    return [...pollsPerOutlet.entries()]
+      .filter(([, s]) => s.size >= totalPollsMin)
+      .map(([o]) => o)
+      .sort()
+  }, [harmonized, totalPollsMin])
+
   const blocTilt = useMemo(() => computeBlocTilt(houseEffects), [houseEffects])
 
-  const outletOrder = useMemo(() => blocTilt.map(b => b.outlet), [blocTilt])
-
-  const outletLabelFn = useOutletLabel(mediaOutletsDim, locale)
+  /** Columns for heatmap / tilt: eligible outlets not manually excluded, |bloc tilt| desc (tilt 0 if no coal/opp cells). */
+  const outletOrder = useMemo(() => {
+    const tiltBy = new Map(blocTilt.map(b => [b.outlet, b.tilt]))
+    return eligibleOutlets
+      .filter(o => !excludedOutlets.has(o))
+      .sort((a, b) => {
+        const d = Math.abs(tiltBy.get(b) ?? 0) - Math.abs(tiltBy.get(a) ?? 0)
+        if (d !== 0) return d
+        return a.localeCompare(b, 'he')
+      })
+  }, [eligibleOutlets, excludedOutlets, blocTilt])
 
   return (
     <div className="lpo-mb-panel">
       {/* ── Global controls ── */}
       <div className="lpo-mb-global-controls">
-        <div className="lpo-mb-settings-wrap" ref={settingsWrapRef}>
-          <button
-            type="button"
-            className={`lpo-mb-settings-btn${settingsOpen ? ' lpo-mb-settings-btn--open' : ''}`}
-            aria-expanded={settingsOpen}
-            aria-haspopup="true"
-            aria-controls="lpo-mb-settings-panel"
-            id="lpo-mb-settings-trigger"
-            title={t.settingsAria}
-            onClick={() => setSettingsOpen(v => !v)}
-          >
-            <SettingsGearIcon />
-            <span className="lpo-mb-sr-only">{t.settingsAria}</span>
-          </button>
-          {settingsOpen && (
-            <div
-              id="lpo-mb-settings-panel"
-              className="lpo-mb-settings-dropdown"
-              role="region"
-              aria-labelledby="lpo-mb-settings-trigger"
-              dir={locale === 'he' ? 'rtl' : 'ltr'}
+        <div className="lpo-mb-gear-export-cluster">
+          <div className="lpo-mb-settings-wrap" ref={settingsWrapRef}>
+            <button
+              type="button"
+              className={`lpo-mb-settings-btn${settingsOpen ? ' lpo-mb-settings-btn--open' : ''}`}
+              aria-expanded={settingsOpen}
+              aria-haspopup="true"
+              aria-controls="lpo-mb-settings-panel"
+              id="lpo-mb-settings-trigger"
+              title={t.settingsAria}
+              onClick={() => setSettingsOpen(v => !v)}
             >
-              <div className="lpo-mb-settings-form">
-                <label className="lpo-mb-settings-form__label" htmlFor={settingsBaselineSelectId}>
-                  <CtrlText text={t.windowDaysLabel} />
-                </label>
-                <div className="lpo-mb-settings-form__control">
-                  <select
-                    id={settingsBaselineSelectId}
-                    className="lpo-mb-select lpo-mb-select--settings-field"
-                    value={windowDays}
-                    onChange={e => onWindowDaysChange(Number(e.target.value))}
-                  >
-                    <option value={14}>{t.day14}</option>
-                    <option value={30}>{t.day30}</option>
-                    <option value={60}>{t.day60}</option>
-                  </select>
-                </div>
-                <div className="lpo-mb-settings-form__icon-slot">
-                  <InfoTip text={t.infoBaselineWindow} locale={locale} />
-                </div>
-
-                <label className="lpo-mb-settings-form__label" htmlFor={settingsMinPollsId}>
-                  <CtrlText text={t.totalPollsLabel} />
-                </label>
-                <div className="lpo-mb-settings-form__control">
-                  <input
-                    id={settingsMinPollsId}
-                    type="number"
-                    className="lpo-mb-number lpo-mb-number--settings-field"
-                    min={1}
-                    max={300}
-                    value={totalPollsMin}
-                    onChange={e => setTotalPollsMin(Math.max(1, Number(e.target.value)))}
-                  />
-                </div>
-                <div className="lpo-mb-settings-form__icon-slot">
-                  <InfoTip text={t.infoMinPolls} locale={locale} />
-                </div>
-
-                <label className="lpo-mb-settings-form__label" htmlFor={settingsFdrMinId}>
-                  <CtrlText text={t.fdrMinNLabel} />
-                </label>
-                <div className="lpo-mb-settings-form__control">
-                  <input
-                    id={settingsFdrMinId}
-                    type="number"
-                    className="lpo-mb-number lpo-mb-number--settings-field"
-                    min={5}
-                    max={30}
-                    value={fdrMinN}
-                    onChange={e => setFdrMinN(Math.min(30, Math.max(5, Number(e.target.value))))}
-                  />
-                </div>
-                <div className="lpo-mb-settings-form__icon-slot">
-                  <InfoTip text={t.infoFdrMin} locale={locale} />
-                </div>
-
-                <div className="lpo-mb-settings-form__label">
-                  <label htmlFor={settingsCombineArabsId} className="lpo-mb-settings-form__combine-label">
-                    <CtrlText text={t.combineArabsLabel} />
+              <SettingsGearIcon />
+              <span className="lpo-mb-sr-only">{t.settingsAria}</span>
+            </button>
+            {settingsOpen && (
+              <div
+                id="lpo-mb-settings-panel"
+                className="lpo-mb-settings-dropdown"
+                role="region"
+                aria-labelledby="lpo-mb-settings-trigger"
+                dir={locale === 'he' ? 'rtl' : 'ltr'}
+              >
+                <div className="lpo-mb-settings-form">
+                  <label className="lpo-mb-settings-form__label" htmlFor={settingsBaselineSelectId}>
+                    <CtrlText text={t.windowDaysLabel} />
                   </label>
+                  <div className="lpo-mb-settings-form__control">
+                    <select
+                      id={settingsBaselineSelectId}
+                      className="lpo-mb-select lpo-mb-select--settings-field"
+                      value={windowDays}
+                      onChange={e => onWindowDaysChange(Number(e.target.value))}
+                    >
+                      <option value={14}>{t.day14}</option>
+                      <option value={30}>{t.day30}</option>
+                      <option value={60}>{t.day60}</option>
+                    </select>
+                  </div>
+                  <div className="lpo-mb-settings-form__icon-slot">
+                    <InfoTip text={t.infoBaselineWindow} locale={locale} />
+                  </div>
+
+                  <label className="lpo-mb-settings-form__label" htmlFor={settingsMinPollsId}>
+                    <CtrlText text={t.totalPollsLabel} />
+                  </label>
+                  <div className="lpo-mb-settings-form__control">
+                    <input
+                      id={settingsMinPollsId}
+                      type="number"
+                      className="lpo-mb-number lpo-mb-number--settings-field"
+                      min={1}
+                      max={300}
+                      value={totalPollsMin}
+                      onChange={e => setTotalPollsMin(Math.max(1, Number(e.target.value)))}
+                    />
+                  </div>
+                  <div className="lpo-mb-settings-form__icon-slot">
+                    <InfoTip text={t.infoMinPolls} locale={locale} />
+                  </div>
+
+                  <label className="lpo-mb-settings-form__label" htmlFor={settingsFdrMinId}>
+                    <CtrlText text={t.fdrMinNLabel} />
+                  </label>
+                  <div className="lpo-mb-settings-form__control">
+                    <input
+                      id={settingsFdrMinId}
+                      type="number"
+                      className="lpo-mb-number lpo-mb-number--settings-field"
+                      min={5}
+                      max={30}
+                      value={fdrMinN}
+                      onChange={e => setFdrMinN(Math.min(30, Math.max(5, Number(e.target.value))))}
+                    />
+                  </div>
+                  <div className="lpo-mb-settings-form__icon-slot">
+                    <InfoTip text={t.infoFdrMin} locale={locale} />
+                  </div>
+
+                  <div className="lpo-mb-settings-form__label">
+                    <label htmlFor={settingsCombineArabsId} className="lpo-mb-settings-form__combine-label">
+                      <CtrlText text={t.combineArabsLabel} />
+                    </label>
+                  </div>
+                  <div className="lpo-mb-settings-form__control lpo-mb-settings-form__control--checkbox">
+                    <input
+                      id={settingsCombineArabsId}
+                      type="checkbox"
+                      checked={combineArabs}
+                      onChange={e => onCombineArabsChange(e.target.checked)}
+                    />
+                  </div>
+                  <div className="lpo-mb-settings-form__icon-slot lpo-mb-settings-form__icon-slot--empty" aria-hidden />
                 </div>
-                <div className="lpo-mb-settings-form__control lpo-mb-settings-form__control--checkbox">
-                  <input
-                    id={settingsCombineArabsId}
-                    type="checkbox"
-                    checked={combineArabs}
-                    onChange={e => onCombineArabsChange(e.target.checked)}
-                  />
-                </div>
-                <div className="lpo-mb-settings-form__icon-slot lpo-mb-settings-form__icon-slot--empty" aria-hidden />
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <MbCsvExportMenu
+            t={t}
+            locale={locale}
+            harmonizedReady={harmonizedExportReady}
+            onExportHarmonized={onExportHarmonizedCsv}
+            residualDiagExport={onExportResidualDiagnostics}
+          />
         </div>
 
-        <span className="lpo-mb-stats-summary">
-          {houseEffects.filter(c => c.pAdj !== null && c.pAdj < 0.05).length} {t.significantCells}
-          &ensp;|&ensp;
-          {houseEffects.filter(c => c.pAdj === null).length} {t.excludedLowN}
+        <span className="lpo-mb-stats-summary" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+          <span className="lpo-mb-stats-summary-inner">
+            <span className="lpo-mb-stats-summary--sig">
+              {houseEffects.filter(c => isHouseEffectFdrSignificant(c)).length} {t.significantCells}
+            </span>
+            <span className="lpo-mb-stats-summary--sep" aria-hidden>
+              &ensp;|&ensp;
+            </span>
+            <span className="lpo-mb-stats-summary--excl">
+              {houseEffects.filter(c => c.pAdj === null).length} {t.excludedLowN}
+            </span>
+          </span>
         </span>
 
         {/* Methodology info — pushed to the far right */}

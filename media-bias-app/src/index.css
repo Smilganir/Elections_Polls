@@ -54,6 +54,66 @@ body { margin: 0; }
   gap: 1rem;
 }
 
+.mb-topbar-back-link {
+  grid-column: 1;
+  justify-self: start;
+  align-self: center;
+  flex-shrink: 0;
+
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 1px solid rgba(88, 152, 241, 0.55);
+  border-radius: 999px;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #7cafeb;
+  background: linear-gradient(
+    180deg,
+    rgba(55, 88, 148, 0.98) 0%,
+    rgba(34, 48, 78, 0.99) 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 2px 10px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.mb-topbar-back-link:visited {
+  color: #7cafeb;
+}
+
+.mb-topbar-back-link:hover {
+  color: #b8d9fc;
+  border-color: rgba(130, 178, 255, 0.85);
+  background: linear-gradient(
+    180deg,
+    rgba(68, 108, 178, 0.99) 0%,
+    rgba(42, 62, 98, 0.99) 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 3px 14px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 420px) {
+  .mb-topbar-back-link {
+    font-size: 0.56rem;
+    padding: 0.2rem 0.34rem;
+    letter-spacing: -0.01em;
+  }
+}
+
 .mb-topbar-brand {
   grid-column: 2;
   justify-self: center;
@@ -85,16 +145,129 @@ body { margin: 0; }
   gap: 0.75rem;
 }
 
-.mb-nav-link {
-  font-size: 0.85rem;
-  color: var(--col-link);
-  text-decoration: none;
-  padding: 0.3rem 0.65rem;
+.mb-export-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mb-export-svg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
   border: 1px solid var(--col-border);
   border-radius: var(--radius-sm);
-  transition: background 0.15s, color 0.15s;
+  background: rgba(30, 40, 56, 0.85);
+  color: var(--col-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.12s ease;
 }
-.mb-nav-link:hover { background: rgba(255,255,255,0.06); color: #c4d6ec; }
+.mb-export-svg-btn:hover:not(:disabled) {
+  background: rgba(58, 123, 213, 0.22);
+  border-color: rgba(127, 160, 196, 0.35);
+  color: var(--col-text);
+}
+.mb-export-svg-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mb-export-svg-btn--open:not(:disabled) {
+  border-color: rgba(127, 160, 196, 0.45);
+  background: rgba(58, 123, 213, 0.18);
+  color: #fff;
+}
+.mb-export-svg-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  pointer-events: none;
+}
+.mb-export-svg-inline :is(svg) {
+  display: block;
+  width: 20px;
+  height: 22px;
+}
+
+/* Physical left anchoring — extends right below the glyph (avoid inline-end=LTR clipping at bar edge). */
+.mb-export-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  min-width: 14rem;
+  padding: 0.45rem 0;
+  background: var(--col-surface);
+  border: 1px solid var(--col-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  z-index: 35;
+}
+
+.mb-export-popover-title {
+  margin: 0;
+  padding: 0 0.75rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--col-muted);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.mb-export-popover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mb-export-popover-item {
+  display: block;
+  width: 100%;
+  text-align: inherit;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--col-text);
+  padding: 0.45rem 0.85rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.mb-export-popover-item:hover:not(:disabled) {
+  background: rgba(58, 123, 213, 0.15);
+}
+.mb-export-popover-item:disabled {
+  color: var(--col-muted);
+  cursor: not-allowed;
+}
+
+/* Export glyph beside panel gear — match gear control sizing + color cascade */
+.lpo-mb-global-controls .mb-export-svg-btn {
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  background: var(--col-surface-hi);
+  color: var(--col-muted);
+}
+.lpo-mb-global-controls .mb-export-svg-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--col-text);
+}
+.lpo-mb-global-controls .mb-export-svg-btn--open:not(:disabled) {
+  border-color: rgba(1, 102, 223, 0.55);
+  background: rgba(58, 123, 213, 0.22);
+  color: #fff;
+}
+.lpo-mb-global-controls .mb-export-popover {
+  z-index: 40;
+}
 
 /* ── Locale toggle (same as poll-tracker-app) ──────────────────────────────── */
 .locale-toggle {
@@ -223,15 +396,28 @@ body { margin: 0; }
 /* ── Global controls bar ──────────────────────────────────────────────────── */
 
 .lpo-mb-global-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
+  column-gap: 1rem;
+  row-gap: 0.75rem;
   padding: 0.75rem 1rem;
   background: var(--col-surface);
   border: 1px solid var(--col-border);
   border-radius: var(--radius) var(--radius) 0 0;
   border-bottom: none;
+}
+
+.lpo-mb-gear-export-cluster {
+  grid-column: 1;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  position: relative;
+  /* Stack above heatmap outlet filter (see previous .lpo-mb-settings-wrap note) */
+  z-index: 35;
 }
 
 .lpo-mb-sr-only {
@@ -249,8 +435,6 @@ body { margin: 0; }
 .lpo-mb-settings-wrap {
   position: relative;
   flex: 0 0 auto;
-  /* Above heatmap outlet filter (30) so dropdown + infotips stack correctly */
-  z-index: 35;
 }
 
 .lpo-mb-settings-btn {
@@ -522,11 +706,32 @@ label.lpo-mb-settings-form__label {
 }
 
 .lpo-mb-stats-summary {
+  grid-column: 2;
+  justify-self: center;
   font-size: 0.78rem;
   color: var(--col-muted);
-  margin-left: auto;
   white-space: nowrap;
+  text-align: center;
+  unicode-bidi: isolate;
+  min-width: 0;
 }
+
+.lpo-mb-stats-summary-inner {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0;
+}
+
+.lpo-mb-stats-summary--sig {
+  color: #c69f2b;
+}
+
+.lpo-mb-stats-summary--excl {
+  color: var(--col-muted);
+}
+
 
 /* ── Section tabs ─────────────────────────────────────────────────────────── */
 
@@ -1095,7 +1300,7 @@ label.lpo-mb-settings-form__label {
 /* Parent grid + subgrid rows: one shared track so bar column width (and 50% zero) aligns vertically */
 .lpo-mb-tilt-section {
   display: grid;
-  grid-template-columns: 12rem 1fr 4rem auto;
+  grid-template-columns: 12rem minmax(0, 1fr) 2.85rem minmax(9.75rem, 11.25rem) minmax(13rem, 1fr);
   column-gap: 0.75rem;
   row-gap: 0.5rem;
   align-items: stretch;
@@ -1103,12 +1308,113 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-tilt-axis-labels {
   grid-column: 1 / -1;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: var(--col-muted);
-  padding: 0 0 0.25rem 12rem;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: end;
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+  padding-bottom: 0.35rem;
   box-sizing: border-box;
+}
+
+.lpo-mb-tilt-axis-corner { min-height: 1px; }
+.lpo-mb-tilt-axis-num-spacer { min-height: 1px; }
+.lpo-mb-tilt-axis-tr-head { min-height: 1px; }
+
+.lpo-mb-tilt-axis-tilt-span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.lpo-mb-tilt-axis-coal-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.lpo-mb-coal-chart-col-caption {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--col-text);
+  line-height: 1.25;
+}
+
+.lpo-mb-coal-chart-col-legend {
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: rgba(148, 163, 184, 0.82);
+}
+
+.lpo-mb-coal-chart-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.lpo-mb-coal-gauge-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.lpo-mb-coal-gauge-track {
+  position: relative;
+  height: 0.85rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: visible;
+}
+
+.lpo-mb-coal-gauge-fill {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.55), rgba(37, 99, 235, 0.95));
+}
+
+.lpo-mb-coal-gauge-target {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 0;
+  z-index: 2;
+}
+
+.lpo-mb-coal-gauge-target-pin {
+  display: block;
+  width: 3px;
+  height: 100%;
+  margin-left: -1.5px;
+  border-radius: 1px;
+  background: linear-gradient(180deg, #fcd34d, #ca8a04);
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.45);
+}
+
+.lpo-mb-coal-gauge-stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.lpo-mb-coal-gauge-pred { color: #93c5fd; }
+.lpo-mb-coal-gauge-sep { color: var(--col-muted); font-weight: 500; }
+.lpo-mb-coal-gauge-actual-num { color: rgba(251, 191, 36, 0.95); }
+.lpo-mb-coal-gauge-na {
+  flex: 1;
+  text-align: center;
+  color: var(--col-muted);
+  font-size: 0.9rem;
 }
 .lpo-mb-tilt-label--coal { color: rgba(252,165,165,0.7); }
 .lpo-mb-tilt-label--opp { color: rgba(147,197,253,0.7); }
@@ -1487,9 +1793,10 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-infotip-para:last-child { margin-bottom: 0; }
 
-/* Push methodology button to the far right of the controls bar */
+/* Far end of the controls bar (grid col 3); mirrors gear on the opposite side */
 .lpo-mb-methodology-info {
-  margin-inline-start: auto;
+  grid-column: 3;
+  justify-self: end;
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
@@ -1503,14 +1810,47 @@ label.lpo-mb-settings-form__label {
     flex-direction: column;
     gap: 0.5rem;
   }
+  .lpo-mb-tilt-axis-labels {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    padding: 0 0 0.25rem 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .lpo-mb-tilt-axis-corner,
+  .lpo-mb-tilt-axis-num-spacer,
+  .lpo-mb-tilt-axis-tr-head {
+    display: none;
+  }
+  .lpo-mb-tilt-axis-tilt-span {
+    padding-inline-start: 8rem;
+  }
+  .lpo-mb-tilt-axis-coal-head {
+    text-align: center;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+  .lpo-mb-tilt-axis-coal-head .lpo-mb-coal-chart-col-legend {
+    text-align: center;
+  }
+
   .lpo-mb-tilt-row {
     display: grid;
     grid-column: auto;
-    grid-template-columns: 8rem 1fr 3.5rem;
-    grid-template-rows: auto auto;
-    gap: 0.75rem;
+    grid-template-columns: 8rem 1fr 3.25rem;
+    grid-template-rows: auto auto auto;
+    gap: 0.5rem 0.65rem;
   }
-  .lpo-mb-track-record { grid-column: 1 / -1; }
-  .lpo-mb-tilt-axis-labels { padding-left: 8rem; }
+  .lpo-mb-tilt-outlet-col { grid-column: 1; grid-row: 1; }
+  .lpo-mb-tilt-bar-area { grid-column: 2; grid-row: 1; }
+  .lpo-mb-tilt-value-col { grid-column: 3; grid-row: 1; justify-self: end; }
+  .lpo-mb-coal-chart-cell {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+  .lpo-mb-track-record { grid-column: 1 / -1; grid-row: 3; }
   .lpo-mb-stats-summary { display: none; }
 }

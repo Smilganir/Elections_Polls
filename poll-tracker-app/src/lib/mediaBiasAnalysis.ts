@@ -16,12 +16,13 @@ import type {
   PartyDimRow,
   Segment,
   ResidualRow,
+  ResidualDiagnosticRow,
   OutletAnomaly,
   HouseEffectCell,
   BlocTilt,
   HistoricalAccuracyResult,
 } from '../types/data'
-import { knesset2022FinalPolls, knesset2022Actual } from './historicalPolls2022'
+import { knesset2022FinalPolls, knesset2022Actual, KNESSET25_COALITION_BLOC_SEATS_ACTUAL } from './historicalPolls2022'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -159,10 +160,19 @@ export function harmonizeArabList(
 /**
  * Computes a 30-day rolling cross-outlet mean seat count for one party.
  *
- * For each date D that appears anywhere in `rows`, the baseline is the mean
- * of all rows for `party` whose date falls in [D − windowDays, D] (inclusive,
- * calendar days).  Non-finite votes are skipped.  If no party rows fall in the
- * window for a given date, that date is omitted from the returned Map (no NaN).
+ * For each date D in `queryDates` (or, when omitted, every unique date in
+ * `rows`), the baseline is the mean of all rows for `party` whose date falls
+ * in [D − windowDays, D] (inclusive, calendar days).  Non-finite votes are
+ * skipped.  If no party rows fall in the window for a given date, that date
+ * is omitted from the returned Map (no NaN).
+ *
+ * `queryDates` matters in the LOO context: when computing baselines for
+ * "outlet X" we pass `rows = otherRows` (X excluded) for the average, but the
+ * date axis must be the **full dataset** so X's own poll dates still get a
+ * lookup entry.  Without that, X's polls on dates where no other outlet
+ * happened to publish (a frequent pattern for outlets with off-cycle release
+ * schedules, e.g. Friday-only Maariv vs. Thursday-heavy news outlets) are
+ * silently dropped from `computeResiduals`.
  *
  * The caller builds a Map<party, Map<date, baseline>> by calling this once per
  * party and passing the result to computeResiduals.
@@ -171,6 +181,7 @@ export function buildPartyBaselineSeries(
   rows: UnpivotRow[],
   party: string,
   windowDays = 30,
+  queryDates?: Iterable<string>,
 ): Map<string, number> {
   const windowMs = windowDays * MS_PER_DAY
 
@@ -181,8 +192,10 @@ export function buildPartyBaselineSeries(
     .filter(r => Number.isFinite(r.ts))
     .sort((a, b) => a.ts - b.ts)
 
-  // Collect all unique dates across the full dataset, sorted.
-  const allDates = [...new Set(rows.map(r => r.date))]
+  // Date axis: caller-supplied set (preserves LOO focal-outlet dates) or — as
+  // fallback when used outside the LOO map — every date present in `rows`.
+  const dateSource = queryDates ?? rows.map(r => r.date)
+  const allDates = [...new Set(dateSource)]
     .map(d => ({ date: d, ts: parseDate(d) }))
     .filter(d => Number.isFinite(d.ts))
     .sort((a, b) => a.ts - b.ts)
@@ -217,6 +230,107 @@ export function buildPartyBaselineSeries(
 // ─── computeResiduals ────────────────────────────────────────────────────────
 
 /**
+ * LOO map: `${outlet}\x00${party}` → rolling baseline by poll `date` string.
+ *
+ * Critical: the date axis is the FULL dataset's distinct dates, not the
+ * focal-outlet-excluded subset.  The averaging pool stays LOO (focal outlet's
+ * own rows are removed), but the focal outlet's own poll dates must still be
+ * lookup-able — otherwise rows whose date never matches another outlet's
+ * publication day get silently dropped (e.g. Friday-only Maariv would lose
+ * ~80% of its rows because most other outlets publish Thursday/Sunday).
+ */
+function buildLooBaselineMap(
+  rows: UnpivotRow[],
+  windowDays: number,
+): Map<string, Map<string, number>> {
+  const outlets = [...new Set(rows.map(r => r.mediaOutlet))]
+  const parties = [...new Set(rows.filter(r => Number.isFinite(r.votes)).map(r => r.party))]
+  const allDates = [...new Set(rows.map(r => r.date))]
+
+  const looMap = new Map<string, Map<string, number>>()
+  for (const outlet of outlets) {
+    const otherRows = rows.filter(r => r.mediaOutlet !== outlet)
+    for (const party of parties) {
+      looMap.set(
+        `${outlet}\x00${party}`,
+        buildPartyBaselineSeries(otherRows, party, windowDays, allDates),
+      )
+    }
+  }
+  return looMap
+}
+
+/**
+ * One row per input `rows` element: explains whether `computeResiduals` would
+ * keep it (`included` + baseline/residuals) or drop it (`skipped_*`).
+ * Uses the same LOO baseline construction as `computeResiduals`.
+ */
+export function listResidualDiagnostics(
+  rows: UnpivotRow[],
+  windowDays = 30,
+): ResidualDiagnosticRow[] {
+  const looMap = buildLooBaselineMap(rows, windowDays)
+  const out: ResidualDiagnosticRow[] = []
+
+  for (const row of rows) {
+    const base = {
+      pollId: row.pollId,
+      date: row.date,
+      mediaOutlet: row.mediaOutlet,
+      party: row.party,
+      votes: row.votes,
+      respondents: row.respondents,
+      pollster: row.pollster,
+    }
+
+    if (!Number.isFinite(row.votes)) {
+      out.push({
+        ...base,
+        status: 'skipped_non_finite_votes',
+        baseline: null,
+        rawResidual: null,
+        statResidual: null,
+      })
+      continue
+    }
+
+    const dateMap = looMap.get(`${row.mediaOutlet}\x00${row.party}`)
+    if (!dateMap) {
+      out.push({
+        ...base,
+        status: 'skipped_no_baseline',
+        baseline: null,
+        rawResidual: null,
+        statResidual: null,
+      })
+      continue
+    }
+
+    const baseline = dateMap.get(row.date)
+    if (baseline === undefined) {
+      out.push({
+        ...base,
+        status: 'skipped_no_baseline',
+        baseline: null,
+        rawResidual: null,
+        statResidual: null,
+      })
+      continue
+    }
+
+    out.push({
+      ...base,
+      status: 'included',
+      baseline,
+      rawResidual: row.votes - baseline,
+      statResidual: dampenResidual(row.votes, baseline),
+    })
+  }
+
+  return out
+}
+
+/**
  * Enriches each row with `baseline`, `rawResidual`, and `statResidual` using
  * a **leave-one-out (LOO)** cross-outlet baseline.
  *
@@ -235,17 +349,7 @@ export function computeResiduals(
   rows: UnpivotRow[],
   windowDays = 30,
 ): ResidualRow[] {
-  const outlets = [...new Set(rows.map(r => r.mediaOutlet))]
-  const parties = [...new Set(rows.filter(r => Number.isFinite(r.votes)).map(r => r.party))]
-
-  // Build LOO baseline map: `${outlet}\x00${party}` → Map<dateStr, baseline>
-  const looMap = new Map<string, Map<string, number>>()
-  for (const outlet of outlets) {
-    const otherRows = rows.filter(r => r.mediaOutlet !== outlet)
-    for (const party of parties) {
-      looMap.set(`${outlet}\x00${party}`, buildPartyBaselineSeries(otherRows, party, windowDays))
-    }
-  }
+  const looMap = buildLooBaselineMap(rows, windowDays)
 
   const result: ResidualRow[] = []
   for (const row of rows) {
@@ -665,7 +769,7 @@ const COMPARISON_KEYS: ReadonlyArray<{
  * present in knesset2022FinalPolls.
  *
  * MAE is computed over the 11 comparison keys above (reported to 1 decimal).
- * Coalition Bloc Error = (Likud + Religious Zionism + Shas + UTJ) − 64.
+ * Coalition Bloc Error = poll bloc − KNESSET25_COALITION_BLOC_SEATS_ACTUAL (Likud+RZ+Shas+UTJ certified).
  */
 export function computeHistoricalAccuracy(outletName: string): HistoricalAccuracyResult {
   const poll = knesset2022FinalPolls[outletName]
@@ -686,7 +790,7 @@ export function computeHistoricalAccuracy(outletName: string): HistoricalAccurac
     outlet: outletName,
     hasData: true,
     mae,
-    coalitionBlocError: coalitionPred - 64,
+    coalitionBlocError: coalitionPred - KNESSET25_COALITION_BLOC_SEATS_ACTUAL,
     coalitionPred,
   }
 }

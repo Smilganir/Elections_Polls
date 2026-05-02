@@ -4,6 +4,9 @@ import { MediaBiasPanel } from './ui/MediaBiasPanel'
 import { useLocale } from './i18n/useLocale'
 import { MB } from './i18n/strings'
 
+/** Published poll tracker (GitHub Pages). Relative `../` breaks when media-bias is opened from file or non-sibling path. */
+const POLL_TRACKER_URL = 'https://smilganir.github.io/Elections_Polls/'
+
 export default function App() {
   const [windowDays, setWindowDays] = useState(30)
   const [combineArabs, setCombineArabs] = useState(true)
@@ -17,6 +20,13 @@ export default function App() {
     <div className="mb-app-shell">
       <header className="mb-topbar">
         <div className="mb-topbar-inner">
+          <a
+            href={POLL_TRACKER_URL}
+            className="mb-topbar-back-link"
+            aria-label={t.backToPollTracker}
+          >
+            {t.backToPollTracker}
+          </a>
           <div className="mb-topbar-brand" dir={locale === 'he' ? 'rtl' : 'ltr'}>
             <h1>{t.appTitle}</h1>
             <span className="mb-topbar-sub">{t.appSubtitle}</span>
@@ -42,9 +52,6 @@ export default function App() {
                 עב
               </button>
             </div>
-            <a href="../" className="mb-nav-link" aria-label={t.backToPollTracker}>
-              {t.backToPollTracker}
-            </a>
           </nav>
         </div>
       </header>

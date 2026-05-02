@@ -11,6 +11,18 @@ export type MbUiStrings = {
   loadFailed: string
   loadFailedCheck: string
   localeToggleAria: string
+  /** Download harmonized unpivot (Arab merge applied) as CSV */
+  exportHarmonizedCsv: string
+  exportHarmonizedCsvAria: string
+  /** LOO residual row-level status (matches current min-polls, outlet filter, baseline window) */
+  exportResidualDiagnosticsCsv: string
+  exportResidualDiagnosticsAria: string
+  /** Icon beside locale opens CSV popup */
+  exportDataMenuAria: string
+  /** Popup heading above export actions */
+  exportPopoverTitle: string
+  /** Residual export row disabled until panel registers */
+  exportResidualWaitingTooltip: string
 
   // Global controls
   /** Gear button: opens baseline / Arabs / min polls / FDR panel */
@@ -31,7 +43,7 @@ export type MbUiStrings = {
   tabAnomalies: string
 
   // Heatmap section
-  heatmapSubtitle: (minN: number) => string
+  heatmapSubtitle: string
   sortToggleAria: string
   /** Small label above Bias / Seats row-sort toggle in heatmap header */
   sortByCaption: string
@@ -42,8 +54,9 @@ export type MbUiStrings = {
   legendOver: string
   legendUnder: string
   legendFdr: string
-  legendDimmed: string
-  legendDimmedExplain: string
+  /** Italic label: faint number when |mean residual| is below the heatmap threshold */
+  legendFaintDigits: string
+  legendFaintDigitsExplain: string
   noData: string
 
   // Bloc legend labels (corner cell)
@@ -56,6 +69,12 @@ export type MbUiStrings = {
   blocTiltSubtitle: string
   tiltLabelOpposition: string
   tiltLabelCoalition: string
+  /** Column header above Knesset 25 final-poll coalition vs certified seats */
+  tiltCoalPollVsActualCaption: string
+  /** Accessible description for coalition bullet gauge */
+  tiltCoalPollGaugeAria: (pollSeats: number, actualSeats: number) => string
+  /** Second line under bloc-tilt column header: explains blue bar vs gold marker */
+  tiltCoalGaugeLegendBlurb: string
 
   // Track Record (bloc tilt rows)
   trackRecord2022: string
@@ -109,6 +128,14 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     loadFailed: 'Failed to load data',
     loadFailedCheck: 'Check that VITE_GOOGLE_SHEETS_API_KEY is set in media-bias-app/.env',
     localeToggleAria: 'Interface language',
+    exportHarmonizedCsv: 'Export harmonized CSV',
+    exportHarmonizedCsvAria: 'Download harmonized poll table as CSV (Arab list merge per settings)',
+    exportResidualDiagnosticsCsv: 'Export residual diagnostics',
+    exportResidualDiagnosticsAria:
+      'Download CSV: each filtered row with LOO baseline status (included vs skipped_no_baseline) and residuals when included',
+    exportDataMenuAria: 'Open CSV downloads',
+    exportPopoverTitle: 'Download CSV',
+    exportResidualWaitingTooltip: 'Waiting for analysis panel…',
 
     // Global controls
     settingsAria: 'Analysis settings',
@@ -128,20 +155,20 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     tabAnomalies: 'Anomalies',
 
     // Heatmap
-    heatmapSubtitle: (minN) =>
-      `Each cell = mean raw residual (outlet seats \u2212 LOO cross-outlet baseline). Bold border = p<0.05 after BH-FDR. Dimmed = n<${minN} (excluded from FDR pool).`,
+    heatmapSubtitle:
+      'Each cell = mean raw residual (outlet seats \u2212 LOO cross-outlet baseline). Gold border = p<0.05 after BH-FDR. Faint digits = |mean| < 0.5 seats (readability only; can still be significant).',
     sortToggleAria: 'Sort party rows',
     sortByCaption: 'Sort by',
     sortToggleBias: 'Bias',
     sortToggleSeats: 'Seats',
     biasColHeader: 'Bias',
     biasColHeaderTooltip:
-      'n-weighted mean of raw residual (outlet \u2212 LOO cross-outlet baseline) across all outlets, for the party in this row.',
+      'Sum of raw residual (outlet \u2212 LOO baseline) across outlets where that cell is p<0.05 after BH-FDR. Outlets without a gold border do not contribute. Empty means no outlet is significant for this party.',
     legendOver: 'Over-reports',
     legendUnder: 'Under-reports',
     legendFdr: 'p<0.05 (FDR)',
-    legendDimmed: 'dim',
-    legendDimmedExplain: 'n<min-n (FDR excluded)',
+    legendFaintDigits: 'Faint digits',
+    legendFaintDigitsExplain: '|mean| < 0.5 seats',
     noData: 'No data yet \u2014 adjust window or min-n settings.',
 
     // Bloc legend
@@ -154,6 +181,11 @@ export const MB: Record<AppLocale, MbUiStrings> = {
       'Bloc tilt = \u03a3 coalition residuals \u2212 \u03a3 opposition residuals (raw seats). Positive = outlet skews Coalition; negative = skews Opposition.',
     tiltLabelOpposition: '\u2190 Opposition tilt',
     tiltLabelCoalition: 'Coalition tilt \u2192',
+    tiltCoalPollVsActualCaption: 'Final poll bloc (Nov 2022)',
+    tiltCoalPollGaugeAria: (pollSeats, actualSeats) =>
+      `Predicted coalition seats from final pre-election poll: ${pollSeats}. Certified bloc result: ${actualSeats}`,
+    tiltCoalGaugeLegendBlurb:
+      "Likud + Religious Zionism + Shas + UTJ seats — blue = outlet's final pre-election poll · gold line = certified Nov 2022 result",
 
     // Track Record
     trackRecord2022: '2022 Track Record:',
@@ -211,6 +243,14 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     loadFailed: 'שגיאה בטעינת נתונים',
     loadFailedCheck: 'ודאו שהמשתנה VITE_GOOGLE_SHEETS_API_KEY מוגדר ב-media-bias-app/.env',
     localeToggleAria: 'שפת הממשק',
+    exportHarmonizedCsv: 'ייצוא CSV מותאם',
+    exportHarmonizedCsvAria: 'הורדת טבלת הסקרים המותאמת כ-CSV (איחוד רשימות ערבים לפי ההגדרה)',
+    exportResidualDiagnosticsCsv: 'ייצוא אבחון שאריות',
+    exportResidualDiagnosticsAria:
+      'הורדת CSV: כל שורה אחרי הפילטרים עם סטטוס קו בסיס LOO (כלול / דולג בלי בסיס) ושאריות כשהן מחושבות',
+    exportDataMenuAria: 'פתיחת תפריט הורדת CSV',
+    exportPopoverTitle: 'הורדת CSV',
+    exportResidualWaitingTooltip: 'ממתינים לטעינת הפאנל…',
 
     // Global controls
     settingsAria: 'הגדרות ניתוח',
@@ -230,20 +270,20 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     tabAnomalies: 'חריגות',
 
     // Heatmap
-    heatmapSubtitle: (minN) =>
-      `כל תא = ממוצע סטייה גולמית (מנדטי ערוץ \u2212 קו בסיס LOO). גבול מודגש = p<0.05 לאחר תיקון BH-FDR. מעומעם = n<${minN} (מוחרג מ-FDR).`,
+    heatmapSubtitle:
+      'כל תא = ממוצע סטייה גולמית (מנדטי ערוץ \u2212 קו בסיס LOO). מסגרת זהובה = p<0.05 לאחר BH-FDR. ספרות עמומות = |ממוצע| < 0.5 מנדטים (קריאות בלבד; עדיין יכול להיות מובהק).',
     sortToggleAria: 'מיון שורות לפי מפלגה',
     sortByCaption: 'מיין לפי',
     sortToggleBias: 'הטיה',
     sortToggleSeats: 'מנדטים',
     biasColHeader: 'הטיה',
     biasColHeaderTooltip:
-      'ממוצע משוקלל-n של סטייה גולמית (מנדטי ערוץ מול ממוצע LOO) על פני כל הערוצים, לשורה של המפלגה הזו.',
+      'סיכום הסטיות הגולמיות (ערוץ \u2212 קו בסיס LOO) בכל הערוכים שנמצאו מובהקים (p<0.05 BH-FDR). תאים ללא מסגרת זהובה לא נכנסים לסיכום. ריק = אף ערוץ לא מובהק עבור מפלגה זו.',
     legendOver: 'מגזים',
     legendUnder: 'מקטין',
     legendFdr: 'p<0.05 (FDR)',
-    legendDimmed: 'מעומעם',
-    legendDimmedExplain: 'n<סף-n (מוחרג מ-FDR)',
+    legendFaintDigits: 'ספרות עמומות',
+    legendFaintDigitsExplain: '|ממוצע| < 0.5 מנדטים',
     noData: 'אין נתונים — שנו הגדרות חלון או סף-n.',
 
     // Bloc legend
@@ -256,6 +296,11 @@ export const MB: Record<AppLocale, MbUiStrings> = {
       'הטיית גוש = \u03a3 שאריות קואליציה \u2212 \u03a3 שאריות אופוזיציה (מנדטים גולמיים). חיובי = הערוץ מגזים לטובת קואליציה; שלילי = לטובת אופוזיציה.',
     tiltLabelOpposition: '\u2190 הטיה לאופוזיציה',
     tiltLabelCoalition: 'הטיה לקואליציה \u2192',
+    tiltCoalPollVsActualCaption: 'בלוק בפול הקודם (נוב׳ 2022)',
+    tiltCoalPollGaugeAria: (pollSeats, actualSeats) =>
+      `מנדטים בלוק מהסקר השבוע האחרון לפני הבחירות: ${pollSeats}. התוצאה הרשמית בבלוק: ${actualSeats}`,
+    tiltCoalGaugeLegendBlurb:
+      'סה״כ כח, ציונות דתית, ש״ס ויהדות התורה — כחול = סקר סופי לפני הבחירות · קו זהב = תוצאות ספירה רשמית (נוב׳ 2022)',
 
     // Track Record
     trackRecord2022: 'רקורד 2022:',
