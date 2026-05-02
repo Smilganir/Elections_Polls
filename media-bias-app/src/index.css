@@ -1,6 +1,6 @@
 /* ── Design tokens (match poll-tracker-app palette) ───────────────────────── */
 :root {
-  font-family: 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   color: #e8ecf2;
   background: #121820;
 
@@ -19,6 +19,11 @@
 
   --radius: 0.4rem;
   --radius-sm: 0.25rem;
+}
+
+/* Hebrew UI: Heebo (document lang set in localeContext) */
+:root:lang(he) {
+  font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -118,21 +123,24 @@ body { margin: 0; }
   grid-column: 2;
   justify-self: center;
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
   text-align: center;
 }
 
 .mb-topbar-brand h1 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: #7cafeb;
   letter-spacing: 0.02em;
 }
 
 .mb-topbar-sub {
+  display: block;
   font-size: 0.8rem;
+  line-height: 1.35;
   color: var(--col-muted);
   font-weight: 400;
 }
@@ -817,6 +825,12 @@ label.lpo-mb-settings-form__label {
   text-align: center;
 }
 
+/* Bloc tilt explainer: sits under the tilt grid inside the section */
+.lpo-mb-section-subtitle--below-bloc-tilt {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
 .lpo-mb-empty {
   color: var(--col-muted);
   text-align: center;
@@ -973,7 +987,7 @@ label.lpo-mb-settings-form__label {
   text-align: center;
   max-width: 5rem;
   min-width: 3.2rem;
-  vertical-align: bottom;
+  vertical-align: top;
 }
 .lpo-mb-th-party--coalition { color: #5ba8ff; }
 .lpo-mb-th-party--opposition { color: #e8ecf2; }
@@ -1025,13 +1039,31 @@ label.lpo-mb-settings-form__label {
 .lpo-mb-bloc-legend-label--coalition { color: #0166DF; }
 .lpo-mb-bloc-legend-label--opposition { color: #e8ecf2; }
 
-/* Bias / Seats sort toggle (last column header) */
+/* Bias / Seats sort toggle (last column header) — stacks like .lpo-mb-th-party-inner */
 .lpo-mb-bias-sort-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.28rem;
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.lpo-mb-bias-sort-icon-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lpo-mb-bias-sort-total {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #6a7f9a;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .lpo-mb-bias-sort-caption {
@@ -1043,14 +1075,19 @@ label.lpo-mb-settings-form__label {
   white-space: nowrap;
 }
 
+/* Match .lpo-mb-outlet-score-pills margin-top spacing under header label text */
+.lpo-mb-bias-sort-wrap > .locale-toggle--vertical {
+  margin-top: 5px;
+}
+
 .lpo-mb-th-bias-col {
   cursor: default;
   text-transform: none;
   max-width: 4.5rem;
   min-width: 3.4rem;
-  padding: 4px 4px 6px;
+  padding: 0.3rem 0.2rem 0.4rem;
   border-left: 1px solid rgba(255, 255, 255, 0.12);
-  vertical-align: bottom;
+  vertical-align: top;
 }
 
 /* Thin gap row between coalition and opposition party rows */
@@ -1340,13 +1377,32 @@ label.lpo-mb-settings-form__label {
 
 /* ── Bloc tilt section ────────────────────────────────────────────────────── */
 
-/* Parent grid + subgrid rows: one shared track so bar column width (and 50% zero) aligns vertically */
+/*
+ * One continuous vertical divider between tilt values and coalition gauges: absolute element
+ * sized/positioned via BlocTiltSection useLayoutEffect + ResizeObserver (midpoint of row gutter).
+ */
 .lpo-mb-tilt-section {
+  position: relative;
   display: grid;
-  grid-template-columns: 12rem minmax(0, 1fr) 2.85rem minmax(9.75rem, 11.25rem) minmax(13rem, 1fr);
-  column-gap: 0.75rem;
+  /* Cols 2 (tilt bars) and 4 (Final bloc gauges): same track so widths stay matched */
+  grid-template-columns: 12rem minmax(17rem, 1fr) 2.85rem minmax(17rem, 1fr) minmax(12rem, 1fr);
+  column-gap: 1.5rem;
   row-gap: 0.5rem;
   align-items: stretch;
+}
+
+.lpo-mb-tilt-vrule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  z-index: 2;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 1px;
 }
 
 .lpo-mb-tilt-axis-labels {
@@ -1354,7 +1410,7 @@ label.lpo-mb-settings-form__label {
   display: grid;
   grid-template-columns: subgrid;
   align-items: end;
-  column-gap: 0.75rem;
+  column-gap: 1.5rem;
   row-gap: 0.25rem;
   padding-bottom: 0.35rem;
   box-sizing: border-box;
@@ -1383,18 +1439,38 @@ label.lpo-mb-settings-form__label {
   font-weight: 700;
   color: var(--col-text);
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .lpo-mb-coal-chart-col-legend {
   font-size: 0.62rem;
   line-height: 1.35;
   color: rgba(148, 163, 184, 0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.lpo-mb-coal-chart-col-legend-lead {
+  white-space: nowrap;
+  /* Same hue as .lpo-mb-tilt-bar--coalition (#0166DF via tokens) */
+  color: var(--col-coalition);
+}
+
+.lpo-mb-coal-chart-col-legend-gold {
+  color: rgba(251, 191, 36, 0.9);
+  font-weight: 600;
+  display: block;
+  width: 100%;
 }
 
 .lpo-mb-coal-chart-cell {
   display: flex;
   align-items: center;
   min-width: 0;
+  padding-inline-start: 0.4rem;
 }
 
 .lpo-mb-coal-gauge-wrap {
@@ -1459,8 +1535,8 @@ label.lpo-mb-settings-form__label {
   color: var(--col-muted);
   font-size: 0.9rem;
 }
-.lpo-mb-tilt-label--coal { color: rgba(252,165,165,0.7); }
-.lpo-mb-tilt-label--opp { color: rgba(147,197,253,0.7); }
+.lpo-mb-tilt-label--coal { color: var(--col-coalition); }
+.lpo-mb-tilt-label--opp { color: var(--col-opposition); }
 
 .lpo-mb-tilt-row {
   display: grid;
@@ -1511,14 +1587,6 @@ label.lpo-mb-settings-form__label {
   font-size: 0.72rem;
   color: var(--col-muted);
 }
-.lpo-mb-tilt-bias-note {
-  font-size: 0.7rem;
-  color: rgba(147,197,253,0.55);
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 .lpo-mb-tilt-bar-area {
   position: relative;
@@ -1550,7 +1618,7 @@ label.lpo-mb-settings-form__label {
   background: linear-gradient(270deg, rgba(148,163,184,0.35) 0%, rgba(200,213,225,0.75) 100%);
 }
 
-.lpo-mb-tilt-value-col { text-align: right; }
+.lpo-mb-tilt-value-col { text-align: right; padding-inline-end: 0.4rem; }
 .lpo-mb-tilt-value {
   font-size: 0.82rem;
   font-weight: 700;
@@ -1566,9 +1634,6 @@ label.lpo-mb-settings-form__label {
   color: var(--col-muted);
   white-space: nowrap;
 }
-
-.lpo-mb-tr-label { color: rgba(148,163,184,0.65); }
-.lpo-mb-tr-mae { color: #94a3b8; }
 
 .lpo-mb-tr-bloc { font-weight: 600; }
 .lpo-mb-tr-bloc--pos { color: #5ba8ff; }
@@ -1848,6 +1913,9 @@ label.lpo-mb-settings-form__label {
   .mb-topbar-sub { display: none; }
   .mb-page-content { padding: 1rem 0.75rem 2rem; }
   /* Narrow: stacked track record — subgrid not used */
+  .lpo-mb-tilt-vrule {
+    display: none !important;
+  }
   .lpo-mb-tilt-section {
     display: flex;
     flex-direction: column;
@@ -1868,17 +1936,27 @@ label.lpo-mb-settings-form__label {
     display: none;
   }
   .lpo-mb-tilt-axis-tilt-span {
+    min-width: 0;
     padding-inline-start: 8rem;
   }
   .lpo-mb-tilt-axis-coal-head {
     text-align: center;
     max-width: 100%;
     margin-inline: auto;
+    margin-inline-start: auto;
+    padding-inline-start: 0;
+    border-inline-start: none;
   }
   .lpo-mb-tilt-axis-coal-head .lpo-mb-coal-chart-col-legend {
     text-align: center;
+    align-items: center;
   }
-
+  .lpo-mb-tilt-axis-coal-head .lpo-mb-coal-chart-col-caption {
+    white-space: normal;
+  }
+  .lpo-mb-tilt-axis-coal-head .lpo-mb-coal-chart-col-legend-lead {
+    white-space: normal;
+  }
   .lpo-mb-tilt-row {
     display: grid;
     grid-column: auto;
@@ -1889,12 +1967,18 @@ label.lpo-mb-settings-form__label {
   .lpo-mb-tilt-outlet-col { grid-column: 1; grid-row: 1; }
   .lpo-mb-tilt-bar-area { grid-column: 2; grid-row: 1; }
   .lpo-mb-tilt-value-col { grid-column: 3; grid-row: 1; justify-self: end; }
-  .lpo-mb-coal-chart-cell {
+  .lpo-mb-tilt-row .lpo-mb-coal-chart-cell {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100%;
+    margin-inline-start: 0;
+    margin-top: 0.25rem;
+    padding-inline-start: 0;
+    padding-top: 0.55rem;
+    border-inline-start: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .lpo-mb-track-record { grid-column: 1 / -1; grid-row: 3; }
+  .lpo-mb-tilt-row .lpo-mb-track-record { grid-column: 1 / -1; grid-row: 3; }
 }
 
 /* ── Narrow portrait: one-time rotate-to-landscape hint ─────────────────── */

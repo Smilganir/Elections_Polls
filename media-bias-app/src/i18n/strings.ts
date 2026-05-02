@@ -48,6 +48,8 @@ export type MbUiStrings = {
   // Heatmap section
   heatmapSubtitle: string
   sortToggleAria: string
+  /** Bold label above bias-column sort controls (total significant residual column) */
+  heatmapBiasColTotalLabel: string
   /** Small label above Bias / Seats row-sort toggle in heatmap header */
   sortByCaption: string
   sortToggleBias: string
@@ -68,19 +70,19 @@ export type MbUiStrings = {
   arabCombinedHe: string
 
   // Bloc Tilt section
-  blocTiltSubtitle: string
+  /** Bloc tilt explainer below the tilt grid */
+  blocTiltSubtitleLead: string
   tiltLabelOpposition: string
   tiltLabelCoalition: string
   /** Column header above Knesset 25 final-poll coalition vs certified seats */
   tiltCoalPollVsActualCaption: string
   /** Accessible description for coalition bullet gauge */
   tiltCoalPollGaugeAria: (pollSeats: number, actualSeats: number) => string
-  /** Second line under bloc-tilt column header: explains blue bar vs gold marker */
-  tiltCoalGaugeLegendBlurb: string
+  /** Coalition legend: parties (muted); certified result clause (gold in CSS) */
+  tiltCoalGaugeLegendLead: string
+  tiltCoalGaugeLegendGold: string
 
   // Track Record (bloc tilt rows)
-  trackRecord2022: string
-  trackRecordMae: string
   trackRecordBlocError: string
   trackRecordNoData: string
 
@@ -162,6 +164,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     heatmapSubtitle:
       'Each cell = mean raw residual (outlet seats \u2212 LOO cross-outlet baseline). Gold border = p<0.05 after BH-FDR. Dimmer digits when mean < 0.5 seats (readability only; can still be significant).',
     sortToggleAria: 'Sort party rows',
+    heatmapBiasColTotalLabel: 'Total',
     sortByCaption: 'Sort by',
     sortToggleBias: 'Bias',
     sortToggleSeats: 'Seats',
@@ -180,19 +183,17 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     arabCombinedHe: 'Arab List (combined)',
 
     // Bloc Tilt
-    blocTiltSubtitle:
-      'Bloc tilt = \u03a3 coalition residuals \u2212 \u03a3 opposition residuals (raw seats). Positive = outlet skews Coalition; negative = skews Opposition.',
+    blocTiltSubtitleLead:
+      'Direction from Σ coalition residuals − Σ opposition residuals (raw seat means).',
     tiltLabelOpposition: '\u2190 Opposition tilt',
     tiltLabelCoalition: 'Coalition tilt \u2192',
     tiltCoalPollVsActualCaption: 'Final poll bloc (Nov 2022)',
     tiltCoalPollGaugeAria: (pollSeats, actualSeats) =>
       `Predicted coalition seats from final pre-election poll: ${pollSeats}. Certified bloc result: ${actualSeats}`,
-    tiltCoalGaugeLegendBlurb:
-      "Likud + Religious Zionism + Shas + UTJ seats — blue = outlet's final pre-election poll · gold line = certified Nov 2022 result",
+    tiltCoalGaugeLegendLead: 'Likud + Religious Zionism + Shas + UTJ seats · ',
+    tiltCoalGaugeLegendGold: 'gold line = certified Nov 2022 result',
 
     // Track Record
-    trackRecord2022: '2022 Track Record:',
-    trackRecordMae: 'MAE',
     trackRecordBlocError: 'Bloc Error:',
     trackRecordNoData: '2022: N/A \u2014 No Data',
 
@@ -238,7 +239,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
   he: {
     // App shell
     appTitle: 'הטיית מדיה',
-    appSubtitle: 'ניתוח אפקטי בית בסקרי בחירות',
+    appSubtitle: 'ניתוח אפקטי בית בסקרי בחירות בישראל',
     backToPollTracker: '\u2190 מעקב סקרים',
     dataLabel: 'נתונים:',
     designLabel: 'עיצוב:',
@@ -278,6 +279,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     heatmapSubtitle:
       'כל תא = ממוצע סטייה גולמית (מנדטי ערוץ \u2212 קו בסיס LOO). מסגרת זהובה = p<0.05 לאחר BH-FDR. טקסט עמום כשממוצע < 0.5 מנדטים (קריאות בלבד; עדיין יכול להיות מובהק).',
     sortToggleAria: 'מיון שורות לפי מפלגה',
+    heatmapBiasColTotalLabel: '\u05e1\u05d4\u05f4\u05db',
     sortByCaption: 'מיין לפי',
     sortToggleBias: 'הטיה',
     sortToggleSeats: 'מנדטים',
@@ -296,19 +298,17 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     arabCombinedHe: 'רשימה ערבית (משולבת)',
 
     // Bloc Tilt
-    blocTiltSubtitle:
-      'הטיית גוש = \u03a3 שאריות קואליציה \u2212 \u03a3 שאריות אופוזיציה (מנדטים גולמיים). חיובי = הערוץ מגזים לטובת קואליציה; שלילי = לטובת אופוזיציה.',
+    blocTiltSubtitleLead:
+      'הכיוון נקבע לפי \u03a3 שאריות קואליציה \u2212 \u03a3 שאריות אופוזיציה (ממוצעים גולמיים במנדטים).',
     tiltLabelOpposition: '\u2190 הטיה לאופוזיציה',
     tiltLabelCoalition: 'הטיה לקואליציה \u2192',
-    tiltCoalPollVsActualCaption: 'בלוק בפול הקודם (נוב׳ 2022)',
+    tiltCoalPollVsActualCaption: 'הקואליציה בסקר האחרון לפני הבחירות (נוב׳ 2022)',
     tiltCoalPollGaugeAria: (pollSeats, actualSeats) =>
       `מנדטים בלוק מהסקר השבוע האחרון לפני הבחירות: ${pollSeats}. התוצאה הרשמית בבלוק: ${actualSeats}`,
-    tiltCoalGaugeLegendBlurb:
-      'סה״כ כח, ציונות דתית, ש״ס ויהדות התורה — כחול = סקר סופי לפני הבחירות · קו זהב = תוצאות ספירה רשמית (נוב׳ 2022)',
+    tiltCoalGaugeLegendLead: 'סה״כ קואליציה: ליכוד, ציונות דתית, ש״ס ויהדות התורה',
+    tiltCoalGaugeLegendGold: 'קו זהב = תוצאות ספירה רשמית (נוב׳ 2022)',
 
     // Track Record
-    trackRecord2022: 'רקורד 2022:',
-    trackRecordMae: 'MAE',
     trackRecordBlocError: 'שגיאת גוש:',
     trackRecordNoData: '2022: אין נתונים',
 
@@ -338,9 +338,15 @@ export const MB: Record<AppLocale, MbUiStrings> = {
       'ערוץ עם רק 1–2 סקרים עלול להיראות מוטה רק במקרה. הפילטר הזה מסתיר ערוצים עם מעט מדי סקרים כדי שהתוצאות יהיו אמינות יותר. ברירת המחדל היא 5.',
     infoFdrMin:
       'FDR (False Discovery Rate — שיעור גילוי שווא): כשמריצים מאות השוואות ערוץ×מפלגה במקביל, ערכי p שלא מתוקנים עלולים לסמן יותר מדי תאים כ„מובהקים” בלי בסיס באמת; Benjamini–Hochberg (BH-FDR) מתאים למרובה מבחנים ומסדר את ערכי ה-p בהתאם.\n\n„מינ׳ ל-FDR" הוא צפיות מינימלי לכל תא לפני שנכנס ל-BH. מתחת לסף התא מחוץ לתיקון (אפור) אך עדיין מראה גוון מהממוצע; מסגרת זהובה = p מתוקן < 0.05.',
-    infoMethodologyTitle: 'שיטת הניתוח',
+    infoMethodologyTitle: 'מתודולוגיה',
     infoMethodology:
-      'אפקט בית מתאר נטייה של גוף שידור לפרסם מנדטים גבוהים או נמוכים יחסית לעמיתיו עבור אותה מפלגה — השוואה יחסית בלבד, לא "מי צודק."\n\nקו בסיס — השארת ערוץ אחד בחוץ (LOO): לכל סקר משווים לממוצע חוצה־ערוצים שמחושב רק מן הערוצים האחרים. הממוצע נשען על הסקרים לאותה מפלגה בחלון הבסיס (14 / 30 / 60 ימים, עד תאריך הסקר); הערוץ הנבחן אינו נכלל בממוצע של עצמו.\n\nשארית: מנדטים בסקר של הערוץ פחות קו הבסיס (יחידות מנדטים). בתא במפת החום מוצג ממוצע השאריות הגולמיות לאותם זוג ערוץ–מפלגה.\n\nשיעור גילוי שווא סטטיסטי (FDR — False Discovery Rate): בהרצת מאות בדיקות במקביל, ערכי p רגילים מייצרים יותר מדי „מובהקויות” אקראיות; תיקון Benjamini–Hochberg (BH-FDR) מתאים למרובה מבחנים.\n\n„מינ׳ ל-FDR" הוא הסף למספר הצפיות בכל תא לפני הכניסה ל-BH — מתחתיו התא דולג על התיקון (נראה אפור) והצביעה נשארת מהממוצע; מסגרת זהובה = p מתוקן < 0.05.\n\nדוגמה: ערוץ א׳ מציג לליכוד 35 מנדטים כשהממוצע בשאר הגופים סביב 32 בתוך אותו חלון ⇒ שארית בערך +3 מנדטים («מגזים» בסרגל). חלון קצר רגיש יותר לסקרים אחרונים; חלון ארוך מתרכך רעש. "מינ׳ סקרים" לערוץ מסתיר גופים דלילים כדי לא להישען על פרסום בודד.',
+      'אפקט הבית (House Effect) מתאר מצב שבו גוף מסוים מציג באופן עקבי מספר מושבים גבוה או נמוך יותר עבור מפלגות מסוימות בהשוואה לגופים אחרים. מדובר בדפוס יחסי ולא בקביעה לגבי רמת הדיוק של הסוקר.\n\n' +
+      'קו הבסיס (Leave-one-out) משמש להשוואה, כאשר כל סקר מושווה לממוצע של כל שאר הגופים מלבד זה הנבדק. הממוצע מחושב על סמך סקרי אותה מפלגה בתוך טווח הזמן שנבחר (14, 30 או 60 יום לפני מועד הסקר), מה שמבטיח שהגוף הנסקר לא יטה את קו הייחוס של עצמו.\n\n' +
+      'השארית (Residual) היא ההפרש בין מספר המושבים בסקר לבין קו הבסיס. התא במפת החום מציג את ממוצע השאריות הגולמיות עבור אותו שילוב של גוף סוקר ומפלגה.\n\n' +
+      'שיעור גילוי שגוי (FDR) נדרש מאחר שביצוע מאות בדיקות סימולטניות עלול לנפח את רמת הוודאות הסטטיסטית. שיטת Benjamini–Hochberg מכיילת את ערכי ה-p כדי להתחשב בריבוי הבדיקות ולהימנע ממסקנות שגויות.\n\n' +
+      'המדד "FDR Min" קובע כמה סקרים נדרשים בכל תא כדי להיכלל בתיקון ה-BH. תאים שאינם עומדים בסף זה ידלגו על התיקון ויוצגו באפור, אך ישמרו על צבע השארית הממוצעת. מסגרת זהב מסמנת מובהקות סטטיסטית (p<0.05) לאחר התיקון.\n\n' +
+      'כדוגמה, אם גוף א\u05f3 מציג לליכוד 35 מושבים בעוד הממוצע של עמיתיו באותו חלון זמן הוא 32, השארית תהיה כ-3+ (דיווח יתר). גוף ב\u05f3 עם מספר סקרים נמוך מ-"Min polls" יוסתר לחלוטין כדי למנוע ממקרים נקודתיים להטות את התמונה הכללית.\n\n' +
+      'בחירת טווח הזמן משפיעה על הנתונים: חלונות קצרים עוקבים אחר תנודות ושינויים אחרונים, בעוד שחלונות ארוכים יותר מייצבים את "רעשי הרקע" של קו הבסיס.',
 
     // Tooltip
     tooltipN: 'N',

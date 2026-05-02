@@ -1,5 +1,12 @@
 import { useMemo, useState, useCallback, useRef, useEffect, useLayoutEffect, useId, type ReactNode } from 'react'
-import type { UnpivotRow, ResidualRow, PartyDimRow, MediaOutletDimRow, HouseEffectCell } from '@shared/types/data'
+import type {
+  UnpivotRow,
+  ResidualRow,
+  PartyDimRow,
+  MediaOutletDimRow,
+  HouseEffectCell,
+  BlocTilt,
+} from '@shared/types/data'
 import type { HistoricalAccuracyResult } from '@shared/types/data'
 import {
   computeResiduals,
@@ -268,6 +275,14 @@ function cellTextColor(resid: number): string {
 function fmtSigned(v: number, decimals = 2): string {
   const s = v.toFixed(decimals)
   return v >= 0 ? `+${s}` : s
+}
+
+/** Shown tilt figure + bar scale: coalition Σ when leaning right; opposition Σ magnitude as negative when leaning left. */
+function blocTiltDisplaySeats(b: BlocTilt | undefined): number {
+  if (!b) return 0
+  if (b.tilt > 0) return b.coalitionSum
+  if (b.tilt < 0) return -Math.abs(b.oppositionSum)
+  return 0
 }
 
 function fmtP(v: number): string {
@@ -604,6 +619,9 @@ function HeatmapSection({
                     title={t.biasColHeaderTooltip}
                   >
                     <div className="lpo-mb-bias-sort-wrap" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+                      <div className="lpo-mb-bias-sort-icon-slot">
+                        <span className="lpo-mb-bias-sort-total">{t.heatmapBiasColTotalLabel}</span>
+                      </div>
                       <span className="lpo-mb-bias-sort-caption">{t.sortByCaption}</span>
                       <div
                         className="locale-toggle locale-toggle--vertical"
@@ -761,14 +779,11 @@ function BlocTiltSection({
 }) {
   const blocTilt = useMemo(() => computeBlocTilt(houseEffects), [houseEffects])
 
-  const tiltByOutlet = useMemo(() => {
-    const m = new Map(blocTilt.map(b => [b.outlet, b]))
-    return m
-  }, [blocTilt])
+  const tiltByOutlet = useMemo(() => new Map(blocTilt.map(b => [b.outlet, b])), [blocTilt])
 
-  const maxAbsTilt = Math.max(
+  const maxAbsDisplay = Math.max(
     1,
-    ...outletOrder.map(o => Math.abs(tiltByOutlet.get(o)?.tilt ?? 0)),
+    ...outletOrder.map(o => Math.abs(blocTiltDisplaySeats(tiltByOutlet.get(o)))),
   )
 
   const coalitionScaleMax = useMemo(() => {
@@ -780,14 +795,49 @@ function BlocTiltSection({
     return Math.max(68, Math.ceil(m / 4) * 4 + 4)
   }, [outletOrder, accuracy])
 
-  const biasNote = useMemo(() => {
-    const m = new Map<string, string>()
-    for (const o of mediaOutletsDim) if (o.biasNote) m.set(o.mediaOutlet, o.biasNote)
-    return m
-  }, [mediaOutletsDim])
-
   const { locale } = useLocale()
   const outletLabel = useOutletLabel(mediaOutletsDim, locale)
+
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const vruleRef = useRef<HTMLDivElement>(null)
+
+  const syncTiltDivider = useCallback(() => {
+    const section = sectionRef.current
+    const line = vruleRef.current
+    if (!section || !line) return
+
+    if (window.matchMedia('(max-width: 768px)').matches) return
+
+    const row = section.querySelector('.lpo-mb-tilt-row')
+    const val = row?.querySelector('.lpo-mb-tilt-value-col')
+    const coal = row?.querySelector('.lpo-mb-coal-chart-cell')
+    if (!val || !coal) return
+
+    const sr = section.getBoundingClientRect()
+    const vr = val.getBoundingClientRect()
+    const cr = coal.getBoundingClientRect()
+    const midX = (vr.right + cr.left) / 2 - sr.left
+    const stroke = 2
+    line.style.left = `${midX - stroke / 2}px`
+    line.style.width = `${stroke}px`
+  }, [])
+
+  useLayoutEffect(() => {
+    syncTiltDivider()
+    const section = sectionRef.current
+    if (!section) return
+    const ro = new ResizeObserver(() => syncTiltDivider())
+    ro.observe(section)
+    const mq = window.matchMedia('(max-width: 768px)')
+    const onReflow = () => syncTiltDivider()
+    mq.addEventListener('change', onReflow)
+    window.addEventListener('orientationchange', onReflow)
+    return () => {
+      ro.disconnect()
+      mq.removeEventListener('change', onReflow)
+      window.removeEventListener('orientationchange', onReflow)
+    }
+  }, [syncTiltDivider, outletOrder.join('|')])
 
   const actualPct = Math.min(
     100,
@@ -797,7 +847,8 @@ function BlocTiltSection({
   if (outletOrder.length === 0) return null
 
   return (
-    <div className="lpo-mb-tilt-section">
+    <div className="lpo-mb-tilt-section" ref={sectionRef}>
+      <div className="lpo-mb-tilt-vrule" ref={vruleRef} aria-hidden />
       <div className="lpo-mb-tilt-axis-labels">
         <div aria-hidden className="lpo-mb-tilt-axis-corner" />
         <div className="lpo-mb-tilt-axis-tilt-span">
@@ -808,7 +859,8 @@ function BlocTiltSection({
         <div className="lpo-mb-tilt-axis-coal-head">
           <span className="lpo-mb-coal-chart-col-caption">{t.tiltCoalPollVsActualCaption}</span>
           <span className="lpo-mb-coal-chart-col-legend" aria-hidden>
-            {t.tiltCoalGaugeLegendBlurb}
+            <span className="lpo-mb-coal-chart-col-legend-lead">{t.tiltCoalGaugeLegendLead}</span>
+            <span className="lpo-mb-coal-chart-col-legend-gold">{t.tiltCoalGaugeLegendGold}</span>
           </span>
         </div>
         <div aria-hidden className="lpo-mb-tilt-axis-tr-head" />
@@ -816,10 +868,10 @@ function BlocTiltSection({
       {outletOrder.map(outlet => {
         const b = tiltByOutlet.get(outlet)
         const tilt = b?.tilt ?? 0
-        const barPct = (Math.abs(tilt) / maxAbsTilt) * 48
+        const displaySeats = blocTiltDisplaySeats(b)
+        const barPct = (Math.abs(displaySeats) / maxAbsDisplay) * 48
         const acc = accuracy[outlet]
         const en = ENGLISH_MEDIA_NAMES[outlet] ?? outlet
-        const note = biasNote.get(outlet)
 
         let coalBody: ReactNode
         if (acc && acc.hasData) {
@@ -868,12 +920,11 @@ function BlocTiltSection({
                   )}
                 </div>
               </div>
-              {note && <span className="lpo-mb-tilt-bias-note">{note}</span>}
             </div>
 
             <div className="lpo-mb-tilt-bar-area">
               <div className="lpo-mb-tilt-center-rule" />
-              {tilt !== 0 && (
+              {displaySeats !== 0 && tilt !== 0 && (
                 <div
                   className={`lpo-mb-tilt-bar ${tilt > 0 ? 'lpo-mb-tilt-bar--coalition' : 'lpo-mb-tilt-bar--opposition'}`}
                   style={{
@@ -890,7 +941,7 @@ function BlocTiltSection({
               <span
                 className={`lpo-mb-tilt-value ${tilt > 0 ? 'lpo-mb-tilt-value--pos' : tilt < 0 ? 'lpo-mb-tilt-value--neg' : ''}`}
               >
-                {fmtSigned(tilt, 1)}
+                {fmtSigned(displaySeats, 1)}
               </span>
             </div>
 
@@ -898,17 +949,11 @@ function BlocTiltSection({
 
             <div className="lpo-mb-track-record">
               {acc && acc.hasData ? (
-                <>
-                  <span className="lpo-mb-tr-label">{t.trackRecord2022}</span>
-                  {' '}
-                  <span className="lpo-mb-tr-mae">{t.trackRecordMae} {acc.mae.toFixed(1)}</span>
-                  {' · '}
-                  <span
-                    className={`lpo-mb-tr-bloc ${acc.coalitionBlocError > 0 ? 'lpo-mb-tr-bloc--pos' : acc.coalitionBlocError < 0 ? 'lpo-mb-tr-bloc--neg' : ''}`}
-                  >
-                    {t.trackRecordBlocError} {acc.coalitionBlocError > 0 ? '+' : ''}{acc.coalitionBlocError}
-                  </span>
-                </>
+                <span
+                  className={`lpo-mb-tr-bloc ${acc.coalitionBlocError > 0 ? 'lpo-mb-tr-bloc--pos' : acc.coalitionBlocError < 0 ? 'lpo-mb-tr-bloc--neg' : ''}`}
+                >
+                  {t.trackRecordBlocError} {acc.coalitionBlocError > 0 ? '+' : ''}{acc.coalitionBlocError}
+                </span>
               ) : (
                 <span className="lpo-mb-tr-na">{t.trackRecordNoData}</span>
               )}
@@ -1239,13 +1284,15 @@ export function MediaBiasPanel({
 
   const blocTilt = useMemo(() => computeBlocTilt(houseEffects), [houseEffects])
 
-  /** Columns for heatmap / tilt: eligible outlets not manually excluded, |bloc tilt| desc (tilt 0 if no coal/opp cells). */
+  /** Columns for heatmap / tilt: eligible outlets not manually excluded, |shown bloc Σ| desc. */
   const outletOrder = useMemo(() => {
-    const tiltBy = new Map(blocTilt.map(b => [b.outlet, b.tilt]))
+    const byOutlet = new Map(blocTilt.map(r => [r.outlet, r]))
     return eligibleOutlets
       .filter(o => !excludedOutlets.has(o))
       .sort((a, b) => {
-        const d = Math.abs(tiltBy.get(b) ?? 0) - Math.abs(tiltBy.get(a) ?? 0)
+        const d =
+          Math.abs(blocTiltDisplaySeats(byOutlet.get(b))) -
+          Math.abs(blocTiltDisplaySeats(byOutlet.get(a)))
         if (d !== 0) return d
         return a.localeCompare(b, 'he')
       })
@@ -1408,7 +1455,6 @@ export function MediaBiasPanel({
 
         {activeTab === 'tilt' && (
           <section className="lpo-mb-section">
-            <p className="lpo-mb-section-subtitle" dir={locale === 'he' ? 'rtl' : 'ltr'}>{t.blocTiltSubtitle}</p>
             <BlocTiltSection
               houseEffects={houseEffects}
               outletOrder={outletOrder}
@@ -1416,6 +1462,12 @@ export function MediaBiasPanel({
               mediaOutletsDim={mediaOutletsDim}
               t={t}
             />
+            <p
+              className="lpo-mb-section-subtitle lpo-mb-section-subtitle--below-bloc-tilt"
+              dir={locale === 'he' ? 'rtl' : 'ltr'}
+            >
+              {t.blocTiltSubtitleLead}
+            </p>
           </section>
         )}
 
