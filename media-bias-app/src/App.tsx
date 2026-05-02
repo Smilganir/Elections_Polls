@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMediaBiasData } from './hooks/useMediaBiasData'
 import { MediaBiasPanel } from './ui/MediaBiasPanel'
 import { useLocale } from './i18n/useLocale'
@@ -14,6 +14,10 @@ export default function App() {
 
   const { locale, setLocale } = useLocale()
   const t = MB[locale]
+
+  useEffect(() => {
+    document.title = t.documentTitle
+  }, [t.documentTitle])
 
   const { data, loading, error } = useMediaBiasData(combineArabs)
 

@@ -4,6 +4,8 @@ export type MbUiStrings = {
   // App shell
   appTitle: string
   appSubtitle: string
+  /** Browser tab title (sync with locale toggle) */
+  documentTitle: string
   backToPollTracker: string
   dataLabel: string
   designLabel: string
@@ -123,8 +125,10 @@ export type MbUiStrings = {
 export const MB: Record<AppLocale, MbUiStrings> = {
   en: {
     // App shell
-    appTitle: 'Media Bias',
-    appSubtitle: 'Israel Election Polls — House Effects Analysis',
+    appTitle: 'House Effect Index',
+    appSubtitle:
+      'Analysis of biases and statistical significance in Israeli election polls',
+    documentTitle: 'House Effect Index — Israeli election polls',
     backToPollTracker: '← Poll Tracker',
     dataLabel: 'Data:',
     designLabel: 'Design:',
@@ -156,7 +160,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     excludedLowN: 'excluded (low-n)',
 
     // Tabs
-    tabHeatmap: 'House Effects Heatmap',
+    tabHeatmap: 'Heatmap',
     tabBlocTilt: 'Bloc Tilt',
     tabAnomalies: 'Anomalies',
 
@@ -238,8 +242,9 @@ export const MB: Record<AppLocale, MbUiStrings> = {
 
   he: {
     // App shell
-    appTitle: 'הטיית מדיה',
-    appSubtitle: 'ניתוח אפקטי בית בסקרי בחירות בישראל',
+    appTitle: 'מדד אפקט הבית',
+    appSubtitle: 'ניתוח הטיות ומובהקות סטטיסטית בסקרי הבחירות בישראל',
+    documentTitle: 'מדד אפקט הבית — סקרי בחירות בישראל',
     backToPollTracker: '\u2190 מעקב סקרים',
     dataLabel: 'נתונים:',
     designLabel: 'עיצוב:',
@@ -271,7 +276,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     excludedLowN: 'מוחרגים (n נמוך)',
 
     // Tabs
-    tabHeatmap: 'מפת חום — אפקטי בית',
+    tabHeatmap: 'מפת חום',
     tabBlocTilt: 'הטיית גוש',
     tabAnomalies: 'חריגות',
 
