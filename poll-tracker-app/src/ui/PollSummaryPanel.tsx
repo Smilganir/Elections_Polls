@@ -19,6 +19,7 @@ import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSumma
 import { IconWithFallback } from './IconWithFallback'
 import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
 import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
+import { publicUrl } from '../utils/publicUrl'
 
 const KNESSET = 120
 const MAJ_SEATS = 60
@@ -709,6 +710,15 @@ export function PollSummaryPanel({
               />
             ))}
           </ul>
+          <div className="lpo-ps-narrative-trends-link-wrap">
+            <a
+              className="lpo-ps-nav-btn"
+              href={publicUrl('media-bias/')}
+              aria-label={t.mediaBiasNarrativeLinkAria}
+            >
+              {t.mediaBiasOpenBtn}
+            </a>
+          </div>
         </section>
       ) : null}
     </div>

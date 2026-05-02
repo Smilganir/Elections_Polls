@@ -54,6 +54,8 @@ export type UiStrings = {
   pollSummaryNarrativeTrendsAria: string
   /** One line; use {date} placeholder */
   pollSummaryNarrativeAsOf: string
+  /** Link below narrative trends → standalone media-bias page */
+  mediaBiasNarrativeLinkAria: string
 
   // ── Media Bias Panel ──────────────────────────────────────────────────────
   mediaBiasOpenBtn: string
@@ -141,6 +143,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryNarrativeBackgroundAria: 'General political context for this poll window',
     pollSummaryNarrativeTrendsAria: 'Outlet and party trend notes',
     pollSummaryNarrativeAsOf: 'Context as of {date}',
+    mediaBiasNarrativeLinkAria: 'Open media house-effects analysis',
+
     // ── Media Bias Panel ────────────────────────────────────────────────────
     mediaBiasOpenBtn: 'Media bias',
     mediaBiasTitle: 'Media Bias',
@@ -222,6 +226,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryNarrativeBackgroundAria: 'רקע כללי לחלון הסקרים',
     pollSummaryNarrativeTrendsAria: 'הערות מגמה לפי ערוצים ומפלגות',
     pollSummaryNarrativeAsOf: 'הקשר מעודכן ל־{date}',
+    mediaBiasNarrativeLinkAria: 'פתיחת ניתוח הטיית מדיה ואפקטי בית',
+
     // ── פאנל הטיית מדיה ─────────────────────────────────────────────────────
     mediaBiasOpenBtn: 'הטיית מדיה',
     mediaBiasTitle: 'הטיית מדיה',

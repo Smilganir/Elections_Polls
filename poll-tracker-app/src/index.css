@@ -3349,6 +3349,20 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   border-radius: 0;
 }
 
+.lpo-ps-narrative-trends-link-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-bottom: 0.15rem;
+}
+
+a.lpo-ps-nav-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .lpo-ps-narrative-trends-list {
   /* Overridden in px by PollSummaryPanel after measuring longest .lpo-ps-narrative-party-label */
   --lpo-ps-narrative-party-label-w: 12.5rem;
