@@ -154,8 +154,8 @@ function sheetsApiPlugin() {
 
 /**
  * Serve /media/* and /parties/* from poll-tracker-app/public/ during dev/preview.
- * In production these files live at the parent deployment root (/Elections/media/…)
- * because the workflow merges media-bias-app/dist into poll-tracker-app/dist/media-bias/.
+ * Production deploy (GitHub Pages): workflow copies this app under poll-tracker `dist/media-bias/`,
+ * served at https://…github.io/<repo>/media-bias/ with shared `/media/` and `/parties/` assets.
  */
 const SHARED_MIME: Record<string, string> = {
   '.png': 'image/png',

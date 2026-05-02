@@ -1,11 +1,13 @@
 # Deploy poll-tracker-app to https://<user>.github.io/<repo>/
-# (media-bias-app is not built into this artifact; deploy it separately if needed.)
+# and media-bias-app to https://<user>.github.io/<repo>/media-bias/ (same Actions artifact).
 #
 # FIRST-TIME SETUP (otherwise deploy job fails with 404 "Failed to create deployment"):
 #   1. Repo → Settings → Pages → Build and deployment → Source: "GitHub Actions" (not "Deploy from a branch").
 #   2. Repo → Settings → Actions → General → Workflow permissions: enable "Read and write permissions".
 #   3. Repo → Settings → Secrets and variables → Actions: add secret VITE_GOOGLE_SHEETS_API_KEY (required).
 #      Optional secret VITE_GOOGLE_SHEETS_SPREADSHEET_ID if not using the project default sheet.
+#   4. Sheets API key referrer restrictions: include both the tracker and bias app paths, e.g.
+#      https://YOUR_USER.github.io/YOUR_REPO_NAME/* and …/YOUR_REPO_NAME/media-bias/*
 #
 # upload-pages-artifact stays @v3 so .nojekyll from public/ is included (v4 omits dotfiles).
 
@@ -56,6 +58,23 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
           VITE_GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
           VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+
+      # ── Build media-bias-app (served at /<repo>/media-bias/) ───────────────
+      - name: Install and build media-bias-app
+        working-directory: media-bias-app
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/media-bias/
+          VITE_GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
+          VITE_GOOGLE_SHEETS_API_KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+
+      - name: Merge media-bias-app into Pages site
+        run: |
+          set -e
+          mkdir -p poll-tracker-app/dist/media-bias
+          rsync -a --delete media-bias-app/dist/ poll-tracker-app/dist/media-bias/
 
       - uses: actions/upload-pages-artifact@v3
         with:
