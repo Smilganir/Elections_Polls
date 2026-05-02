@@ -11,6 +11,9 @@ export type MbUiStrings = {
   loadFailed: string
   loadFailedCheck: string
   localeToggleAria: string
+  /** One-time portrait hint on narrow phones */
+  rotateLandscapeTitle: string
+  rotateLandscapeDismiss: string
   /** Download harmonized unpivot (Arab merge applied) as CSV */
   exportHarmonizedCsv: string
   exportHarmonizedCsvAria: string
@@ -127,6 +130,8 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     loadFailed: 'Failed to load data',
     loadFailedCheck: 'Check that VITE_GOOGLE_SHEETS_API_KEY is set in media-bias-app/.env',
     localeToggleAria: 'Interface language',
+    rotateLandscapeTitle: 'Rotate to landscape',
+    rotateLandscapeDismiss: 'Got it',
     exportHarmonizedCsv: 'Export harmonized CSV',
     exportHarmonizedCsvAria: 'Download harmonized poll table as CSV (Arab list merge per settings)',
     exportResidualDiagnosticsCsv: 'Export residual diagnostics',
@@ -241,6 +246,8 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     loadFailed: 'שגיאה בטעינת נתונים',
     loadFailedCheck: 'ודאו שהמשתנה VITE_GOOGLE_SHEETS_API_KEY מוגדר ב-media-bias-app/.env',
     localeToggleAria: 'שפת הממשק',
+    rotateLandscapeTitle: 'סובבו את המכשיר לרוחב',
+    rotateLandscapeDismiss: 'הבנתי',
     exportHarmonizedCsv: 'ייצוא CSV מותאם',
     exportHarmonizedCsvAria: 'הורדת טבלת הסקרים המותאמת כ-CSV (איחוד רשימות ערבים לפי ההגדרה)',
     exportResidualDiagnosticsCsv: 'ייצוא אבחון שאריות',

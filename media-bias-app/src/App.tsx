@@ -3,6 +3,7 @@ import { useMediaBiasData } from './hooks/useMediaBiasData'
 import { MediaBiasPanel } from './ui/MediaBiasPanel'
 import { useLocale } from './i18n/useLocale'
 import { MB } from './i18n/strings'
+import { RotateLandscapeHint } from './ui/RotateLandscapeHint'
 
 /** Published poll tracker (GitHub Pages). Relative `../` breaks when media-bias is opened from file or non-sibling path. */
 const POLL_TRACKER_URL = 'https://smilganir.github.io/Elections_Polls/'
@@ -17,7 +18,9 @@ export default function App() {
   const { data, loading, error } = useMediaBiasData(combineArabs)
 
   return (
-    <div className="mb-app-shell">
+    <>
+      <RotateLandscapeHint locale={locale} />
+      <div className="mb-app-shell">
       <header className="mb-topbar">
         <div className="mb-topbar-inner">
           <a
@@ -103,5 +106,6 @@ export default function App() {
         </span>
       </footer>
     </div>
+    </>
   )
 }
