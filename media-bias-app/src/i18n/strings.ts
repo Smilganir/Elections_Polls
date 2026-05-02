@@ -54,9 +54,8 @@ export type MbUiStrings = {
   legendOver: string
   legendUnder: string
   legendFdr: string
-  /** Italic label: faint number when |mean residual| is below the heatmap threshold */
-  legendFaintDigits: string
-  legendFaintDigitsExplain: string
+  /** Mean threshold for dimmed cell digits (heatmap legend tail, styled muted) */
+  legendMeanUnderHalfSeats: string
   noData: string
 
   // Bloc legend labels (corner cell)
@@ -156,7 +155,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
 
     // Heatmap
     heatmapSubtitle:
-      'Each cell = mean raw residual (outlet seats \u2212 LOO cross-outlet baseline). Gold border = p<0.05 after BH-FDR. Faint digits = |mean| < 0.5 seats (readability only; can still be significant).',
+      'Each cell = mean raw residual (outlet seats \u2212 LOO cross-outlet baseline). Gold border = p<0.05 after BH-FDR. Dimmer digits when mean < 0.5 seats (readability only; can still be significant).',
     sortToggleAria: 'Sort party rows',
     sortByCaption: 'Sort by',
     sortToggleBias: 'Bias',
@@ -167,8 +166,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     legendOver: 'Over-reports',
     legendUnder: 'Under-reports',
     legendFdr: 'p<0.05 (FDR)',
-    legendFaintDigits: 'Faint digits',
-    legendFaintDigitsExplain: '|mean| < 0.5 seats',
+    legendMeanUnderHalfSeats: 'mean < 0.5 seats',
     noData: 'No data yet \u2014 adjust window or min-n settings.',
 
     // Bloc legend
@@ -218,10 +216,10 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     infoMinPolls:
       'An outlet with only 1–2 polls could look biased just by chance. This filter hides outlets with too few polls so the results are more trustworthy. The default is 5.',
     infoFdrMin:
-      'To check whether a bias is real and not just random noise, we need enough data points per party. Cells with fewer than this number are greyed out and skipped in the significance test.',
-    infoMethodologyTitle: 'How does this work?',
+      'FDR (false discovery rate): we test hundreds of outlet×party cells together; uncorrected p-values would wrongly flag lots of pairs as “significant”. Benjamini–Hochberg (BH‑FDR) adjusts p-values so the overall mistake rate stays controlled under many comparisons.\n\n“FDR Min” is how many qualifying poll rows a cell needs before it enters BH. Below that, grey cells skip FDR (no adjusted p-value) but still pick up colour from the mean residual; a gold border means BH‑adjusted p<0.05.',
+    infoMethodologyTitle: 'Methodology',
     infoMethodology:
-      'Every outlet publishes polls that give each party a seat count. This tool compares each outlet\'s numbers against the average of ALL OTHER outlets for the same party in the same time window — so no biased outlet can pull the "average" in its favour.\n\nIf an outlet consistently gives a party more seats than everyone else, its cell turns cyan (over-reports). If it gives fewer, it turns pink (under-reports). A bold border means the difference is statistically significant — very unlikely to be just chance.',
+      'A house effect means an outlet systematically reports higher or lower seats for some parties than peer outlets—a relative pattern, not a verdict on accuracy.\n\nBaseline (leave-one-out): Each poll is compared to a cross-outlet mean built from everyone except that outlet (LOO). The mean is computed over polls for the same party that fall inside the baseline window (14 / 30 / 60 days ending on that poll\'s date), so your outlet cannot pull its own reference.\n\nResidual: Seats in the outlet\'s poll minus that LOO baseline (in seat units). The heatmap cell shows the average of these raw residuals for that outlet–party pair.\n\nFalse discovery rate (FDR): with hundreds of simultaneous outlet×party tests, raw p-values overstate certainty; Benjamini–Hochberg (BH‑FDR) calibrates p-values for multiplicity.\n\n“FDR Min” is how many poll rows each cell needs to enter BH correction. Cells below it skip FDR (grey) but retain colour from the mean residual; a gold border means BH‑adjusted p<0.05.\n\nExample: Outlet A shows Likud at 35 while peers average about 32 in the window ⇒ residual roughly +3 (over-reporting). Outlet B with very few polls is hidden entirely when below \"Min polls\" so one-offs do not dominate.\n\nShorter windows follow recent swings; longer windows stabilise baseline noise.',
 
     // Tooltip
     tooltipN: 'N',
@@ -271,7 +269,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
 
     // Heatmap
     heatmapSubtitle:
-      'כל תא = ממוצע סטייה גולמית (מנדטי ערוץ \u2212 קו בסיס LOO). מסגרת זהובה = p<0.05 לאחר BH-FDR. ספרות עמומות = |ממוצע| < 0.5 מנדטים (קריאות בלבד; עדיין יכול להיות מובהק).',
+      'כל תא = ממוצע סטייה גולמית (מנדטי ערוץ \u2212 קו בסיס LOO). מסגרת זהובה = p<0.05 לאחר BH-FDR. טקסט עמום כשממוצע < 0.5 מנדטים (קריאות בלבד; עדיין יכול להיות מובהק).',
     sortToggleAria: 'מיון שורות לפי מפלגה',
     sortByCaption: 'מיין לפי',
     sortToggleBias: 'הטיה',
@@ -282,8 +280,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     legendOver: 'מגזים',
     legendUnder: 'מקטין',
     legendFdr: 'p<0.05 (FDR)',
-    legendFaintDigits: 'ספרות עמומות',
-    legendFaintDigitsExplain: '|ממוצע| < 0.5 מנדטים',
+    legendMeanUnderHalfSeats: 'ממוצע < 0.5 מנדטים',
     noData: 'אין נתונים — שנו הגדרות חלון או סף-n.',
 
     // Bloc legend
@@ -333,10 +330,10 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     infoMinPolls:
       'ערוץ עם רק 1–2 סקרים עלול להיראות מוטה רק במקרה. הפילטר הזה מסתיר ערוצים עם מעט מדי סקרים כדי שהתוצאות יהיו אמינות יותר. ברירת המחדל היא 5.',
     infoFdrMin:
-      'כדי לבדוק אם הטיה אמיתית ולא סתם רעש אקראי, אנחנו צריכים מספיק נקודות מידע לכל מפלגה. תאים עם פחות מהמספר הזה מעומעמים ומוחרגים מהמבחן הסטטיסטי.',
-    infoMethodologyTitle: 'איך זה עובד?',
+      'FDR (False Discovery Rate — שיעור גילוי שווא): כשמריצים מאות השוואות ערוץ×מפלגה במקביל, ערכי p שלא מתוקנים עלולים לסמן יותר מדי תאים כ„מובהקים” בלי בסיס באמת; Benjamini–Hochberg (BH-FDR) מתאים למרובה מבחנים ומסדר את ערכי ה-p בהתאם.\n\n„מינ׳ ל-FDR" הוא צפיות מינימלי לכל תא לפני שנכנס ל-BH. מתחת לסף התא מחוץ לתיקון (אפור) אך עדיין מראה גוון מהממוצע; מסגרת זהובה = p מתוקן < 0.05.',
+    infoMethodologyTitle: 'שיטת הניתוח',
     infoMethodology:
-      'כל ערוץ מדיה מפרסם סקרים שנותנים לכל מפלגה מספר מנדטים. הכלי הזה משווה את המספרים של כל ערוץ לממוצע של כל שאר הערוצים, לאותה מפלגה ובאותה תקופה — כך שאף ערוץ מוטה לא יכול "למשוך" את הממוצע לטובתו.\n\nאם ערוץ נותן למפלגה יותר מנדטים מכולם — התא הופך טורקיז (מגזים). אם פחות — ורוד (מקטין). גבול מודגש אומר שההבדל מובהק סטטיסטית — כנראה לא מקרה.',
+      'אפקט בית מתאר נטייה של גוף שידור לפרסם מנדטים גבוהים או נמוכים יחסית לעמיתיו עבור אותה מפלגה — השוואה יחסית בלבד, לא "מי צודק."\n\nקו בסיס — השארת ערוץ אחד בחוץ (LOO): לכל סקר משווים לממוצע חוצה־ערוצים שמחושב רק מן הערוצים האחרים. הממוצע נשען על הסקרים לאותה מפלגה בחלון הבסיס (14 / 30 / 60 ימים, עד תאריך הסקר); הערוץ הנבחן אינו נכלל בממוצע של עצמו.\n\nשארית: מנדטים בסקר של הערוץ פחות קו הבסיס (יחידות מנדטים). בתא במפת החום מוצג ממוצע השאריות הגולמיות לאותם זוג ערוץ–מפלגה.\n\nשיעור גילוי שווא סטטיסטי (FDR — False Discovery Rate): בהרצת מאות בדיקות במקביל, ערכי p רגילים מייצרים יותר מדי „מובהקויות” אקראיות; תיקון Benjamini–Hochberg (BH-FDR) מתאים למרובה מבחנים.\n\n„מינ׳ ל-FDR" הוא הסף למספר הצפיות בכל תא לפני הכניסה ל-BH — מתחתיו התא דולג על התיקון (נראה אפור) והצביעה נשארת מהממוצע; מסגרת זהובה = p מתוקן < 0.05.\n\nדוגמה: ערוץ א׳ מציג לליכוד 35 מנדטים כשהממוצע בשאר הגופים סביב 32 בתוך אותו חלון ⇒ שארית בערך +3 מנדטים («מגזים» בסרגל). חלון קצר רגיש יותר לסקרים אחרונים; חלון ארוך מתרכך רעש. "מינ׳ סקרים" לערוץ מסתיר גופים דלילים כדי לא להישען על פרסום בודד.',
 
     // Tooltip
     tooltipN: 'N',

@@ -650,35 +650,53 @@ function HeatmapSection({
               </tbody>
             </table>
           </div>
-          <p className="lpo-mb-heatmap-legend">
-            {/* Diverging color bar: under-reports ← 0 → over-reports */}
-            {(() => {
-              const vals = houseEffects.filter(c => c.pAdj !== null).map(c => c.meanRawResid)
-              const minR = vals.length ? Math.min(...vals) : -6
-              const maxR = vals.length ? Math.max(...vals) : 6
-              return (
-                <span className="lpo-mb-legend-bar-wrap">
-                  <span className="lpo-mb-legend-bar-end lpo-mb-legend-bar-end--under">
-                    <span className="lpo-mb-legend-bar-endval">{fmtSigned(minR, 1)}</span>
-                    <span className="lpo-mb-legend-bar-endlabel">{t.legendUnder}</span>
+          <div className="lpo-mb-heatmap-scroll-footer">
+            <p className="lpo-mb-heatmap-legend">
+              <span className="lpo-mb-heatmap-legend-inner">
+                {/* Diverging color bar: under-reports ← 0 → over-reports */}
+                {(() => {
+                  const vals = houseEffects.filter(c => c.pAdj !== null).map(c => c.meanRawResid)
+                  const minR = vals.length ? Math.min(...vals) : -6
+                  const maxR = vals.length ? Math.max(...vals) : 6
+                  return (
+                    <span className="lpo-mb-legend-bar-wrap">
+                      <span className="lpo-mb-legend-bar-end lpo-mb-legend-bar-end--under">
+                        <span className="lpo-mb-legend-bar-endval">{fmtSigned(minR, 1)}</span>
+                        <span className="lpo-mb-legend-bar-endlabel">{t.legendUnder}</span>
+                      </span>
+                      <span className="lpo-mb-legend-bar-outer">
+                        <span className="lpo-mb-legend-bar" />
+                        <span className="lpo-mb-legend-bar-zero">0</span>
+                      </span>
+                      <span className="lpo-mb-legend-bar-end lpo-mb-legend-bar-end--over">
+                        <span className="lpo-mb-legend-bar-endval">{fmtSigned(maxR, 1)}</span>
+                        <span className="lpo-mb-legend-bar-endlabel">{t.legendOver}</span>
+                      </span>
+                    </span>
+                  )
+                })()}
+                <span className="lpo-mb-legend-fdr-chip">
+                  <span className="lpo-mb-legend-sig-box" aria-hidden /> {t.legendFdr}
+                </span>
+                <span className="lpo-mb-legend-mean-note">{t.legendMeanUnderHalfSeats}</span>
+              </span>
+            </p>
+            <div className="lpo-mb-heatmap-stats-footer">
+              <span className="lpo-mb-stats-summary" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+                <span className="lpo-mb-stats-summary-inner">
+                  <span className="lpo-mb-stats-summary--sig">
+                    {houseEffects.filter(c => isHouseEffectFdrSignificant(c)).length} {t.significantCells}
                   </span>
-                  <span className="lpo-mb-legend-bar-outer">
-                    <span className="lpo-mb-legend-bar" />
-                    <span className="lpo-mb-legend-bar-zero">0</span>
+                  <span className="lpo-mb-stats-summary--sep" aria-hidden>
+                    &ensp;|&ensp;
                   </span>
-                  <span className="lpo-mb-legend-bar-end lpo-mb-legend-bar-end--over">
-                    <span className="lpo-mb-legend-bar-endval">{fmtSigned(maxR, 1)}</span>
-                    <span className="lpo-mb-legend-bar-endlabel">{t.legendOver}</span>
+                  <span className="lpo-mb-stats-summary--excl">
+                    {houseEffects.filter(c => c.pAdj === null).length} {t.excludedLowN}
                   </span>
                 </span>
-              )
-            })()}
-            &emsp;
-            <span className="lpo-mb-legend-sig-box" /> {t.legendFdr}
-            &emsp;
-            <span className="lpo-mb-legend-excl">{t.legendFaintDigits}</span>{' '}
-            {t.legendFaintDigitsExplain}
-          </p>
+              </span>
+            </div>
+          </div>
         </div>
         </div>
       </div>
@@ -1343,45 +1361,30 @@ export function MediaBiasPanel({
           />
         </div>
 
-        <span className="lpo-mb-stats-summary" dir={locale === 'he' ? 'rtl' : 'ltr'}>
-          <span className="lpo-mb-stats-summary-inner">
-            <span className="lpo-mb-stats-summary--sig">
-              {houseEffects.filter(c => isHouseEffectFdrSignificant(c)).length} {t.significantCells}
-            </span>
-            <span className="lpo-mb-stats-summary--sep" aria-hidden>
-              &ensp;|&ensp;
-            </span>
-            <span className="lpo-mb-stats-summary--excl">
-              {houseEffects.filter(c => c.pAdj === null).length} {t.excludedLowN}
-            </span>
-          </span>
-        </span>
+        <div className="lpo-mb-tabs" role="tablist">
+          {(
+            [
+              { id: 'heatmap', label: t.tabHeatmap },
+              { id: 'tilt', label: t.tabBlocTilt },
+              { id: 'anomaly', label: t.tabAnomalies },
+            ] as const
+          ).map(tab => (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              className={`lpo-mb-tab ${activeTab === tab.id ? 'lpo-mb-tab--active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-        {/* Methodology info — pushed to the far right */}
+        {/* Methodology info — far end */}
         <span className="lpo-mb-methodology-info">
           <InfoTip text={t.infoMethodology} title={t.infoMethodologyTitle} locale={locale} />
         </span>
-      </div>
-
-      {/* ── Section tabs ── */}
-      <div className="lpo-mb-tabs" role="tablist">
-        {(
-          [
-            { id: 'heatmap', label: t.tabHeatmap },
-            { id: 'tilt', label: t.tabBlocTilt },
-            { id: 'anomaly', label: t.tabAnomalies },
-          ] as const
-        ).map(tab => (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`lpo-mb-tab ${activeTab === tab.id ? 'lpo-mb-tab--active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
       </div>
 
       {/* ── Section content ── */}

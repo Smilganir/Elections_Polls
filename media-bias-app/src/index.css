@@ -706,8 +706,6 @@ label.lpo-mb-settings-form__label {
 }
 
 .lpo-mb-stats-summary {
-  grid-column: 2;
-  justify-self: center;
   font-size: 0.78rem;
   color: var(--col-muted);
   white-space: nowrap;
@@ -733,20 +731,25 @@ label.lpo-mb-settings-form__label {
 }
 
 
-/* ── Section tabs ─────────────────────────────────────────────────────────── */
+/* ── Section tabs (centered row inside .lpo-mb-global-controls) ───────────────── */
 
 .lpo-mb-tabs {
   display: flex;
   gap: 0;
   justify-content: center;
-  background: var(--col-surface);
-  border: 1px solid var(--col-border);
-  border-top: 1px solid rgba(255,255,255,0.04);
-  border-bottom: none;
+  align-items: center;
+}
+
+.lpo-mb-global-controls .lpo-mb-tabs {
+  grid-column: 2;
+  justify-self: center;
+  align-self: center;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .lpo-mb-tab {
-  padding: 0.6rem 1.25rem;
+  padding: 0.45rem 1rem;
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--col-muted);
@@ -755,6 +758,7 @@ label.lpo-mb-settings-form__label {
   border-bottom: 2px solid transparent;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 .lpo-mb-tab:hover { color: var(--col-text); }
 .lpo-mb-tab--active {
@@ -876,6 +880,7 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-heatmap-scroll-x {
   flex: 1 1 auto;
+  min-height: 0;
   min-width: 0;
   /* Table starts at the frozen edge; do not use text-align:center (creates a gap) */
   text-align: start;
@@ -904,6 +909,28 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-heatmap-scroll-table {
   min-width: max-content;
+}
+
+/* Legend + cell counts below scroll table — same column width as outlet+bias strip, centered together */
+.lpo-mb-heatmap-scroll-footer {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding-top: 0.25rem;
+}
+
+.lpo-mb-heatmap-scroll-footer .lpo-mb-heatmap-legend {
+  margin-top: 0.5rem;
+}
+
+.lpo-mb-heatmap-stats-footer {
+  width: 100%;
+  text-align: center;
 }
 
 /*
@@ -1155,19 +1182,34 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-heatmap-legend {
   margin: 0.75rem 0 0;
+  padding: 0;
   font-size: 0.75rem;
   color: var(--col-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.25rem;
   text-align: center;
   align-self: stretch;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
+}
+
+/* Shrink-wrapped row: centered in full-width <p> (inline-flex + parent text-align) */
+.lpo-mb-heatmap-legend-inner {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem 0.9rem;
+  max-width: 100%;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.lpo-mb-legend-fdr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
 }
 
 /* Diverging legend bar */
@@ -1247,9 +1289,10 @@ label.lpo-mb-settings-form__label {
   vertical-align: middle;
 }
 
-.lpo-mb-legend-excl {
-  opacity: 0.4;
+/* Matches faint cell-digit treatment: readable but clearly secondary vs FDR line */
+.lpo-mb-legend-mean-note {
   font-style: italic;
+  color: rgba(148, 163, 184, 0.62);
 }
 
 /* ── Cell tooltip ─────────────────────────────────────────────────────────── */
@@ -1852,5 +1895,4 @@ label.lpo-mb-settings-form__label {
     width: 100%;
   }
   .lpo-mb-track-record { grid-column: 1 / -1; grid-row: 3; }
-  .lpo-mb-stats-summary { display: none; }
 }
