@@ -526,6 +526,26 @@ export function PollSummaryPanel({
 
   const showEmptyFilterMsg = visibleRows.length === 0
 
+  const outletFilterSubtitle = (
+    <div className="lpo-ps-subtitle-bar" dir="ltr">
+      <OutletFilterDropdown
+        allOutlets={allOutletKeys}
+        excludedOutlets={excludedOutlets}
+        onToggle={toggleOutlet}
+        onClear={clearExcluded}
+        locale={locale}
+        displayMediaOutlet={displayMediaOutlet}
+      />
+      <p
+        className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
+        dir={locale === 'he' ? 'rtl' : 'ltr'}
+      >
+        <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
+        {t.pollSummaryOutletsBreakdownTail}
+      </p>
+    </div>
+  )
+
   return (
     <div className="lpo-ps-wrap">
       <section className="lpo-ps-hero" aria-label={t.pollSummaryHeroAria}>
@@ -588,30 +608,9 @@ export function PollSummaryPanel({
         ) : null}
       </section>
 
-      <div className="lpo-ps-subtitle-bar" dir="ltr">
-        <OutletFilterDropdown
-          allOutlets={allOutletKeys}
-          excludedOutlets={excludedOutlets}
-          onToggle={toggleOutlet}
-          onClear={clearExcluded}
-          locale={locale}
-          displayMediaOutlet={displayMediaOutlet}
-        />
-        <p
-          className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
-          dir={locale === 'he' ? 'rtl' : 'ltr'}
-        >
-          <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
-          {t.pollSummaryOutletsBreakdownTail}
-        </p>
-      </div>
-
-      <div className="lpo-ps-rows-unified">
-        {showEmptyFilterMsg ? (
-          <p className="lpo-ps-empty" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
-            {locale === 'he' ? 'לא נבחרו ערוצים' : 'No outlets selected'}
-          </p>
-        ) : hasAnyChips ? (
+      {hasAnyChips ? (
+        <div className="lpo-ps-rows-unified lpo-ps-rows-unified--with-unified-split">
+          {outletFilterSubtitle}
           <div
             ref={unifiedSplitRef}
             className="lpo-ps-unified-split"
@@ -671,27 +670,38 @@ export function PollSummaryPanel({
               </div>
             </div>
           </div>
-        ) : (
-          <ul className="lpo-ps-rows" aria-label={t.pollSummaryRowsAria}>
-            {visibleRows.map(({ current, previous }, rowIdx) => (
-              <li
-                key={current.pollId}
-                className={`lpo-ps-row${rowIdx % 2 === 1 ? ' lpo-ps-row--alt' : ''}`}
-              >
-                <PollSummaryRowMain
-                  current={current}
-                  previous={previous}
-                  locale={locale}
-                  t={t}
-                  dateFmt={dateFmt}
-                  combineArabsWithOpposition={combineArabsWithOpposition}
-                  displayMediaOutlet={displayMediaOutlet}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        </div>
+      ) : (
+        <>
+          {outletFilterSubtitle}
+          <div className="lpo-ps-rows-unified">
+            {showEmptyFilterMsg ? (
+              <p className="lpo-ps-empty" style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+                {locale === 'he' ? 'לא נבחרו ערוצים' : 'No outlets selected'}
+              </p>
+            ) : (
+              <ul className="lpo-ps-rows" aria-label={t.pollSummaryRowsAria}>
+                {visibleRows.map(({ current, previous }, rowIdx) => (
+                  <li
+                    key={current.pollId}
+                    className={`lpo-ps-row${rowIdx % 2 === 1 ? ' lpo-ps-row--alt' : ''}`}
+                  >
+                    <PollSummaryRowMain
+                      current={current}
+                      previous={previous}
+                      locale={locale}
+                      t={t}
+                      dateFmt={dateFmt}
+                      combineArabsWithOpposition={combineArabsWithOpposition}
+                      displayMediaOutlet={displayMediaOutlet}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
 
       {hasNarrativeTrends ? (
         <section

@@ -3739,6 +3739,21 @@ a.lpo-ps-nav-btn {
   min-width: 0;
 }
 
+/* Unified split + outlet filter share the same fit-content column so the filter lines up with row media icons. */
+.lpo-ps-rows-unified--with-unified-split {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.lpo-ps-rows-unified--with-unified-split .lpo-ps-unified-split {
+  margin-inline: 0;
+}
+
 /* Left: outlet + bloc bars | Right: one horizontal scroll for all party chip rows. Zebra: JS gradient on split. */
 .lpo-ps-unified-split {
   display: flex;
