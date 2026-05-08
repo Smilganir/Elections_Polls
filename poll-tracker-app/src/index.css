@@ -1132,6 +1132,27 @@ html[lang='he'] .lpo-filter--page-count select {
   flex-shrink: 0;
 }
 
+/* Party-label column: keep legend on the start edge, filter control on the end (narrow header cell). */
+.lpo-party-label-col--table-outlet-filter .lpo-header-bloc-legend {
+  order: 1;
+}
+
+.lpo-party-label-col--table-outlet-filter .lpo-table-outlet-filter {
+  order: 2;
+  margin-inline-start: auto;
+}
+
+/* Top-align filter with .lpo-col-header outlet icons: one short child was vertically centered in the tall grid row. */
+.lpo-table:not(.lpo-single-col) .lpo-party-label-col--table-outlet-filter {
+  align-items: flex-start;
+  padding-top: 0.6rem;
+}
+
+/* Vertical center of filter vs .lpo-col-header media icon (44px vs ~22px control when tops align). */
+.lpo-table:not(.lpo-single-col) .lpo-party-label-col--table-outlet-filter .lpo-table-outlet-filter {
+  margin-top: calc((44px - 22px) / 2);
+}
+
 .lpo-table-outlet-filter .lpo-ps-outlet-filter {
   position: relative;
   z-index: 2;
@@ -2426,6 +2447,16 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     padding-inline-start: 0.45rem;
   }
 
+  /* Match .lpo-col-header (0.6rem); bloc-legend rule above would otherwise win on tie. */
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--bloc-legend.lpo-party-label-col--table-outlet-filter {
+    padding-top: 0.6rem;
+  }
+
+  /* Smaller header icons in this breakpoint: re-sync vertical center vs filter button (~22px). */
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--table-outlet-filter .lpo-table-outlet-filter {
+    margin-top: calc((36px - 22px) / 2);
+  }
+
   .lpo-table:not(.lpo-single-col) .lpo-col-totals--multi .lpo-total {
     position: relative;
   }
@@ -2616,6 +2647,19 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
   .lpo-col-header {
     padding: 0.4rem 0.4rem 0.35rem;
+  }
+
+  /* Same top inset as .lpo-col-header here so outlet filter lines up with header icons */
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--table-outlet-filter {
+    padding-top: 0.4rem;
+  }
+
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--bloc-legend.lpo-party-label-col--table-outlet-filter {
+    padding-top: 0.4rem;
+  }
+
+  .lpo-table:not(.lpo-single-col) .lpo-party-label-col--table-outlet-filter .lpo-table-outlet-filter {
+    margin-top: calc((32px - 22px) / 2);
   }
 
   /* Match padding-bottom above + half row border + half 7px dot */
