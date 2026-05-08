@@ -1058,6 +1058,12 @@ html[lang='he'] .lpo-filter--page-count select {
   border-radius: 0.55rem 0.55rem 0 0;
 }
 
+/* Multi-column: keep header + outlet-filter dropdown above first table rows (later siblings paint later).
+   Also .lpo-header-sync-clip must not clip the dropdown (see :not(.lpo-single-col) rule below). */
+.lpo-table:not(.lpo-single-col) .lpo-sticky-header-shell {
+  z-index: 30;
+}
+
 .lpo-single-col .lpo-sticky-header-shell {
   /* Keep date dot above body rows and below topbar (10) */
   z-index: 8;
@@ -1066,6 +1072,11 @@ html[lang='he'] .lpo-filter--page-count select {
 .lpo-header-sync-clip {
   overflow: hidden;
   width: 100%;
+}
+
+/* Multi-column outlet filter: dropdown extends below header row; overflow:hidden would clip it */
+.lpo-table:not(.lpo-single-col) .lpo-header-sync-clip {
+  overflow: visible;
 }
 
 /* Sparkline (1 col): let bloc date dot extend below header row without clipping */
@@ -1112,6 +1123,22 @@ html[lang='he'] .lpo-filter--page-count select {
 /* Shown only on narrow multi-column layouts (see tablet/phone media queries). */
 .lpo-header-bloc-legend {
   display: none;
+}
+
+/* Polls/page > 1: same outlet filter control as PollSummaryPanel, above bloc legend when shown */
+.lpo-table-outlet-filter {
+  display: flex;
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+
+.lpo-table-outlet-filter .lpo-ps-outlet-filter {
+  position: relative;
+  z-index: 2;
+}
+
+.lpo-table-outlet-filter .lpo-ps-outlet-filter-panel {
+  z-index: 80;
 }
 
 .lpo-bloc-legend-row {
@@ -3098,6 +3125,13 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   width: 18px;
   height: 18px;
   object-fit: cover;
+}
+
+/* Table header: filter is inside .lpo-party-label-col, so .lpo-party-label-col .mapped-icon (36px) wins in MQs unless we outrank it. */
+.lpo-party-label-col .lpo-ps-outlet-filter-ico .mapped-icon,
+.lpo-party-label-col .lpo-ps-outlet-filter-ico .icon-fallback {
+  width: 18px;
+  height: 18px;
 }
 
 .lpo-ps-outlet-filter-name {

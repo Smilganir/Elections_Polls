@@ -145,7 +145,7 @@ function FilterIcon() {
   )
 }
 
-function OutletFilterDropdown({
+export function OutletFilterDropdown({
   allOutlets,
   excludedOutlets,
   onToggle,

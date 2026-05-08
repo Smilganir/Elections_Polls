@@ -26,7 +26,7 @@ import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
 import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
 import { buildRollingWindowReport } from '../lib/pollRollingWindow'
-import { PollSummaryPanel } from '../ui/PollSummaryPanel'
+import { OutletFilterDropdown, PollSummaryPanel } from '../ui/PollSummaryPanel'
 import {
   harmonizeArabList,
   computeResiduals,
@@ -880,6 +880,8 @@ export function LatestPollsOverviewPage() {
   const [pollsPerPage, setPollsPerPage] = useState(getDefaultPollsPerPage)
   /** After the user picks "# of polls" from the select, do not override it on resize until full page load. */
   const pollsPerPageUserChosenRef = useRef(false)
+  /** Multi-column LPO table only: hide outlets (same UX as PollSummaryPanel filter). Cleared when polls/page is 1. */
+  const [excludedLpoOutlets, setExcludedLpoOutlets] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
     const maxOpt = maxPollsPerPageForWidth(typeof window !== 'undefined' ? window.innerWidth : 1200)
@@ -891,6 +893,10 @@ export function LatestPollsOverviewPage() {
     if (pollsPerPage !== 1) return
     if (isPortraitMobileForEvents()) return
     setShowEventLabels(true)
+  }, [pollsPerPage])
+
+  useEffect(() => {
+    if (pollsPerPage <= 1) setExcludedLpoOutlets(new Set())
   }, [pollsPerPage])
 
   const [eventViewportWidth, setEventViewportWidth] = useState(() =>
@@ -1028,6 +1034,28 @@ export function LatestPollsOverviewPage() {
     return { polls: list, previousByPollId: prevByPollId }
   }, [unpivot, segmentMap])
 
+  const pollsForLpoGrid = useMemo(() => {
+    if (pollsPerPage <= 1 || excludedLpoOutlets.size === 0) return polls
+    return polls.filter((p) => !excludedLpoOutlets.has(p.mediaOutlet))
+  }, [polls, pollsPerPage, excludedLpoOutlets])
+
+  const lpoOutletFilterList = useMemo(() => {
+    const s = new Set<string>()
+    for (const p of polls) s.add(p.mediaOutlet)
+    return [...s].sort((a, b) => a.localeCompare(b))
+  }, [polls])
+
+  const toggleLpoOutletFilter = useCallback((outlet: string) => {
+    setExcludedLpoOutlets((prev) => {
+      const next = new Set(prev)
+      if (next.has(outlet)) next.delete(outlet)
+      else next.add(outlet)
+      return next
+    })
+  }, [])
+
+  const clearLpoOutletFilter = useCallback(() => setExcludedLpoOutlets(new Set()), [])
+
   const pollRollingReport = useMemo(
     () => buildRollingWindowReport(polls, pollSummaryWindowDays),
     [polls, pollSummaryWindowDays],
@@ -1043,14 +1071,18 @@ export function LatestPollsOverviewPage() {
     return previousByPollId.has(poll.pollId)
   }
 
-  const totalPages = Math.max(1, Math.ceil(polls.length / pollsPerPage))
+  const totalPages = Math.max(1, Math.ceil(pollsForLpoGrid.length / pollsPerPage))
   const totalPagesRef = useRef(totalPages)
   totalPagesRef.current = totalPages
   const safePage = Math.min(pageIndex, totalPages - 1)
-  const visiblePolls = polls.slice(
+  const visiblePolls = pollsForLpoGrid.slice(
     safePage * pollsPerPage,
     (safePage + 1) * pollsPerPage,
   )
+
+  useEffect(() => {
+    setPageIndex((p) => Math.min(p, Math.max(0, totalPages - 1)))
+  }, [totalPages])
   const lpoHorizontalSyncKey = visiblePolls.map((p) => p.pollId).join(',')
 
   const allParties = useMemo(() => {
@@ -1694,8 +1726,20 @@ export function LatestPollsOverviewPage() {
                 <div className="lpo-header-row">
             {!showSparklines && (
               <div
-                className={`lpo-party-label-col${visiblePolls.length > 1 ? ' lpo-party-label-col--bloc-legend' : ''}`}
+                className={`lpo-party-label-col${visiblePolls.length > 1 ? ' lpo-party-label-col--bloc-legend' : ''}${pollsPerPage > 1 ? ' lpo-party-label-col--table-outlet-filter' : ''}`}
               >
+                {pollsPerPage > 1 ? (
+                  <div className="lpo-table-outlet-filter" dir="ltr">
+                    <OutletFilterDropdown
+                      allOutlets={lpoOutletFilterList}
+                      excludedOutlets={excludedLpoOutlets}
+                      onToggle={toggleLpoOutletFilter}
+                      onClear={clearLpoOutletFilter}
+                      locale={locale}
+                      displayMediaOutlet={displayMediaOutlet}
+                    />
+                  </div>
+                ) : null}
                 {visiblePolls.length > 1 ? (
                   <div className="lpo-header-bloc-legend" aria-hidden>
                     <div className="lpo-bloc-legend-row lpo-bloc-legend-row--opposition">
