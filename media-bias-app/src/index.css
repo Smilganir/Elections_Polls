@@ -1409,7 +1409,8 @@ label.lpo-mb-settings-form__label {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: subgrid;
-  align-items: end;
+  /* Top-align column heads so both .lpo-mb-coal-chart-col-caption lines match (coal legend is taller than tilt span). */
+  align-items: start;
   column-gap: 1.5rem;
   row-gap: 0.25rem;
   padding-bottom: 0.35rem;
@@ -1425,6 +1426,22 @@ label.lpo-mb-settings-form__label {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.lpo-mb-tilt-axis-tilt-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.lpo-mb-tilt-axis-tilt-head > .lpo-mb-coal-chart-col-caption {
+  display: block;
+  width: 100%;
+  text-align: center;
 }
 
 .lpo-mb-tilt-axis-coal-head {
@@ -1938,7 +1955,7 @@ label.lpo-mb-settings-form__label {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
-    align-items: end;
+    align-items: start;
     column-gap: 0.55rem;
     row-gap: 0.25rem;
     padding: 0 0 0.3rem;
@@ -1948,6 +1965,10 @@ label.lpo-mb-settings-form__label {
   .lpo-mb-tilt-axis-num-spacer,
   .lpo-mb-tilt-axis-tr-head {
     display: block;
+  }
+  .lpo-mb-tilt-axis-tilt-head .lpo-mb-coal-chart-col-caption {
+    white-space: normal;
+    line-height: 1.25;
   }
   .lpo-mb-tilt-axis-tilt-span {
     min-width: 0;

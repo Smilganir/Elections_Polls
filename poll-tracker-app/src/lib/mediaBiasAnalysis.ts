@@ -764,15 +764,20 @@ const COMPARISON_KEYS: ReadonlyArray<{
 /**
  * Returns the 2022 track-record badge data for one outlet.
  *
- * Fully isolated from the rolling-baseline pipeline — reads only from
- * historicalPolls2022.ts.  Returns `{ hasData: false }` for outlets not
- * present in knesset2022FinalPolls.
+ * Final polls table: keyed by spreadsheet column → same shape as knesset2022FinalPolls.
+ * Omit to use bundled `knesset2022FinalPolls` constants only (used by poll-tracker Overview).
+ *
+ * Fully isolated from the rolling-baseline pipeline — reads historicalPolls2022 constants
+ * for official results plus this optional overrides map.
  *
  * MAE is computed over the 11 comparison keys above (reported to 1 decimal).
  * Coalition Bloc Error = poll bloc − KNESSET25_COALITION_BLOC_SEATS_ACTUAL (Likud+RZ+Shas+UTJ certified).
  */
-export function computeHistoricalAccuracy(outletName: string): HistoricalAccuracyResult {
-  const poll = knesset2022FinalPolls[outletName]
+export function computeHistoricalAccuracy(
+  outletName: string,
+  finalPollsLookup: Record<string, Record<string, number>> = knesset2022FinalPolls,
+): HistoricalAccuracyResult {
+  const poll = finalPollsLookup[outletName]
   if (!poll) return { outlet: outletName, hasData: false }
 
   const mae =

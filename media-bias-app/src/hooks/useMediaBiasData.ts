@@ -6,7 +6,26 @@ import {
   harmonizeArabList,
   computeHistoricalAccuracy,
 } from '@shared/lib/mediaBiasAnalysis'
+import {
+  knesset2022FinalPolls,
+  parseKnesset25ResultsSheet,
+  KNESSET_25_RESULTS_SHEET_TABS,
+} from '@shared/lib/historicalPolls2022'
 import { mergeYeshAtidIntoBennettParty } from '../utils/mergeYeshAtidIntoBennettParty'
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+async function fetchKnesset25ResultsSheet(): Promise<string[][] | null> {
+  for (const tab of KNESSET_25_RESULTS_SHEET_TABS) {
+    try {
+      const res = await fetchSheet(tab, 'A:ZZ')
+      return res.rows
+    } catch {
+      /* try alternate tab spelling */
+    }
+  }
+  return null
+}
 
 // ─── Row parsers (mirror useDashboardData logic) ─────────────────────────────
 
@@ -67,6 +86,8 @@ type RawSheetData = {
   unpivot: UnpivotRow[]
   partiesDim: PartyDimRow[]
   mediaOutletsDim: MediaOutletDimRow[]
+  /** Merged static + `Kneset 25 Results` sheet (when available) for 2022 gauge + track record */
+  knessetFinalPolls: Record<string, Record<string, number>>
 }
 
 export type MediaBiasData = {
@@ -111,15 +132,22 @@ export function useMediaBiasData(combineArabs = true): State {
       if (!rawRef.current) {
         setState(s => ({ ...s, loading: true, error: null }))
         try {
-          const [unpivotRes, partiesRes, outletsRes] = await Promise.all([
+          const [unpivotRes, partiesRes, outletsRes, knessetRows] = await Promise.all([
             fetchSheet('UnpivotData'),
             fetchSheet('Parties Dim'),
             fetchSheet('Media Outlets Dim'),
+            fetchKnesset25ResultsSheet(),
           ])
+          const sheetPolls = parseKnesset25ResultsSheet(knessetRows ?? [])
+          const knessetFinalPolls =
+            Object.keys(sheetPolls).length > 0
+              ? { ...knesset2022FinalPolls, ...sheetPolls }
+              : knesset2022FinalPolls
           rawRef.current = {
             unpivot: parseUnpivot(unpivotRes.rows),
             partiesDim: parsePartiesDim(partiesRes.rows),
             mediaOutletsDim: parseMediaOutletsDim(outletsRes.rows),
+            knessetFinalPolls,
           }
         } catch (err) {
           if (!cancelled) {
@@ -145,7 +173,7 @@ export function useMediaBiasData(combineArabs = true): State {
       const allOutlets = [...new Set(raw.unpivot.map(r => r.mediaOutlet))]
       const accuracy: Record<string, HistoricalAccuracyResult> = {}
       for (const outlet of allOutlets) {
-        accuracy[outlet] = computeHistoricalAccuracy(outlet)
+        accuracy[outlet] = computeHistoricalAccuracy(outlet, raw.knessetFinalPolls)
       }
 
       if (!cancelled) {

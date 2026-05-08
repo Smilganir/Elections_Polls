@@ -1,0 +1,42 @@
+Media Bias app — Heatmap tab (English voiceover / script)
+Approx. 2.5–3 minutes. Read at a comfortable pace.
+
+---
+
+0:00–0:30 — What you are looking at
+[Screen: Heatmap tab, party column on the left, outlet columns on the right]
+On the heatmap, each row is a party and each column is a polling publisher — the same outlets you see in the poll tracker. The goal is to see, relative to everyone else, who tends to report more or fewer seats for a given party, using the time window you chose in settings.
+
+---
+
+0:30–1:10 — Colour and the number in the cell
+[Hover a coloured cell and the ± value]
+The cell colour shows the direction and strength of the residual — the gap between what that outlet shows for the party and what the average of all other outlets gives for that same party in the same window. The number in the cell is the same thing in seat units, with a plus or minus.
+[Point to the legend at the bottom / colour scale]
+The legend explains the ends of the scale — which direction is “over” versus “under” relative to peers. This is not a verdict on who is “right”; it is a relative pattern versus other outlets.
+
+---
+
+1:10–1:50 — Statistical emphasis and the Total column
+[Point to a gold-bordered cell, then the Total column]
+A gold border means that outlet–party pair also passes a multiple-comparisons check (Benjamini–Hochberg FDR) — so it is not only a strong colour but also flagged as more reliable when hundreds of cells are tested together.
+In the last column, Total summarises, in the same spirit, meaningful mass along the row — and you can sort parties by bias total versus by latest-poll seat size. Those are two different reading orders.
+
+---
+
+1:50–2:25 — Coalition / opposition, filter, horizontal scroll
+[Coalition and opposition labels; outlet filter; scroll if many columns]
+On the left, coalition and opposition tags help you read the map in political context — that is bloc labelling, not part of the statistical test itself.
+You can hide specific outlets so they do not dominate the view — useful when you only want to compare a subset.
+If there are many columns, use horizontal scroll — every outlet column stays reachable without squashing the whole table.
+
+---
+
+2:25–3:00 — Settings that change the heatmap + close
+[Brief cut to settings / gear]
+Window length, Arab-list merge, minimum polls per outlet, and FDR minimum all change which rows qualify, how the baseline is built, and which cells get a gold border. After you change a setting, let the view refresh and re-read the same rows.
+In short: the heatmap is the main layer for seeing house-effect patterns in seats; for full methodology, use the info control next to the settings.
+
+---
+
+Filming tip: start with a few rows after sorting; hover a gold-bordered cell and a non-gold cell once; show Bias vs Seats sort and any grey (FDR-excluded) cells if they appear on screen.

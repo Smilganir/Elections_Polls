@@ -76,6 +76,8 @@ export type MbUiStrings = {
   blocTiltSubtitleLead: string
   tiltLabelOpposition: string
   tiltLabelCoalition: string
+  /** Column caption above bloc-tilt directional labels (styled like tiltCoalPollVsActualCaption) */
+  tiltPollSummaryCaption: string
   /** Column header above Knesset 25 final-poll coalition vs certified seats */
   tiltCoalPollVsActualCaption: string
   /** Accessible description for coalition bullet gauge */
@@ -191,6 +193,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
       'Direction from Σ coalition residuals − Σ opposition residuals (raw seat means).',
     tiltLabelOpposition: '\u2190 Opposition tilt',
     tiltLabelCoalition: 'Coalition tilt \u2192',
+    tiltPollSummaryCaption: 'Summary of bloc biases in Knesset 26 polls',
     tiltCoalPollVsActualCaption: 'Final poll bloc (Nov 2022)',
     tiltCoalPollGaugeAria: (pollSeats, actualSeats) =>
       `Predicted coalition seats from final pre-election poll: ${pollSeats}. Certified bloc result: ${actualSeats}`,
@@ -307,6 +310,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
       'הכיוון נקבע לפי \u03a3 שאריות קואליציה \u2212 \u03a3 שאריות אופוזיציה (ממוצעים גולמיים במנדטים).',
     tiltLabelOpposition: '\u2190 הטיה לאופוזיציה',
     tiltLabelCoalition: 'הטיה לקואליציה \u2192',
+    tiltPollSummaryCaption: '26 סיכום הטיות גוש בסקרים לכנסת ה',
     tiltCoalPollVsActualCaption: 'הקואליציה בסקר האחרון לפני הבחירות (נוב׳ 2022)',
     tiltCoalPollGaugeAria: (pollSeats, actualSeats) =>
       `מנדטים בלוק מהסקר השבוע האחרון לפני הבחירות: ${pollSeats}. התוצאה הרשמית בבלוק: ${actualSeats}`,

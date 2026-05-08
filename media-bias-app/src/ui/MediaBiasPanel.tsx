@@ -851,9 +851,12 @@ function BlocTiltSection({
       <div className="lpo-mb-tilt-vrule" ref={vruleRef} aria-hidden />
       <div className="lpo-mb-tilt-axis-labels">
         <div aria-hidden className="lpo-mb-tilt-axis-corner" />
-        <div className="lpo-mb-tilt-axis-tilt-span">
-          <span className="lpo-mb-tilt-label--opp">{t.tiltLabelOpposition}</span>
-          <span className="lpo-mb-tilt-label--coal">{t.tiltLabelCoalition}</span>
+        <div className="lpo-mb-tilt-axis-tilt-head">
+          <span className="lpo-mb-coal-chart-col-caption">{t.tiltPollSummaryCaption}</span>
+          <div className="lpo-mb-tilt-axis-tilt-span">
+            <span className="lpo-mb-tilt-label--opp">{t.tiltLabelOpposition}</span>
+            <span className="lpo-mb-tilt-label--coal">{t.tiltLabelCoalition}</span>
+          </div>
         </div>
         <div aria-hidden className="lpo-mb-tilt-axis-num-spacer" />
         <div className="lpo-mb-tilt-axis-coal-head">

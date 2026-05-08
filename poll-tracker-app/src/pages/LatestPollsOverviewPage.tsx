@@ -800,7 +800,7 @@ export function LatestPollsOverviewPage() {
 
     // Historical accuracy per outlet present in 2022 data.
     const outlets2022 = ['חדשות 12', 'חדשות 13', 'כאן חדשות', 'ערוץ 14', 'מעריב', 'ישראל היום']
-    const accuracy2022 = outlets2022.map(computeHistoricalAccuracy)
+    const accuracy2022 = outlets2022.map(o => computeHistoricalAccuracy(o))
 
     // ── Bloc tilt summary ──────────────────────────────────────────────────
     console.group('%c[MediaBias] Bloc Tilt per Outlet (sorted by |tilt|)', 'color:#6366f1;font-weight:bold')
