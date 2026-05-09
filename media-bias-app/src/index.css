@@ -825,12 +825,6 @@ label.lpo-mb-settings-form__label {
   text-align: center;
 }
 
-/* Bloc tilt explainer: sits under the tilt grid inside the section */
-.lpo-mb-section-subtitle--below-bloc-tilt {
-  margin-top: 1rem;
-  margin-bottom: 0;
-}
-
 .lpo-mb-empty {
   color: var(--col-muted);
   text-align: center;
@@ -1421,6 +1415,12 @@ label.lpo-mb-settings-form__label {
 .lpo-mb-tilt-axis-num-spacer { min-height: 1px; }
 .lpo-mb-tilt-axis-tr-head { min-height: 1px; }
 
+.lpo-mb-tilt-axis-tilt-legend-rail {
+  flex-shrink: 0;
+  height: calc(0.62rem * 1.35 + 0.22rem);
+  pointer-events: none;
+}
+
 .lpo-mb-tilt-axis-tilt-span {
   display: flex;
   align-items: center;
@@ -1442,6 +1442,13 @@ label.lpo-mb-settings-form__label {
   display: block;
   width: 100%;
   text-align: center;
+}
+
+/* Same min-height so the row below (tilt span vs gold) starts after matching caption bands. */
+.lpo-mb-tilt-axis-labels .lpo-mb-tilt-axis-tilt-head > .lpo-mb-coal-chart-col-caption,
+.lpo-mb-tilt-axis-labels .lpo-mb-tilt-axis-coal-head > .lpo-mb-coal-chart-col-caption {
+  min-height: calc(0.7rem * 1.25 * 2);
+  box-sizing: border-box;
 }
 
 .lpo-mb-tilt-axis-coal-head {
@@ -1969,6 +1976,7 @@ label.lpo-mb-settings-form__label {
   .lpo-mb-tilt-axis-tilt-head .lpo-mb-coal-chart-col-caption {
     white-space: normal;
     line-height: 1.25;
+    min-height: unset;
   }
   .lpo-mb-tilt-axis-tilt-span {
     min-width: 0;
@@ -1988,10 +1996,16 @@ label.lpo-mb-settings-form__label {
   .lpo-mb-tilt-axis-coal-head .lpo-mb-coal-chart-col-caption {
     white-space: normal;
     line-height: 1.25;
+    min-height: unset;
   }
   .lpo-mb-tilt-axis-coal-head .lpo-mb-coal-chart-col-legend-lead {
     white-space: normal;
     line-height: 1.3;
+  }
+
+  .lpo-mb-tilt-axis-tilt-legend-rail {
+    min-height: calc(0.62rem * 1.3 * 2 + 0.22rem);
+    height: auto;
   }
   .lpo-mb-tilt-row {
     display: grid;

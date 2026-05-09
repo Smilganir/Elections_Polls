@@ -72,8 +72,6 @@ export type MbUiStrings = {
   arabCombinedHe: string
 
   // Bloc Tilt section
-  /** Bloc tilt explainer below the tilt grid */
-  blocTiltSubtitleLead: string
   tiltLabelOpposition: string
   tiltLabelCoalition: string
   /** Column caption above bloc-tilt directional labels (styled like tiltCoalPollVsActualCaption) */
@@ -189,8 +187,6 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     arabCombinedHe: 'Arab List (combined)',
 
     // Bloc Tilt
-    blocTiltSubtitleLead:
-      'Direction from Σ coalition residuals − Σ opposition residuals (raw seat means).',
     tiltLabelOpposition: '\u2190 Opposition tilt',
     tiltLabelCoalition: 'Coalition tilt \u2192',
     tiltPollSummaryCaption: 'Summary of bloc biases in Knesset 26 polls',
@@ -306,8 +302,6 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     arabCombinedHe: 'רשימה ערבית (משולבת)',
 
     // Bloc Tilt
-    blocTiltSubtitleLead:
-      'הכיוון נקבע לפי \u03a3 שאריות קואליציה \u2212 \u03a3 שאריות אופוזיציה (ממוצעים גולמיים במנדטים).',
     tiltLabelOpposition: '\u2190 הטיה לאופוזיציה',
     tiltLabelCoalition: 'הטיה לקואליציה \u2192',
     tiltPollSummaryCaption: '26 סיכום הטיות גוש בסקרים לכנסת ה',

@@ -853,6 +853,8 @@ function BlocTiltSection({
         <div aria-hidden className="lpo-mb-tilt-axis-corner" />
         <div className="lpo-mb-tilt-axis-tilt-head">
           <span className="lpo-mb-coal-chart-col-caption">{t.tiltPollSummaryCaption}</span>
+          {/* Same vertical offset as .lpo-mb-coal-chart-col-legend-lead + its gap before gold */}
+          <div className="lpo-mb-tilt-axis-tilt-legend-rail" aria-hidden />
           <div className="lpo-mb-tilt-axis-tilt-span">
             <span className="lpo-mb-tilt-label--opp">{t.tiltLabelOpposition}</span>
             <span className="lpo-mb-tilt-label--coal">{t.tiltLabelCoalition}</span>
@@ -1465,12 +1467,6 @@ export function MediaBiasPanel({
               mediaOutletsDim={mediaOutletsDim}
               t={t}
             />
-            <p
-              className="lpo-mb-section-subtitle lpo-mb-section-subtitle--below-bloc-tilt"
-              dir={locale === 'he' ? 'rtl' : 'ltr'}
-            >
-              {t.blocTiltSubtitleLead}
-            </p>
           </section>
         )}
 
