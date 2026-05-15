@@ -210,6 +210,12 @@ export default defineConfig({
   root: appDir,
   envDir: appDir,
   base,
+  /** Repo-root `data/` CSV (Knesset 25 snapshot) is imported from `src/` via `?raw`. */
+  server: {
+    fs: {
+      allow: [appDir, path.resolve(appDir, '..')],
+    },
+  },
   plugins: [react(), sheetsApiPlugin(), sharedAssetsPlugin()],
   resolve: {
     alias: { '@shared': shared },

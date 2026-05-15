@@ -48,6 +48,12 @@ export type MbUiStrings = {
   tabAnomalies: string
 
   // Heatmap section
+  /** Heading above the embedded K25 focused heatmap (under live heatmap) */
+  k25FocusedHeatmapSubtitle: string
+  /** Frozen corner label when outlet filter / bloc legend hidden (K25 focus tab) */
+  k25HeatmapPartyColumn: string
+  /** Short note under K25 focused heatmap heading */
+  k25HeatmapStaticNote: string
   heatmapSubtitle: string
   sortToggleAria: string
   /** Bold label above bias-column sort controls (total significant residual column) */
@@ -64,6 +70,8 @@ export type MbUiStrings = {
   /** Mean threshold for dimmed cell digits (heatmap legend tail, styled muted) */
   legendMeanUnderHalfSeats: string
   noData: string
+  /** Heatmap column header / outlet icon native tooltip: pollster names prefix */
+  heatmapOutletPollsters: string
 
   // Bloc legend labels (corner cell)
   coalition: string
@@ -165,6 +173,10 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     tabAnomalies: 'Anomalies',
 
     // Heatmap
+    k25FocusedHeatmapSubtitle: 'Focused Knesset 25 (2022) heatmap',
+    k25HeatmapPartyColumn: 'Party',
+    k25HeatmapStaticNote:
+      'Static Knesset 25 snapshot of main parties and media outlets, same methodology as above.',
     heatmapSubtitle:
       'Each cell = mean raw residual (outlet seats \u2212 LOO cross-outlet baseline). Gold border = p<0.05 after BH-FDR. Dimmer digits when mean < 0.5 seats (readability only; can still be significant).',
     sortToggleAria: 'Sort party rows',
@@ -180,8 +192,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     legendFdr: 'p<0.05 (FDR)',
     legendMeanUnderHalfSeats: 'mean < 0.5 seats',
     noData: 'No data yet \u2014 adjust window or min-n settings.',
-
-    // Bloc legend
+    heatmapOutletPollsters: 'Pollster(s)',
     coalition: 'Coalition',
     opposition: 'Opposition',
     arabCombinedHe: 'Arab List (combined)',
@@ -280,6 +291,10 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     tabAnomalies: 'חריגות',
 
     // Heatmap
+    k25FocusedHeatmapSubtitle: 'מפת חום ממוקדת — כנסת 25 (2022)',
+    k25HeatmapPartyColumn: 'מפלגה',
+    k25HeatmapStaticNote:
+      'תמונת מצב סטטית לכנסת 25 — המפלגות וכלי התקשורת העיקריים; אותה מתודולוגיה כמו למעלה.',
     heatmapSubtitle:
       'כל תא = ממוצע סטייה גולמית (מנדטי ערוץ \u2212 קו בסיס LOO). מסגרת זהובה = p<0.05 לאחר BH-FDR. טקסט עמום כשממוצע < 0.5 מנדטים (קריאות בלבד; עדיין יכול להיות מובהק).',
     sortToggleAria: 'מיון שורות לפי מפלגה',
@@ -295,8 +310,7 @@ export const MB: Record<AppLocale, MbUiStrings> = {
     legendFdr: 'p<0.05 (FDR)',
     legendMeanUnderHalfSeats: 'ממוצע < 0.5 מנדטים',
     noData: 'אין נתונים — שנו הגדרות חלון או סף-n.',
-
-    // Bloc legend
+    heatmapOutletPollsters: 'סוקרים',
     coalition: 'קואליציה',
     opposition: 'אופוזיציה',
     arabCombinedHe: 'רשימה ערבית (משולבת)',

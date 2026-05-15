@@ -31,6 +31,11 @@ import { MB, type MbUiStrings } from '../i18n/strings'
 import { MbCsvExportMenu } from './MbCsvExportMenu'
 import { downloadHarmonizedCsv } from '../utils/exportHarmonizedCsv'
 import { downloadResidualDiagnosticsCsv } from '../utils/exportResidualDiagnosticsCsv'
+import {
+  buildKnesset25Harmonized,
+  KNESSET25_FOCUS_OUTLETS,
+  KNESSET25_FOCUS_PARTIES,
+} from '../data/knesset25PollSnapshot'
 
 /** Benjamini–Hochberg FDR threshold — must match gold border on heatmap cells. */
 const MB_FDR_ALPHA = 0.05
@@ -207,12 +212,15 @@ function IconBadge({
   label,
   size = 22,
   ringColor,
+  title,
 }: {
   src?: string
   label: string
   size?: number
   /** CSS colour for the circular border ring (e.g. bloc colour). */
   ringColor?: string
+  /** Native tooltip (e.g. pollster names on outlet icons). */
+  title?: string
 }) {
   const [broken, setBroken] = useState(false)
   const base = { width: size, height: size, borderRadius: '50%', flexShrink: 0 } as const
@@ -222,7 +230,7 @@ function IconBadge({
 
   if (!src || broken) {
     return (
-      <span className="lpo-mb-icon-fallback" style={style}>
+      <span className="lpo-mb-icon-fallback" style={style} title={title}>
         {label.slice(0, 2)}
       </span>
     )
@@ -231,6 +239,7 @@ function IconBadge({
     <img
       src={sharedPublicUrl(src)}
       alt={label}
+      title={title}
       className="lpo-mb-icon"
       style={style}
       onError={() => setBroken(true)}
@@ -369,6 +378,7 @@ function HeatmapSection({
   onToggleOutlet,
   onClearOutlets,
   t,
+  heatmapFocus,
 }: {
   houseEffects: HouseEffectCell[]
   harmonized: UnpivotRow[]
@@ -380,6 +390,8 @@ function HeatmapSection({
   onToggleOutlet: (outlet: string) => void
   onClearOutlets: () => void
   t: MbUiStrings
+  /** Focused grid: fixed parties, no coalition/opposition chrome */
+  heatmapFocus?: { parties: string[]; hideBlocChrome: boolean }
 }) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const [partySortBy, setPartySortBy] = useState<'seats' | 'bias'>('bias')
@@ -414,18 +426,52 @@ function HeatmapSection({
     return m
   }, [houseEffects])
 
+  /** Unique pollster names per outlet (from current harmonized table) for header icon tooltips */
+  const pollstersByOutlet = useMemo(() => {
+    const pollsterSet = new Map<string, Set<string>>()
+    const orderSet = new Set(outletOrder)
+    for (const r of harmonized) {
+      if (!orderSet.has(r.mediaOutlet)) continue
+      const name = r.pollster?.trim()
+      if (!name) continue
+      if (!pollsterSet.has(r.mediaOutlet)) pollsterSet.set(r.mediaOutlet, new Set())
+      pollsterSet.get(r.mediaOutlet)!.add(name)
+    }
+    const lineByOutlet = new Map<string, string>()
+    for (const o of outletOrder) {
+      const set = pollsterSet.get(o)
+      if (!set?.size) continue
+      lineByOutlet.set(o, [...set].sort((a, b) => a.localeCompare(b, 'he')).join(', '))
+    }
+    return lineByOutlet
+  }, [harmonized, outletOrder])
+
+  const scopedHouseEffects = useMemo(() => {
+    if (!heatmapFocus) return houseEffects
+    const po = new Set(outletOrder)
+    const pp = new Set(heatmapFocus.parties)
+    return houseEffects.filter(c => po.has(c.outlet) && pp.has(c.party))
+  }, [heatmapFocus, heatmapFocus?.parties, houseEffects, outletOrder])
+
   // Sum of raw mean residuals for FDR-significant outlet cells in this party's row only
   const partySignificantResidualSum = useMemo(() => {
     const m = new Map<string, number>()
-    for (const c of houseEffects) {
+    for (const c of scopedHouseEffects) {
       if (!isHouseEffectFdrSignificant(c)) continue
       const prev = m.get(c.party) ?? 0
       m.set(c.party, prev + c.meanRawResid)
     }
     return m
-  }, [houseEffects])
+  }, [scopedHouseEffects])
 
   const { allParties, coalitionParties, oppositionParties } = useMemo(() => {
+    if (heatmapFocus) {
+      return {
+        allParties: [...heatmapFocus.parties],
+        coalitionParties: [] as string[],
+        oppositionParties: [] as string[],
+      }
+    }
     const inHeatmap = new Set(houseEffects.map(c => c.party))
     const sortFn =
       partySortBy === 'bias'
@@ -443,7 +489,16 @@ function HeatmapSection({
     const coalition = all.filter(p => segMap.get(p) === 'Coalition')
     const opposition = all.filter(p => segMap.get(p) === 'Opposition' || segMap.get(p) === 'Arabs')
     return { allParties: all, coalitionParties: coalition, oppositionParties: opposition }
-  }, [houseEffects, segMap, latestPollSeats, partyIdByParty, partySignificantResidualSum, partySortBy])
+  }, [
+    heatmapFocus,
+    heatmapFocus?.parties,
+    houseEffects,
+    segMap,
+    latestPollSeats,
+    partyIdByParty,
+    partySignificantResidualSum,
+    partySortBy,
+  ])
 
   // Per-outlet sum of meanRawResid across coalition parties
   const outletCoalitionSum = useMemo(() => {
@@ -483,7 +538,7 @@ function HeatmapSection({
   )
   const handleMouseLeave = useCallback(() => setTooltip(null), [])
 
-  const heatmapLayoutSyncKey = `${partySortBy}\t${locale}\t${outletOrder.join('\0')}\t${allParties.join('\0')}\t${[...excludedOutlets].sort().join('\0')}`
+  const heatmapLayoutSyncKey = `${heatmapFocus?.hideBlocChrome ? 'f' : ''}\t${partySortBy}\t${locale}\t${outletOrder.join('\0')}\t${allParties.join('\0')}\t${[...excludedOutlets].sort().join('\0')}`
 
   useLayoutEffect(() => {
     if (outletOrder.length === 0 || allParties.length === 0) return
@@ -521,34 +576,49 @@ function HeatmapSection({
     return <p className="lpo-mb-empty">{t.noData}</p>
   }
 
+  const hideBlocChrome = heatmapFocus?.hideBlocChrome === true
+
+  const outletHeaderTitle = (outlet: string) => {
+    const pl = pollstersByOutlet.get(outlet)
+    const name = outletLabel(outlet)
+    return pl ? `${name}\n${t.heatmapOutletPollsters}: ${pl}` : name
+  }
+
   const outletHeaderCells = outletOrder.map(outlet => {
-    const cs = outletCoalitionSum.get(outlet)
-    const os = outletOppositionSum.get(outlet)
+    const cs = hideBlocChrome ? undefined : outletCoalitionSum.get(outlet)
+    const os = hideBlocChrome ? undefined : outletOppositionSum.get(outlet)
     return (
-      <th key={outlet} className="lpo-mb-th-party" title={ENGLISH_MEDIA_NAMES[outlet]}>
+      <th key={outlet} className="lpo-mb-th-party" title={outletHeaderTitle(outlet)}>
         <div className="lpo-mb-th-party-inner">
-          <IconBadge src={MEDIA_ICON_MAP[outlet]} label={outlet} size={35} />
+          <IconBadge
+            src={MEDIA_ICON_MAP[outlet]}
+            label={outlet}
+            size={35}
+            title={outletHeaderTitle(outlet)}
+          />
           <span className="lpo-mb-th-party-abbr">{outletLabel(outlet)}</span>
-          <div className="lpo-mb-outlet-score-pills">
-            {cs !== undefined && (
-              <span
-                className="lpo-mb-outlet-pill"
-                style={{ background: residualColor(cs), color: cellTextColor(cs) }}
-                title={`Coalition Σ: ${fmtSigned(cs, 1)}`}
-              >
-                C {fmtSigned(cs, 1)}
-              </span>
-            )}
-            {os !== undefined && (
-              <span
-                className="lpo-mb-outlet-pill"
-                style={{ background: residualColor(os), color: cellTextColor(os) }}
-                title={`Opposition Σ: ${fmtSigned(os, 1)}`}
-              >
-                O {fmtSigned(os, 1)}
-              </span>
-            )}
-          </div>
+          {!hideBlocChrome && (
+            <div className="lpo-mb-outlet-score-pills">
+              {cs !== undefined && (
+                <span
+                  className="lpo-mb-outlet-pill"
+                  style={{ background: residualColor(cs), color: cellTextColor(cs) }}
+                  title={`Coalition Σ: ${fmtSigned(cs, 1)}`}
+                >
+                  C {fmtSigned(cs, 1)}
+                </span>
+              )}
+              {os !== undefined && (
+                <span
+                  className="lpo-mb-outlet-pill"
+                  style={{ background: residualColor(os), color: cellTextColor(os) }}
+                  title={`Opposition Σ: ${fmtSigned(os, 1)}`}
+                >
+                  O {fmtSigned(os, 1)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </th>
     )
@@ -566,29 +636,44 @@ function HeatmapSection({
               <tr ref={frozenTheadRowRef}>
                 <th className="lpo-mb-th-outlet">
                   <div className="lpo-mb-th-outlet-inner">
-                    <OutletFilterDropdown
-                      allOutlets={eligibleOutlets}
-                      excludedOutlets={excludedOutlets}
-                      onToggle={onToggleOutlet}
-                      onClear={onClearOutlets}
-                      locale={locale}
-                      outletLabel={outletLabel}
-                    />
-                    <div className="lpo-mb-bloc-legend">
-                      <span className="lpo-mb-bloc-legend-label lpo-mb-bloc-legend-label--coalition">{t.coalition}</span>
-                      <span className="lpo-mb-bloc-legend-label lpo-mb-bloc-legend-label--opposition">{t.opposition}</span>
-                    </div>
+                    {hideBlocChrome ? (
+                      <span
+                        className="lpo-mb-focused-corner-label"
+                        dir={locale === 'he' ? 'rtl' : 'ltr'}
+                      >
+                        {t.k25HeatmapPartyColumn}
+                      </span>
+                    ) : (
+                      <>
+                        <OutletFilterDropdown
+                          allOutlets={eligibleOutlets}
+                          excludedOutlets={excludedOutlets}
+                          onToggle={onToggleOutlet}
+                          onClear={onClearOutlets}
+                          locale={locale}
+                          outletLabel={outletLabel}
+                        />
+                        <div className="lpo-mb-bloc-legend">
+                          <span className="lpo-mb-bloc-legend-label lpo-mb-bloc-legend-label--coalition">
+                            {t.coalition}
+                          </span>
+                          <span className="lpo-mb-bloc-legend-label lpo-mb-bloc-legend-label--opposition">
+                            {t.opposition}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </th>
               </tr>
             </thead>
             <tbody>
               {allParties.map(party => {
-                const isCoalition = segMap.get(party) === 'Coalition'
+                const isCoalition = !hideBlocChrome && segMap.get(party) === 'Coalition'
                 return (
                   <tr key={party}>
                     <td
-                      className={`lpo-mb-td-outlet ${isCoalition ? 'lpo-mb-td-outlet--coalition' : 'lpo-mb-td-outlet--opposition'}`}
+                      className={`lpo-mb-td-outlet ${hideBlocChrome ? 'lpo-mb-td-outlet--neutral' : isCoalition ? 'lpo-mb-td-outlet--coalition' : 'lpo-mb-td-outlet--opposition'}`}
                       title={party}
                     >
                       <div className="lpo-mb-td-outlet-inner">
@@ -596,7 +681,7 @@ function HeatmapSection({
                           src={PARTY_ICON_MAP[party]}
                           label={party}
                           size={35}
-                          ringColor={isCoalition ? '#0166DF' : '#e8ecf2'}
+                          ringColor={hideBlocChrome ? '#e8ecf2' : isCoalition ? '#0166DF' : '#e8ecf2'}
                         />
                         <span className="lpo-mb-td-outlet-name">{partyLabel(party)}</span>
                       </div>
@@ -608,7 +693,12 @@ function HeatmapSection({
           </table>
         </div>
         {/* Right: horizontally scrollable outlet + bias columns */}
-        <div className="lpo-mb-heatmap-scroll-wrap" role="region" tabIndex={0} aria-label={t.tabHeatmap}>
+        <div
+          className="lpo-mb-heatmap-scroll-wrap"
+          role="region"
+          tabIndex={0}
+          aria-label={hideBlocChrome ? t.k25FocusedHeatmapSubtitle : t.tabHeatmap}
+        >
           <div className="lpo-mb-heatmap-scroll-x">
             <table className="lpo-mb-heatmap-scroll-table">
               <thead>
@@ -622,27 +712,31 @@ function HeatmapSection({
                       <div className="lpo-mb-bias-sort-icon-slot">
                         <span className="lpo-mb-bias-sort-total">{t.heatmapBiasColTotalLabel}</span>
                       </div>
-                      <span className="lpo-mb-bias-sort-caption">{t.sortByCaption}</span>
-                      <div
-                        className="locale-toggle locale-toggle--vertical"
-                        role="group"
-                        aria-label={t.sortToggleAria}
-                      >
-                        <button
-                          type="button"
-                          className={`locale-toggle-btn${partySortBy === 'bias' ? ' active' : ''}`}
-                          onClick={() => setPartySortBy('bias')}
-                        >
-                          {t.sortToggleBias}
-                        </button>
-                        <button
-                          type="button"
-                          className={`locale-toggle-btn${partySortBy === 'seats' ? ' active' : ''}`}
-                          onClick={() => setPartySortBy('seats')}
-                        >
-                          {t.sortToggleSeats}
-                        </button>
-                      </div>
+                      {!heatmapFocus && (
+                        <>
+                          <span className="lpo-mb-bias-sort-caption">{t.sortByCaption}</span>
+                          <div
+                            className="locale-toggle locale-toggle--vertical"
+                            role="group"
+                            aria-label={t.sortToggleAria}
+                          >
+                            <button
+                              type="button"
+                              className={`locale-toggle-btn${partySortBy === 'bias' ? ' active' : ''}`}
+                              onClick={() => setPartySortBy('bias')}
+                            >
+                              {t.sortToggleBias}
+                            </button>
+                            <button
+                              type="button"
+                              className={`locale-toggle-btn${partySortBy === 'seats' ? ' active' : ''}`}
+                              onClick={() => setPartySortBy('seats')}
+                            >
+                              {t.sortToggleSeats}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </th>
                 </tr>
@@ -673,7 +767,7 @@ function HeatmapSection({
               <span className="lpo-mb-heatmap-legend-inner">
                 {/* Diverging color bar: under-reports ← 0 → over-reports */}
                 {(() => {
-                  const vals = houseEffects.filter(c => c.pAdj !== null).map(c => c.meanRawResid)
+                  const vals = scopedHouseEffects.filter(c => c.pAdj !== null).map(c => c.meanRawResid)
                   const minR = vals.length ? Math.min(...vals) : -6
                   const maxR = vals.length ? Math.max(...vals) : 6
                   return (
@@ -703,13 +797,14 @@ function HeatmapSection({
               <span className="lpo-mb-stats-summary" dir={locale === 'he' ? 'rtl' : 'ltr'}>
                 <span className="lpo-mb-stats-summary-inner">
                   <span className="lpo-mb-stats-summary--sig">
-                    {houseEffects.filter(c => isHouseEffectFdrSignificant(c)).length} {t.significantCells}
+                    {scopedHouseEffects.filter(c => isHouseEffectFdrSignificant(c)).length}{' '}
+                    {t.significantCells}
                   </span>
                   <span className="lpo-mb-stats-summary--sep" aria-hidden>
                     &ensp;|&ensp;
                   </span>
                   <span className="lpo-mb-stats-summary--excl">
-                    {houseEffects.filter(c => c.pAdj === null).length} {t.excludedLowN}
+                    {scopedHouseEffects.filter(c => c.pAdj === null).length} {t.excludedLowN}
                   </span>
                 </span>
               </span>
@@ -1233,6 +1328,10 @@ export function MediaBiasPanel({
 
   const clearExcluded = useCallback(() => setExcludedOutlets(new Set()), [])
 
+  const k25ExcludedStub = useMemo(() => new Set<string>(), [])
+  const noOpToggleOutlet = useCallback((_outlet: string) => {}, [])
+  const noOpClearOutlets = useCallback(() => {}, [])
+
   // Step 1: count distinct polls per outlet; keep outlets meeting the threshold,
   // then additionally remove any outlets manually excluded by the user.
   // Filtering BEFORE baseline computation means excluded outlets don't
@@ -1302,6 +1401,48 @@ export function MediaBiasPanel({
         return a.localeCompare(b, 'he')
       })
   }, [eligibleOutlets, excludedOutlets, blocTilt])
+
+  // Focus tab lists Yesh Atid as its own row; skip Yah merge so those cells exist (main heatmap still merges).
+  const k25Harmonized = useMemo(
+    () => buildKnesset25Harmonized(combineArabs, false),
+    [combineArabs],
+  )
+
+  const k25FilteredHarmonized = useMemo(() => {
+    const pollsPerOutlet = new Map<string, Set<number>>()
+    for (const r of k25Harmonized) {
+      if (!pollsPerOutlet.has(r.mediaOutlet)) pollsPerOutlet.set(r.mediaOutlet, new Set())
+      pollsPerOutlet.get(r.mediaOutlet)!.add(r.pollId)
+    }
+    return k25Harmonized.filter(r => (pollsPerOutlet.get(r.mediaOutlet)?.size ?? 0) >= totalPollsMin)
+  }, [k25Harmonized, totalPollsMin])
+
+  const k25Residuals = useMemo(
+    () => computeResiduals(k25FilteredHarmonized, windowDays),
+    [k25FilteredHarmonized, windowDays],
+  )
+
+  const k25HouseEffects = useMemo(
+    () => computeHouseEffects(k25Residuals, partiesDim, { minN: fdrMinN }),
+    [k25Residuals, partiesDim, fdrMinN],
+  )
+
+  const k25EligibleOutlets = useMemo(() => {
+    const pollsPerOutlet = new Map<string, Set<number>>()
+    for (const r of k25Harmonized) {
+      if (!pollsPerOutlet.has(r.mediaOutlet)) pollsPerOutlet.set(r.mediaOutlet, new Set())
+      pollsPerOutlet.get(r.mediaOutlet)!.add(r.pollId)
+    }
+    return [...pollsPerOutlet.entries()]
+      .filter(([, s]) => s.size >= totalPollsMin)
+      .map(([o]) => o)
+      .sort()
+  }, [k25Harmonized, totalPollsMin])
+
+  const k25FocusOutletOrder = useMemo(() => {
+    const eligible = new Set(k25EligibleOutlets)
+    return KNESSET25_FOCUS_OUTLETS.filter(o => eligible.has(o))
+  }, [k25EligibleOutlets])
 
   return (
     <div className="lpo-mb-panel">
@@ -1455,6 +1596,23 @@ export function MediaBiasPanel({
               onClearOutlets={clearExcluded}
               t={t}
             />
+            <div className="lpo-mb-k25-embed" dir={locale === 'he' ? 'rtl' : 'ltr'}>
+              <h2 className="lpo-mb-k25-embed-heading">{t.k25FocusedHeatmapSubtitle}</h2>
+              <p className="lpo-mb-k25-static-note">{t.k25HeatmapStaticNote}</p>
+              <HeatmapSection
+                houseEffects={k25HouseEffects}
+                harmonized={k25FilteredHarmonized}
+                partiesDim={partiesDim}
+                mediaOutletsDim={mediaOutletsDim}
+                outletOrder={k25FocusOutletOrder}
+                eligibleOutlets={k25EligibleOutlets}
+                excludedOutlets={k25ExcludedStub}
+                onToggleOutlet={noOpToggleOutlet}
+                onClearOutlets={noOpClearOutlets}
+                t={t}
+                heatmapFocus={{ parties: [...KNESSET25_FOCUS_PARTIES], hideBlocChrome: true }}
+              />
+            </div>
           </section>
         )}
 

@@ -989,6 +989,37 @@ label.lpo-mb-settings-form__label {
 /* Party row label colours (parties are now rows) */
 .lpo-mb-td-outlet--coalition { color: #5ba8ff; }
 .lpo-mb-td-outlet--opposition { color: #e8ecf2; }
+.lpo-mb-td-outlet--neutral { color: #e8ecf2; }
+
+.lpo-mb-focused-corner-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  color: #b8c0cc;
+}
+
+.lpo-mb-k25-embed {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lpo-mb-k25-embed-heading {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: #c8d4e6;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.lpo-mb-k25-static-note {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #9aa3b0;
+  max-width: 52rem;
+}
 
 
 /* Outlet score pills — two stacked colour chips in column headers */
