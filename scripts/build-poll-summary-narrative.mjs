@@ -42,9 +42,9 @@ const ENGLISH_PARTY_OVERRIDES = {
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
 const DEFAULT_BACKGROUND_EN =
-  'The October 2026 election approaches amid the Iran war’s aftermath and a disputed US-brokered ceasefire, as Bennett and Lapid turn Yahad into a Bennett-led joint ticket that folds Yesh Atid into the anti-Netanyahu consolidation while the coalition remains under majority pressure.'
+  'The October 2026 election countdown unfolds as the U.S.–Iran ceasefire framework frays and talks turn bitter over terms, alongside renewed escalation in Gaza and friction in Washington, while Bennett and Lapid unite Yahad as a Bennett-led ticket that folds Yesh Atid into the anti-Netanyahu front, with latest polls still showing the opposition and anti-bloc camp ahead across most major outlets.'
 const DEFAULT_BACKGROUND_HE =
-  'רקע: ספירה לאחור לבחירות אוקטובר 2026 על רקע המלחמה מול איראן והפסקת האש האמריקאית שנויה במחלוקת, כשבנט ולפיד הופכים את יחד לרשימה משותפת בראשות בנט שמכניסה את יש עתיד למהלך איחוד נגד נתניהו, בזמן שהקואליציה נותרת תחת לחץ רוב.'
+  'רקע: ספירה לאחור לבחירות אוקטובר 2026 על רקע פסקת אש אמריקנית–איראנית רעועה ומו״מ סוער סביב התנאים, לצד הסלמה בעזה ומתיחות בוושינגטון, כשבנט ולפיד מאחדים את יחד בראשות בנט ומכניסים את יש עתיד למסע נגד נתניהו, ובסקרים האחרונים נשמרת עדיפות האופוזיציה וגוש השותפים נגד הבלוק אצל רוב הסוקרים.'
 
 function round1(x) {
   return Math.round(x * 10) / 10
