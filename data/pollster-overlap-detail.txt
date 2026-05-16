@@ -1,0 +1,235 @@
+=== A) Same pollster + same calendar date, multiple outlets ===
+
+Date 2025-09-30 | Pollster: מנחם לזר
+  Poll ID 406 | וואלה
+  Poll ID 409 | מעריב
+
+=== B) Focal polls with >=1 OTHER outlet by SAME pollster in [date-30, date] ===
+
+Total focal polls with at least one overlapping pollster row: 65
+
+--- Focal: 2023-03-05 | ערוץ 14 | Poll ID 11 | דירקט פולס ---
+    overlap: 2023-02-24 | ערוץ 7 | Poll ID 8
+
+--- Focal: 2023-03-16 | ערוץ 14 | Poll ID 15 | דירקט פולס ---
+    overlap: 2023-02-24 | ערוץ 7 | Poll ID 8
+
+--- Focal: 2023-03-24 | ג׳רוזלם פוסט | Poll ID 19 | מנחם לזר ---
+    overlap: 2023-02-24 | מעריב | Poll ID 7
+    overlap: 2023-03-10 | מעריב | Poll ID 13
+    overlap: 2023-03-17 | מעריב | Poll ID 17
+
+--- Focal: 2023-04-07 | מעריב | Poll ID 24 | מנחם לזר ---
+    overlap: 2023-03-24 | ג׳רוזלם פוסט | Poll ID 19
+
+--- Focal: 2023-04-14 | מעריב | Poll ID 26 | מנחם לזר ---
+    overlap: 2023-03-24 | ג׳רוזלם פוסט | Poll ID 19
+
+--- Focal: 2023-04-21 | מעריב | Poll ID 29 | מנחם לזר ---
+    overlap: 2023-03-24 | ג׳רוזלם פוסט | Poll ID 19
+
+--- Focal: 2024-06-23 | חדשות 13 | Poll ID 184 | יצחק כ״ץ ---
+    overlap: 2024-06-14 | ישראל היום | Poll ID 180
+
+--- Focal: 2024-07-07 | חדשות 13 | Poll ID 190 | יצחק כ״ץ ---
+    overlap: 2024-06-14 | ישראל היום | Poll ID 180
+
+--- Focal: 2024-09-17 | חדשות 13 | Poll ID 218 | יצחק כ״ץ ---
+    overlap: 2024-08-27 | i24 news | Poll ID 209
+
+--- Focal: 2024-09-26 | i24 news | Poll ID 221 | יצחק כ״ץ ---
+    overlap: 2024-09-17 | חדשות 13 | Poll ID 218
+
+--- Focal: 2024-10-20 | חדשות 13 | Poll ID 230 | יצחק כ״ץ ---
+    overlap: 2024-09-26 | i24 news | Poll ID 221
+
+--- Focal: 2024-10-31 | ישראל היום | Poll ID 234 | יצחק כ״ץ ---
+    overlap: 2024-10-20 | חדשות 13 | Poll ID 230
+
+--- Focal: 2024-11-06 | i24 news | Poll ID 239 | יצחק כ״ץ ---
+    overlap: 2024-10-20 | חדשות 13 | Poll ID 230
+    overlap: 2024-10-31 | ישראל היום | Poll ID 234
+
+--- Focal: 2024-12-11 | חדשות 13 | Poll ID 248 | יצחק כ״ץ ---
+    overlap: 2024-12-09 | i24 news | Poll ID 247
+
+--- Focal: 2025-01-23 | ישראל היום | Poll ID 268 | יצחק כ״ץ ---
+    overlap: 2025-01-16 | i24 news | Poll ID 263
+
+--- Focal: 2025-02-05 | חדשות 13 | Poll ID 289 | יצחק כ״ץ ---
+    overlap: 2025-01-16 | i24 news | Poll ID 263
+    overlap: 2025-01-23 | ישראל היום | Poll ID 268
+
+--- Focal: 2025-02-23 | i24 news | Poll ID 294 | יצחק כ״ץ ---
+    overlap: 2025-02-05 | חדשות 13 | Poll ID 289
+
+--- Focal: 2025-05-07 | מכונת האמת | Poll ID 312 | מנחם לזר ---
+    overlap: 2025-04-11 | מעריב | Poll ID 306
+    overlap: 2025-04-18 | מעריב | Poll ID 307
+    overlap: 2025-04-25 | מעריב | Poll ID 309
+    overlap: 2025-05-02 | מעריב | Poll ID 310
+
+--- Focal: 2025-05-09 | מעריב | Poll ID 314 | מנחם לזר ---
+    overlap: 2025-05-07 | מכונת האמת | Poll ID 312
+
+--- Focal: 2025-05-16 | ישראל היום | Poll ID 316 | יצחק כ״ץ ---
+    overlap: 2025-05-05 | חדשות 13 | Poll ID 311
+
+--- Focal: 2025-05-16 | מעריב | Poll ID 315 | מנחם לזר ---
+    overlap: 2025-05-07 | מכונת האמת | Poll ID 312
+
+--- Focal: 2025-05-20 | חדשות 13 | Poll ID 317 | יצחק כ״ץ ---
+    overlap: 2025-05-16 | ישראל היום | Poll ID 316
+
+--- Focal: 2025-05-23 | מעריב | Poll ID 319 | מנחם לזר ---
+    overlap: 2025-05-07 | מכונת האמת | Poll ID 312
+
+--- Focal: 2025-05-30 | מעריב | Poll ID 323 | מנחם לזר ---
+    overlap: 2025-05-07 | מכונת האמת | Poll ID 312
+
+--- Focal: 2025-06-04 | חדשות 13 | Poll ID 325 | יצחק כ״ץ ---
+    overlap: 2025-05-16 | ישראל היום | Poll ID 316
+
+--- Focal: 2025-06-06 | מעריב | Poll ID 327 | מנחם לזר ---
+    overlap: 2025-05-07 | מכונת האמת | Poll ID 312
+
+--- Focal: 2025-06-09 | וואלה | Poll ID 328 | מנחם לזר ---
+    overlap: 2025-05-16 | מעריב | Poll ID 315
+    overlap: 2025-05-23 | מעריב | Poll ID 319
+    overlap: 2025-05-30 | מעריב | Poll ID 323
+    overlap: 2025-06-06 | מעריב | Poll ID 327
+
+--- Focal: 2025-06-11 | חדשות 13 | Poll ID 329 | יצחק כ״ץ ---
+    overlap: 2025-05-16 | ישראל היום | Poll ID 316
+
+--- Focal: 2025-06-13 | מעריב | Poll ID 331 | מנחם לזר ---
+    overlap: 2025-06-09 | וואלה | Poll ID 328
+
+--- Focal: 2025-06-20 | מעריב | Poll ID 335 | מנחם לזר ---
+    overlap: 2025-06-09 | וואלה | Poll ID 328
+
+--- Focal: 2025-06-25 | וואלה | Poll ID 344 | מנחם לזר ---
+    overlap: 2025-05-30 | מעריב | Poll ID 323
+    overlap: 2025-06-06 | מעריב | Poll ID 327
+    overlap: 2025-06-13 | מעריב | Poll ID 331
+    overlap: 2025-06-20 | מעריב | Poll ID 335
+
+--- Focal: 2025-06-26 | מעריב | Poll ID 348 | מנחם לזר ---
+    overlap: 2025-06-09 | וואלה | Poll ID 328
+    overlap: 2025-06-25 | וואלה | Poll ID 344
+
+--- Focal: 2025-06-26 | i24 news | Poll ID 347 | צוריאל שרון ---
+    overlap: 2025-05-29 | ערוץ 14 | Poll ID 322
+
+--- Focal: 2025-07-04 | מעריב | Poll ID 352 | מנחם לזר ---
+    overlap: 2025-06-09 | וואלה | Poll ID 328
+    overlap: 2025-06-25 | וואלה | Poll ID 344
+
+--- Focal: 2025-07-11 | מעריב | Poll ID 353 | מנחם לזר ---
+    overlap: 2025-06-25 | וואלה | Poll ID 344
+
+--- Focal: 2025-07-18 | מעריב | Poll ID 358 | מנחם לזר ---
+    overlap: 2025-06-25 | וואלה | Poll ID 344
+
+--- Focal: 2025-07-25 | מעריב | Poll ID 363 | מנחם לזר ---
+    overlap: 2025-06-25 | וואלה | Poll ID 344
+
+--- Focal: 2025-09-09 | וואלה | Poll ID 390 | מנחם לזר ---
+    overlap: 2025-08-15 | מעריב | Poll ID 371
+    overlap: 2025-08-22 | מעריב | Poll ID 375
+    overlap: 2025-08-29 | מעריב | Poll ID 382
+    overlap: 2025-09-05 | מעריב | Poll ID 389
+
+--- Focal: 2025-09-12 | מעריב | Poll ID 394 | מנחם לזר ---
+    overlap: 2025-09-09 | וואלה | Poll ID 390
+
+--- Focal: 2025-09-19 | ישראל היום | Poll ID 401 | דודי חסיד ---
+    overlap: 2025-09-17 | כאן חדשות | Poll ID 395
+
+--- Focal: 2025-09-19 | מעריב | Poll ID 402 | מנחם לזר ---
+    overlap: 2025-09-09 | וואלה | Poll ID 390
+
+--- Focal: 2025-09-26 | מעריב | Poll ID 404 | מנחם לזר ---
+    overlap: 2025-09-09 | וואלה | Poll ID 390
+
+--- Focal: 2025-09-30 | וואלה | Poll ID 406 | מנחם לזר ---
+    overlap: 2025-09-05 | מעריב | Poll ID 389
+    overlap: 2025-09-12 | מעריב | Poll ID 394
+    overlap: 2025-09-19 | מעריב | Poll ID 402
+    overlap: 2025-09-26 | מעריב | Poll ID 404
+    overlap: 2025-09-30 | מעריב | Poll ID 409
+
+--- Focal: 2025-09-30 | מעריב | Poll ID 409 | מנחם לזר ---
+    overlap: 2025-09-09 | וואלה | Poll ID 390
+    overlap: 2025-09-30 | וואלה | Poll ID 406
+
+--- Focal: 2025-10-10 | מעריב | Poll ID 412 | מנחם לזר ---
+    overlap: 2025-09-30 | וואלה | Poll ID 406
+
+--- Focal: 2025-10-17 | מעריב | Poll ID 416 | מנחם לזר ---
+    overlap: 2025-09-30 | וואלה | Poll ID 406
+
+--- Focal: 2025-10-24 | מעריב | Poll ID 422 | מנחם לזר ---
+    overlap: 2025-09-30 | וואלה | Poll ID 406
+
+--- Focal: 2025-10-26 | כאן חדשות | Poll ID 423 | דודי חסיד ---
+    overlap: 2025-10-23 | ישראל היום | Poll ID 418
+
+--- Focal: 2025-11-13 | ישראל היום | Poll ID 433 | דודי חסיד ---
+    overlap: 2025-10-26 | כאן חדשות | Poll ID 423
+
+--- Focal: 2025-11-30 | כאן חדשות | Poll ID 447 | דודי חסיד ---
+    overlap: 2025-11-13 | ישראל היום | Poll ID 433
+
+--- Focal: 2025-12-04 | ישראל היום | Poll ID 450 | דודי חסיד ---
+    overlap: 2025-11-30 | כאן חדשות | Poll ID 447
+
+--- Focal: 2025-12-25 | ישראל היום | Poll ID 465 | דודי חסיד ---
+    overlap: 2025-11-30 | כאן חדשות | Poll ID 447
+
+--- Focal: 2025-12-28 | כאן חדשות | Poll ID 469 | דודי חסיד ---
+    overlap: 2025-12-04 | ישראל היום | Poll ID 450
+    overlap: 2025-12-25 | ישראל היום | Poll ID 465
+
+--- Focal: 2026-01-15 | ישראל היום | Poll ID 482 | דודי חסיד ---
+    overlap: 2025-12-28 | כאן חדשות | Poll ID 469
+
+--- Focal: 2026-03-29 | כאן חדשות | Poll ID 546 | דודי חסיד ---
+    overlap: 2026-03-19 | ישראל היום | Poll ID 535
+
+--- Focal: 2026-04-09 | כאן חדשות | Poll ID 549 | דודי חסיד ---
+    overlap: 2026-03-19 | ישראל היום | Poll ID 535
+
+--- Focal: 2026-04-16 | ישראל היום | Poll ID 556 | דודי חסיד ---
+    overlap: 2026-03-29 | כאן חדשות | Poll ID 546
+    overlap: 2026-04-09 | כאן חדשות | Poll ID 549
+
+--- Focal: 2026-04-27 | כאן חדשות | Poll ID 568 | דודי חסיד ---
+    overlap: 2026-04-16 | ישראל היום | Poll ID 556
+
+--- Focal: 2026-04-27 | וואלה | Poll ID 566 | מנחם לזר ---
+    overlap: 2026-04-03 | מעריב | Poll ID 547
+    overlap: 2026-04-10 | מעריב | Poll ID 554
+    overlap: 2026-04-17 | מעריב | Poll ID 560
+    overlap: 2026-04-24 | מעריב | Poll ID 564
+
+--- Focal: 2026-04-30 | ישראל היום | Poll ID 573 | דודי חסיד ---
+    overlap: 2026-04-09 | כאן חדשות | Poll ID 549
+    overlap: 2026-04-27 | כאן חדשות | Poll ID 568
+
+--- Focal: 2026-05-01 | מעריב | Poll ID 575 | מנחם לזר ---
+    overlap: 2026-04-27 | וואלה | Poll ID 566
+
+--- Focal: 2026-05-08 | מעריב | Poll ID 579 | מנחם לזר ---
+    overlap: 2026-04-27 | וואלה | Poll ID 566
+
+--- Focal: 2026-05-12 | כאן חדשות | Poll ID 580 | דודי חסיד ---
+    overlap: 2026-04-16 | ישראל היום | Poll ID 556
+    overlap: 2026-04-30 | ישראל היום | Poll ID 573
+
+--- Focal: 2026-05-14 | ישראל היום | Poll ID 584 | דודי חסיד ---
+    overlap: 2026-04-27 | כאן חדשות | Poll ID 568
+    overlap: 2026-05-12 | כאן חדשות | Poll ID 580
+
+--- Focal: 2026-05-15 | מעריב | Poll ID 586 | מנחם לזר ---
+    overlap: 2026-04-27 | וואלה | Poll ID 566
