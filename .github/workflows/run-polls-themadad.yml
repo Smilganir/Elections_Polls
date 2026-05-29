@@ -10,8 +10,9 @@
 #
 # Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
 #
-# Schedule: hourly :25 UTC; gate runs fetch/check only when local Asia/Jerusalem hour is
-# 09, 10, 12, 15, 18, or 21 (exact minute ~:25). run_polls.py only if new poll id.
+# Schedule: hourly :25 UTC; fetch/check only when the *scheduled* Asia/Jerusalem hour is
+# 09, 10, 12, 15, 18, or 21 (uses workflow run created_at, not runner wall clock).
+# run_polls.py only if max Poll ID changed (fingerprint). concurrency cancels stale queued runs.
 
 name: Run polls when themadad updates
 
@@ -27,6 +28,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: themadad-poll-sync
+  cancel-in-progress: true
 
 jobs:
   sync:
@@ -39,16 +45,34 @@ jobs:
 
       - name: Gate — manual always runs; scheduled only 09 / 10 / 12 / 15 / 18 / 21 Asia/Jerusalem
         id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Manual run — gate open."
             exit 0
           fi
-          H=$(TZ=Asia/Jerusalem date +%H)
-          echo "Asia/Jerusalem hour=$H"
+
+          # Use workflow run created_at (scheduled trigger time), NOT runner wall clock.
+          # Backlogged self-hosted jobs were skipping because they executed hours late (e.g. hour=16).
+          CREATED=$(curl -sf \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            | jq -r '.created_at // empty')
+
+          if [ -z "$CREATED" ] || [ "$CREATED" = "null" ]; then
+            echo "::warning::Could not read run created_at — running fetch (fail-open)."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          H=$(TZ=Asia/Jerusalem date -d "$CREATED" +%H)
+          echo "Scheduled run created_at=$CREATED → Asia/Jerusalem hour=$H"
           case "$H" in
             09|10|12|15|18|21) echo "skip=false" >> "$GITHUB_OUTPUT" ;;
-            *) echo "skip=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "skip=true" >> "$GITHUB_OUTPUT"; echo "Outside allowed Jerusalem hours — skipping." ;;
           esac
 
       - uses: actions/cache/restore@v4
