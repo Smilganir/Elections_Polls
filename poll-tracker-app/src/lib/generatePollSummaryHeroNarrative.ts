@@ -7,10 +7,10 @@ import type { RollingWindowRow } from './pollRollingWindow'
  * Keep aligned with DEFAULT_BACKGROUND_* in scripts/build-poll-summary-narrative.mjs.
  */
 export const EDITORIAL_BACKGROUND_EN =
-  'The October 2026 election countdown unfolds as the U.S.–Iran ceasefire framework frays and talks turn bitter over terms, alongside renewed escalation in Gaza and friction in Washington, while Bennett and Lapid unite Yahad as a Bennett-led ticket that folds Yesh Atid into the anti-Netanyahu front, with latest polls still showing the opposition and anti-bloc camp ahead across most major outlets.'
+  "With the Knesset's self-dissolution bill through its first reading and the vote set to be moved up from October 27 into a September 8–October 20 window, the campaign opens amid the Haredi parties' break with Netanyahu over the failed draft-exemption law and a still-raging Lebanon front where the latest U.S.-brokered ceasefire was just rejected by Hezbollah, while Bennett and Lapid run a united Yahad ticket led by Bennett that folds in Yesh Atid, with latest polls still showing the opposition and anti-Netanyahu camp ahead across most major outlets."
 
 export const EDITORIAL_BACKGROUND_HE =
-  'רקע: ספירה לאחור לבחירות אוקטובר 2026 על רקע פסקת אש אמריקנית–איראנית רעועה ומו״מ סוער סביב התנאים, לצד הסלמה בעזה ומתיחות בוושינגטון, כשבנט ולפיד מאחדים את יחד בראשות בנט ומכניסים את יש עתיד למסע נגד נתניהו, ובסקרים האחרונים נשמרת עדיפות האופוזיציה וגוש השותפים נגד הבלוק אצל רוב הסוקרים.'
+  'רקע: לאחר שהצעת החוק לפיזור הכנסת עברה בקריאה ראשונה ומועד הבחירות צפוי לעבור מ-27 באוקטובר לחלון שבין 8 בספטמבר ל-20 באוקטובר, מסע הבחירות נפתח על רקע הקרע בין המפלגות החרדיות לנתניהו סביב כישלון חוק הגיוס ולחימה נמשכת בלבנון שבה הפסקת האש האחרונה בתיווך אמריקני נדחתה זה עתה על ידי חיזבאללה, כשבנט ולפיד מתמודדים ברשימת יחד מאוחדת בראשות בנט שמכניסה את יש עתיד למסע נגד נתניהו, ובסקרים האחרונים נשמרת עדיפות האופוזיציה והגוש נגד נתניהו אצל רוב הסוקרים.'
 
 function maxIsoDateInRollingRows(rows: RollingWindowRow[]): string | null {
   if (rows.length === 0) return null

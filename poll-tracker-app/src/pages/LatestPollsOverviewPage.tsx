@@ -727,7 +727,7 @@ export function LatestPollsOverviewPage() {
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem(COMBINE_ARABS_STORAGE_KEY) === '1'
   })
-  const [showPollSummary, setShowPollSummary] = useState(true)
+  const [showPollSummary, setShowPollSummary] = useState(() => !import.meta.env.DEV)
   const [pollSummaryWindowDays, setPollSummaryWindowDays] = useState(
     DEFAULT_POLL_SUMMARY_WINDOW_DAYS,
   )

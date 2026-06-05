@@ -1,8 +1,8 @@
 {
-  "asOfUtc": "2026-05-16",
+  "asOfUtc": "2026-06-05",
   "locales": {
     "en": {
-      "background": "The October 2026 election countdown unfolds as the U.S.–Iran ceasefire framework frays and talks turn bitter over terms, alongside renewed escalation in Gaza and friction in Washington, while Bennett and Lapid unite Yahad as a Bennett-led ticket that folds Yesh Atid into the anti-Netanyahu front, with latest polls still showing the opposition and anti-bloc camp ahead across most major outlets.",
+      "background": "With the Knesset's self-dissolution bill through its first reading and the vote set to be moved up from October 27 into a September 8–October 20 window, the campaign opens amid the Haredi parties' break with Netanyahu over the failed draft-exemption law and a still-raging Lebanon front where the latest U.S.-brokered ceasefire was just rejected by Hezbollah, while Bennett and Lapid run a united Yahad ticket led by Bennett that folds in Yesh Atid, with latest polls still showing the opposition and anti-Netanyahu camp ahead across most major outlets.",
       "trendBullets": [
         "<strong>Outliers:</strong> Zman Yisrael and Channel 12 point to coalition strengthening.",
         "[[party:Blue & White]]<span class=\"lpo-ps-narrative-party-label\"><strong>Blue & White</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down\">-</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--down\"><strong>4</strong></span></span> seats on average (<strong>across 1 poll</strong>)",
@@ -13,7 +13,7 @@
       ]
     },
     "he": {
-      "background": "רקע: ספירה לאחור לבחירות אוקטובר 2026 על רקע פסקת אש אמריקנית–איראנית רעועה ומו״מ סוער סביב התנאים, לצד הסלמה בעזה ומתיחות בוושינגטון, כשבנט ולפיד מאחדים את יחד בראשות בנט ומכניסים את יש עתיד למסע נגד נתניהו, ובסקרים האחרונים נשמרת עדיפות האופוזיציה וגוש השותפים נגד הבלוק אצל רוב הסוקרים.",
+      "background": "רקע: לאחר שהצעת החוק לפיזור הכנסת עברה בקריאה ראשונה ומועד הבחירות צפוי לעבור מ-27 באוקטובר לחלון שבין 8 בספטמבר ל-20 באוקטובר, מסע הבחירות נפתח על רקע הקרע בין המפלגות החרדיות לנתניהו סביב כישלון חוק הגיוס ולחימה נמשכת בלבנון שבה הפסקת האש האחרונה בתיווך אמריקני נדחתה זה עתה על ידי חיזבאללה, כשבנט ולפיד מתמודדים ברשימת יחד מאוחדת בראשות בנט שמכניסה את יש עתיד למסע נגד נתניהו, ובסקרים האחרונים נשמרת עדיפות האופוזיציה והגוש נגד נתניהו אצל רוב הסוקרים.",
       "trendBullets": [
         "<strong>חריגים:</strong> ערוצי זמן ישראל וחדשות 12 מצביעים על התחזקות הקואליציה.",
         "[[party:Blue & White]]<span class=\"lpo-ps-narrative-party-label\"><strong>כחול לבן</strong></span> – <span dir=\"ltr\" class=\"lpo-ps-narrative-seat-delta-run\"><span class=\"lpo-ps-narrative-party-trend-arrow lpo-ps-narrative-party-trend-arrow--down\">-</span><span class=\"lpo-ps-narrative-seat lpo-ps-narrative-seat--down\"><strong>4</strong></span></span> מנדטים בממוצע (<strong>סקר אחד</strong>)",

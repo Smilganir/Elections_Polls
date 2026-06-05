@@ -114,6 +114,7 @@ function partyTrendBulletHtml(
 }
 
 const MAX_BULLETS = 8
+const MAX_PARTY_TREND_BULLETS = 7
 
 /**
  * Data-driven poll summary trend bullets: matches rules in scripts/build-poll-summary-narrative.mjs
@@ -181,8 +182,12 @@ export function generatePollSummaryTrendBullets(
       ([partyKey, v]) =>
         v !== 0 && !Number.isNaN(v) && segmentForPartyKey(partyKey, rows) !== 'Arabs',
     )
-    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
-    .slice(0, 5)
+    .sort((a, b) => {
+      const magDiff = Math.abs(b[1]) - Math.abs(a[1])
+      if (magDiff !== 0) return magDiff
+      return changedPartyOutletCount(rows, b[0]) - changedPartyOutletCount(rows, a[0])
+    })
+    .slice(0, MAX_PARTY_TREND_BULLETS)
 
   for (const [partyKey, avg] of ranked) {
     const nc = changedPartyOutletCount(rows, partyKey)
