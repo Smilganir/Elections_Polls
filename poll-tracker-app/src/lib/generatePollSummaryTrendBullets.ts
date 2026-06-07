@@ -22,7 +22,7 @@ function segmentForPartyKey(partyKey: string, rows: RollingWindowRow[]): Segment
   return 'Opposition'
 }
 
-function changedPartyOutletCount(rows: RollingWindowRow[], partyKey: string): number {
+function changedPartyTransitionCount(rows: RollingWindowRow[], partyKey: string): number {
   let n = 0
   for (const row of rows) {
     if (row.changedParties.some((c) => c.party === partyKey)) n += 1
@@ -129,9 +129,12 @@ export function generatePollSummaryTrendBullets(
     windowDays: number
     displayMediaOutlet: (outlet: string) => string
     displayParty: (partyKey: string) => string
+    /** All poll-to-poll transitions in the window; defaults to `rows` (latest per outlet). */
+    trendRows?: RollingWindowRow[]
   },
 ): string[] {
-  const { locale, windowDays, displayMediaOutlet, displayParty } = opts
+  const { locale, windowDays, displayMediaOutlet, displayParty, trendRows } = opts
+  const partyRows = trendRows ?? rows
   const rn = rows.length
   const nRollPrior = summary.nWithPrior
   const deltaC = summary.deltaCoalition
@@ -176,21 +179,21 @@ export function generatePollSummaryTrendBullets(
     }
   }
 
-  const avgParty = averagePartySeatDeltaAcrossOutlets(rows)
+  const avgParty = averagePartySeatDeltaAcrossOutlets(partyRows)
   const ranked = [...avgParty.entries()]
     .filter(
       ([partyKey, v]) =>
-        v !== 0 && !Number.isNaN(v) && segmentForPartyKey(partyKey, rows) !== 'Arabs',
+        v !== 0 && !Number.isNaN(v) && segmentForPartyKey(partyKey, partyRows) !== 'Arabs',
     )
     .sort((a, b) => {
       const magDiff = Math.abs(b[1]) - Math.abs(a[1])
       if (magDiff !== 0) return magDiff
-      return changedPartyOutletCount(rows, b[0]) - changedPartyOutletCount(rows, a[0])
+      return changedPartyTransitionCount(partyRows, b[0]) - changedPartyTransitionCount(partyRows, a[0])
     })
     .slice(0, MAX_PARTY_TREND_BULLETS)
 
   for (const [partyKey, avg] of ranked) {
-    const nc = changedPartyOutletCount(rows, partyKey)
+    const nc = changedPartyTransitionCount(partyRows, partyKey)
     if (nc === 0) continue
     bullets.push(partyTrendBulletHtml(partyKey, avg, nc, locale, displayParty))
   }

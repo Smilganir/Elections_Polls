@@ -25,7 +25,7 @@ import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
 import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
-import { buildRollingWindowReport } from '../lib/pollRollingWindow'
+import { buildRollingWindowReport, buildRollingWindowTrendTransitionRows } from '../lib/pollRollingWindow'
 import { OutletFilterDropdown, PollSummaryPanel } from '../ui/PollSummaryPanel'
 import {
   harmonizeArabList,
@@ -1061,6 +1061,11 @@ export function LatestPollsOverviewPage() {
     [polls, pollSummaryWindowDays],
   )
 
+  const pollRollingTrendRows = useMemo(
+    () => buildRollingWindowTrendTransitionRows(polls, pollSummaryWindowDays),
+    [polls, pollSummaryWindowDays],
+  )
+
   const pollSummaryNarrativeBackground = useMemo(
     () => getLivePollSummaryBackground(locale),
     [locale],
@@ -1691,6 +1696,7 @@ export function LatestPollsOverviewPage() {
       ) : showPollSummary ? (
         <PollSummaryPanel
           rows={pollRollingReport.rows}
+          trendTransitionRows={pollRollingTrendRows}
           locale={locale}
           t={t}
           maxStaleDays={pollSummaryWindowDays}

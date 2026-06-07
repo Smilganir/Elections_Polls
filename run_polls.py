@@ -134,45 +134,51 @@ def _apply_ch12_558_instead_of_559_wide(data_df: pd.DataFrame) -> pd.DataFrame:
     return out.loc[~bad].copy()
 
 
-def _prefer_n12_split_arabs_on_same_day(data_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    N12 duplicate-day rule: when חדשות 12 (N12) publishes 2+ polls on the same date,
-    prefer the row that **splits the Arab vote** into the detail columns
-    (``Joint Arab List`` == 0 with any of ``Hadash Ta'al`` / ``Ra'am`` / ``Balad`` > 0)
-    over a row that **lumps** them into ``Joint Arab List``. The rolling-window
-    narrative and party-line trends rely on the split columns; a lumped row loses
-    those parties to the Arab bloc aggregate.
+_ARAB_DETAIL_COLS = ("Hadash Ta'al", "Ra'am", "Balad")
 
-    Runs **before** the generic ``(Date, Media Outlet)`` dedupe so the generic rule
-    has nothing to do for N12 on those days. Poll ID is **not** the tie-breaker:
-    the correctly-split poll can have a lower Poll ID (e.g. 2026-04-23 keeps
-    **562** and drops **563**). When multiple split rows share a date (rare),
-    fall back to the highest Poll ID among them.
+
+def _console_safe(text: str) -> str:
+    """ASCII-safe text for Windows consoles that cannot print Hebrew."""
+    return text.encode('ascii', 'backslashreplace').decode('ascii')
+
+
+def _poll_num(v: object) -> float:
+    x = pd.to_numeric(v, errors='coerce')
+    return 0.0 if pd.isna(x) else float(x)
+
+
+def _is_split_arabs_row(row) -> bool:
+    """Row splits Arab vote into detail columns instead of Joint Arab List."""
+    jal = _poll_num(row.get('Joint Arab List', 0))
+    detail = sum(_poll_num(row.get(c, 0)) for c in _ARAB_DETAIL_COLS)
+    return jal == 0 and detail > 0
+
+
+def _prefer_split_arabs_on_same_day(data_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Same-day duplicate rule (all outlets): when 2+ polls share Date + Media Outlet,
+    prefer the row that **splits the Arab vote** into ``Hadash Ta'al`` / ``Ra'am`` /
+    ``Balad`` over a row that **lumps** them into ``Joint Arab List``. Party-line
+    trends and rolling-window deltas rely on the split columns; a lumped row loses
+    per-party detail.
+
+    Runs **before** generic ``(Date, Media Outlet)`` dedupe. Poll ID is **not** the
+    primary tie-breaker when one row is split and another lumped: the split row can
+    have a lower Poll ID. When multiple split rows share a date (rare), keep the
+    highest Poll ID among them. When no row is split, or all rows are split, defer
+    to generic dedupe.
     """
     out = data_df.copy()
     mo = out['Media Outlet'].astype(str).str.strip()
     day_iso = pd.to_datetime(out['Date'], errors='coerce', dayfirst=True, format='mixed').dt.strftime('%Y-%m-%d')
-    sel = mo == 'חדשות 12'
-    if not sel.any():
-        return out
-
-    sub = out.loc[sel].copy()
-    sub['_day'] = day_iso.loc[sub.index]
-
-    def _num(v: object) -> float:
-        x = pd.to_numeric(v, errors='coerce')
-        return 0.0 if pd.isna(x) else float(x)
-
-    def _is_split(row) -> bool:
-        jal = _num(row.get('Joint Arab List', 0))
-        detail = sum(_num(row.get(c, 0)) for c in ("Hadash Ta'al", "Ra'am", 'Balad'))
-        return jal == 0 and detail > 0
 
     to_drop: list[int] = []
-    for date_str, grp in sub.groupby('_day', dropna=True):
-        if len(grp) < 2 or not isinstance(date_str, str) or not date_str:
+    keys = pd.DataFrame({'mo': mo, 'day': day_iso}, index=out.index)
+    for (outlet, date_str), grp_ix in keys.groupby(['mo', 'day']).groups.items():
+        if len(grp_ix) < 2 or not isinstance(date_str, str) or not date_str:
             continue
-        flags = grp.apply(_is_split, axis=1)
+        grp = out.loc[list(grp_ix)]
+        flags = grp.apply(_is_split_arabs_row, axis=1)
         if not flags.any() or flags.all():
             continue  # no lumped row, or all rows split — leave to generic dedupe
         split_ix = flags[flags].index.tolist()
@@ -189,13 +195,18 @@ def _prefer_n12_split_arabs_on_same_day(data_df: pd.DataFrame) -> pd.DataFrame:
             int(float(pid)) for pid in out.loc[dropped_here, 'Poll ID'].tolist()
         )
         print(
-            f'  N12 same-day split-Arabs preference: {date_str} kept poll {kept_id} '
-            f'(Arab parties split); dropped {dropped_ids} (lumped Arab vote).'
+            f'  Same-day split-Arabs preference ({_console_safe(outlet)}, {date_str}): '
+            f'kept poll {kept_id} (Arab parties split); '
+            f'dropped {dropped_ids} (lumped Arab vote).'
         )
 
     if to_drop:
         out = out.drop(index=to_drop).copy()
     return out
+
+
+# Backward-compatible alias (was N12-only; now applies to all outlets).
+_prefer_n12_split_arabs_on_same_day = _prefer_split_arabs_on_same_day
 
 
 def _request_proxies() -> dict | None:
@@ -290,7 +301,7 @@ def max_poll_id_from_html(html: str) -> int | None:
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
     data_df = _apply_ch12_558_instead_of_559_wide(data_df)
-    data_df = _prefer_n12_split_arabs_on_same_day(data_df)
+    data_df = _prefer_split_arabs_on_same_day(data_df)
 
     data_df = data_df[data_df['Poll ID'] > 1].copy()
 
@@ -342,7 +353,7 @@ def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
     dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
     data_df = data_df[~dup].copy()
     data_df = _apply_ch12_558_instead_of_559_wide(data_df)
-    data_df = _prefer_n12_split_arabs_on_same_day(data_df)
+    data_df = _prefer_split_arabs_on_same_day(data_df)
 
     data_df = data_df[data_df['Poll ID'] > 1].copy()
 

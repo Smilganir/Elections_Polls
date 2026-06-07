@@ -135,7 +135,7 @@ def apply_same_wide_pipeline(data_df: pd.DataFrame, verbose: bool = True) -> pd.
     dup = (data_df["Media Outlet"] == "ערוץ 14") & (data_df["Poll ID"] == 153)
     data_df = data_df[~dup].copy()
     data_df = rp._apply_ch12_558_instead_of_559_wide(data_df)
-    data_df = rp._prefer_n12_split_arabs_on_same_day(data_df)
+    data_df = rp._prefer_split_arabs_on_same_day(data_df)
 
     data_df = data_df[data_df["Poll ID"].notna() & (data_df["Poll ID"] > 0)].copy()
 

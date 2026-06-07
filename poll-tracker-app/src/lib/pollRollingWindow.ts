@@ -167,6 +167,52 @@ export function buildRollingWindowReport(
   return { rows, summary: summaryFromRollingRows(rows) }
 }
 
+/**
+ * Every consecutive poll-to-poll transition whose **current** (newer) poll falls
+ * within maxStaleDays. Used for trend bullets so party momentum reflects all polls
+ * in the window, not only each outlet's latest vs prior.
+ */
+export function buildRollingWindowTrendTransitionRows(
+  polls: RollingPoll[],
+  maxStaleDays: number,
+  today = new Date(),
+): RollingWindowRow[] {
+  const byOutlet = new Map<string, RollingPoll[]>()
+  for (const p of polls) {
+    if (!byOutlet.has(p.mediaOutlet)) byOutlet.set(p.mediaOutlet, [])
+    byOutlet.get(p.mediaOutlet)!.push(p)
+  }
+
+  const rows: RollingWindowRow[] = []
+
+  for (const [, outletPolls] of byOutlet) {
+    const sorted = [...outletPolls].sort((a, b) => {
+      const dc = a.date.localeCompare(b.date)
+      if (dc !== 0) return dc
+      return a.pollId - b.pollId
+    })
+
+    for (let i = 1; i < sorted.length; i++) {
+      const previous = sorted[i - 1]!
+      const current = sorted[i]!
+      if (ageDaysPollToToday(current.date, today) > maxStaleDays) continue
+      rows.push({
+        current,
+        previous,
+        changedParties: changedPartiesBetween(current, previous),
+      })
+    }
+  }
+
+  rows.sort((a, b) => {
+    const dc = b.current.date.localeCompare(a.current.date)
+    if (dc !== 0) return dc
+    return b.current.pollId - a.current.pollId
+  })
+
+  return rows
+}
+
 /** Cross-outlet averages + deltas for an arbitrary row set (e.g. after outlet filter). */
 export function summaryFromRollingRows(rows: RollingWindowRow[]): RollingWindowSummary {
   const n = Math.max(1, rows.length)
