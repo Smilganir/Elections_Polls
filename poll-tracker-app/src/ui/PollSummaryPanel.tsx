@@ -122,7 +122,6 @@ function DeltaBadge({ delta }: { delta: number }) {
 
 type PollSummaryPanelProps = {
   rows: RollingWindowRow[]
-  trendTransitionRows: RollingWindowRow[]
   locale: AppLocale
   t: UiStrings
   maxStaleDays: number
@@ -373,7 +372,6 @@ export function PollSummaryPanel({
   displayMediaOutlet,
   displayParty,
   narrativeBackground = '',
-  trendTransitionRows,
 }: PollSummaryPanelProps) {
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY'
   const bgText = narrativeBackground.trim()
@@ -397,13 +395,6 @@ export function PollSummaryPanel({
   }, [])
   const clearExcluded = useCallback(() => setExcludedOutlets(new Set()), [])
 
-  const visibleTrendRows = useMemo(
-    () =>
-      excludedOutlets.size === 0
-        ? trendTransitionRows
-        : trendTransitionRows.filter((r) => !excludedOutlets.has(r.current.mediaOutlet)),
-    [trendTransitionRows, excludedOutlets],
-  )
   const summary = useMemo(() => summaryFromRollingRows(visibleRows), [visibleRows])
   const trendBullets = useMemo(
     () =>
@@ -412,17 +403,8 @@ export function PollSummaryPanel({
         windowDays: maxStaleDays,
         displayMediaOutlet,
         displayParty,
-        trendRows: visibleTrendRows,
       }),
-    [
-      visibleRows,
-      visibleTrendRows,
-      summary,
-      locale,
-      maxStaleDays,
-      displayMediaOutlet,
-      displayParty,
-    ],
+    [visibleRows, summary, locale, maxStaleDays, displayMediaOutlet, displayParty],
   )
   const narrativeAsOfDisplay = useMemo(() => {
     if (visibleRows.length === 0) return undefined

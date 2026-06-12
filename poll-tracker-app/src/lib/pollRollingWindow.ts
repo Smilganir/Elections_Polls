@@ -30,6 +30,53 @@ export function ageDaysPollToToday(pollDateStr: string, today = new Date()): num
   return Math.floor(diff / 86400000)
 }
 
+const ARAB_DETAIL_PARTY_KEYS = ["Hadash Ta'al", "Ra'am", 'Balad'] as const
+const JOINT_ARAB_LIST_KEY = 'Joint Arab List'
+
+function partyVotes(poll: RollingPoll, partyKey: string): number {
+  return poll.parties.find((p) => p.party === partyKey)?.votes ?? 0
+}
+
+/** Split-Arabs row: detail columns populated, Joint Arab List empty (matches run_polls.py). */
+export function isSplitArabsPoll(poll: RollingPoll): boolean {
+  const jal = partyVotes(poll, JOINT_ARAB_LIST_KEY)
+  const detail = ARAB_DETAIL_PARTY_KEYS.reduce((s, k) => s + partyVotes(poll, k), 0)
+  return jal === 0 && detail > 0
+}
+
+/**
+ * Same-day duplicate rule (all outlets): prefer split-Arabs poll over lumped-Arabs.
+ * When multiple polls share (Media Outlet, date), keep one pollId — mirrors ETL in run_polls.py.
+ */
+export function dedupePollsPreferSplitArabs<T extends RollingPoll>(polls: T[]): T[] {
+  const byOutletDay = new Map<string, T[]>()
+  for (const p of polls) {
+    const day = String(p.date).trim().slice(0, 10)
+    const key = `${p.mediaOutlet}\0${day}`
+    if (!byOutletDay.has(key)) byOutletDay.set(key, [])
+    byOutletDay.get(key)!.push(p)
+  }
+
+  const keepIds = new Set<number>()
+  for (const grp of byOutletDay.values()) {
+    if (grp.length === 1) {
+      keepIds.add(grp[0]!.pollId)
+      continue
+    }
+    const splitFlags = grp.map(isSplitArabsPoll)
+    if (!splitFlags.some(Boolean) || splitFlags.every(Boolean)) {
+      const best = [...grp].sort((a, b) => b.pollId - a.pollId)[0]!
+      keepIds.add(best.pollId)
+      continue
+    }
+    const splitPolls = grp.filter((_, i) => splitFlags[i])
+    const best = [...splitPolls].sort((a, b) => b.pollId - a.pollId)[0]!
+    keepIds.add(best.pollId)
+  }
+
+  return polls.filter((p) => keepIds.has(p.pollId))
+}
+
 export type ChangedParty = {
   party: string
   segment: Segment
@@ -99,9 +146,8 @@ function changedPartiesBetween(current: RollingPoll, previous: RollingPoll | nul
 }
 
 /**
- * Mean seat change vs prior poll per outlet, by canonical party key. Only outlets
- * where the party appears in `changedParties` contribute (unchanged outlets are
- * omitted for that party).
+ * Mean seat change vs prior poll per outlet, by party key. Built only from each row's
+ * `changedParties` — same deltas as the poll-summary party chip strip.
  */
 export function averagePartySeatDeltaAcrossOutlets(rows: RollingWindowRow[]): Map<string, number> {
   const sum = new Map<string, number>()
@@ -116,6 +162,27 @@ export function averagePartySeatDeltaAcrossOutlets(rows: RollingWindowRow[]): Ma
   for (const [party, s] of sum) {
     const n = count.get(party) ?? 0
     if (n > 0) out.set(party, s / n)
+  }
+  return out
+}
+
+/** Non-Arab parties with chip deltas on visible outlet rows: avg seat Δ and outlet count. */
+export function partyTrendStatsFromRows(
+  rows: RollingWindowRow[],
+): Map<string, { avg: number; outlets: number }> {
+  const sum = new Map<string, number>()
+  const count = new Map<string, number>()
+  for (const { changedParties } of rows) {
+    for (const cp of changedParties) {
+      if (cp.segment === 'Arabs') continue
+      sum.set(cp.party, (sum.get(cp.party) ?? 0) + cp.delta)
+      count.set(cp.party, (count.get(cp.party) ?? 0) + 1)
+    }
+  }
+  const out = new Map<string, { avg: number; outlets: number }>()
+  for (const [party, s] of sum) {
+    const n = count.get(party) ?? 0
+    if (n > 0) out.set(party, { avg: s / n, outlets: n })
   }
   return out
 }
@@ -165,52 +232,6 @@ export function buildRollingWindowReport(
   })
 
   return { rows, summary: summaryFromRollingRows(rows) }
-}
-
-/**
- * Every consecutive poll-to-poll transition whose **current** (newer) poll falls
- * within maxStaleDays. Used for trend bullets so party momentum reflects all polls
- * in the window, not only each outlet's latest vs prior.
- */
-export function buildRollingWindowTrendTransitionRows(
-  polls: RollingPoll[],
-  maxStaleDays: number,
-  today = new Date(),
-): RollingWindowRow[] {
-  const byOutlet = new Map<string, RollingPoll[]>()
-  for (const p of polls) {
-    if (!byOutlet.has(p.mediaOutlet)) byOutlet.set(p.mediaOutlet, [])
-    byOutlet.get(p.mediaOutlet)!.push(p)
-  }
-
-  const rows: RollingWindowRow[] = []
-
-  for (const [, outletPolls] of byOutlet) {
-    const sorted = [...outletPolls].sort((a, b) => {
-      const dc = a.date.localeCompare(b.date)
-      if (dc !== 0) return dc
-      return a.pollId - b.pollId
-    })
-
-    for (let i = 1; i < sorted.length; i++) {
-      const previous = sorted[i - 1]!
-      const current = sorted[i]!
-      if (ageDaysPollToToday(current.date, today) > maxStaleDays) continue
-      rows.push({
-        current,
-        previous,
-        changedParties: changedPartiesBetween(current, previous),
-      })
-    }
-  }
-
-  rows.sort((a, b) => {
-    const dc = b.current.date.localeCompare(a.current.date)
-    if (dc !== 0) return dc
-    return b.current.pollId - a.current.pollId
-  })
-
-  return rows
 }
 
 /** Cross-outlet averages + deltas for an arbitrary row set (e.g. after outlet filter). */

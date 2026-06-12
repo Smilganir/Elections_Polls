@@ -3,7 +3,7 @@ import { narrativePartyLabelWrap, narrativeSeatDeltaLeadHtml } from '../ui/pollN
 import type { AppLocale } from '../i18n/localeContext'
 import type { Segment } from '../types/data'
 import {
-  averagePartySeatDeltaAcrossOutlets,
+  partyTrendStatsFromRows,
   type RollingWindowRow,
   type RollingWindowSummary,
 } from './pollRollingWindow'
@@ -20,14 +20,6 @@ function segmentForPartyKey(partyKey: string, rows: RollingWindowRow[]): Segment
     if (cp) return cp.segment
   }
   return 'Opposition'
-}
-
-function changedPartyTransitionCount(rows: RollingWindowRow[], partyKey: string): number {
-  let n = 0
-  for (const row of rows) {
-    if (row.changedParties.some((c) => c.party === partyKey)) n += 1
-  }
-  return n
 }
 
 /** Hebrew subject: ערוץ X / ערוצי X ו-Y / ערוצי X, Y ו-Z */
@@ -113,8 +105,8 @@ function partyTrendBulletHtml(
   return `[[party:${partyKey}]]${narrativePartyLabelWrap(`<strong>${name}</strong>`)} – ${clause}`
 }
 
-const MAX_BULLETS = 8
-const MAX_PARTY_TREND_BULLETS = 7
+const MAX_BULLETS = 11
+const MAX_PARTY_TREND_BULLETS = 10
 
 /**
  * Data-driven poll summary trend bullets: matches rules in scripts/build-poll-summary-narrative.mjs
@@ -129,12 +121,9 @@ export function generatePollSummaryTrendBullets(
     windowDays: number
     displayMediaOutlet: (outlet: string) => string
     displayParty: (partyKey: string) => string
-    /** All poll-to-poll transitions in the window; defaults to `rows` (latest per outlet). */
-    trendRows?: RollingWindowRow[]
   },
 ): string[] {
-  const { locale, windowDays, displayMediaOutlet, displayParty, trendRows } = opts
-  const partyRows = trendRows ?? rows
+  const { locale, windowDays, displayMediaOutlet, displayParty } = opts
   const rn = rows.length
   const nRollPrior = summary.nWithPrior
   const deltaC = summary.deltaCoalition
@@ -179,23 +168,22 @@ export function generatePollSummaryTrendBullets(
     }
   }
 
-  const avgParty = averagePartySeatDeltaAcrossOutlets(partyRows)
-  const ranked = [...avgParty.entries()]
+  const stats = partyTrendStatsFromRows(rows)
+  const ranked = [...stats.entries()]
     .filter(
-      ([partyKey, v]) =>
-        v !== 0 && !Number.isNaN(v) && segmentForPartyKey(partyKey, partyRows) !== 'Arabs',
+      ([partyKey, { avg }]) =>
+        avg !== 0 && !Number.isNaN(avg) && segmentForPartyKey(partyKey, rows) !== 'Arabs',
     )
     .sort((a, b) => {
-      const magDiff = Math.abs(b[1]) - Math.abs(a[1])
+      const magDiff = Math.abs(b[1].avg) - Math.abs(a[1].avg)
       if (magDiff !== 0) return magDiff
-      return changedPartyTransitionCount(partyRows, b[0]) - changedPartyTransitionCount(partyRows, a[0])
+      return b[1].outlets - a[1].outlets
     })
     .slice(0, MAX_PARTY_TREND_BULLETS)
 
-  for (const [partyKey, avg] of ranked) {
-    const nc = changedPartyTransitionCount(partyRows, partyKey)
-    if (nc === 0) continue
-    bullets.push(partyTrendBulletHtml(partyKey, avg, nc, locale, displayParty))
+  for (const [partyKey, { avg, outlets }] of ranked) {
+    if (outlets === 0) continue
+    bullets.push(partyTrendBulletHtml(partyKey, avg, outlets, locale, displayParty))
   }
 
   return bullets.slice(0, MAX_BULLETS)

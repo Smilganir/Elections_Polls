@@ -25,7 +25,7 @@ import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
 import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
-import { buildRollingWindowReport, buildRollingWindowTrendTransitionRows } from '../lib/pollRollingWindow'
+import { buildRollingWindowReport, dedupePollsPreferSplitArabs } from '../lib/pollRollingWindow'
 import { OutletFilterDropdown, PollSummaryPanel } from '../ui/PollSummaryPanel'
 import {
   harmonizeArabList,
@@ -1014,12 +1014,11 @@ export function LatestPollsOverviewPage() {
       return b.pollId - a.pollId
     })
 
-    // Each poll's predecessor is the same outlet's next-lower Poll ID, regardless of
-    // which page the user is on. Anchoring previous-poll deltas to the visible
-    // column (not to the outlet's globally-latest poll) keeps "Previous" labels
-    // and Δ arrows correct across pagination.
+    const deduped = dedupePollsPreferSplitArabs(list)
+
+    // Each poll's predecessor is the same outlet's next-lower Poll ID (after same-day dedupe).
     const byOutletAsc = new Map<string, PollColumn[]>()
-    for (const p of list) {
+    for (const p of deduped) {
       if (!byOutletAsc.has(p.mediaOutlet)) byOutletAsc.set(p.mediaOutlet, [])
       byOutletAsc.get(p.mediaOutlet)!.push(p)
     }
@@ -1031,7 +1030,7 @@ export function LatestPollsOverviewPage() {
       }
     }
 
-    return { polls: list, previousByPollId: prevByPollId }
+    return { polls: deduped, previousByPollId: prevByPollId }
   }, [unpivot, segmentMap])
 
   const pollsForLpoGrid = useMemo(() => {
@@ -1058,11 +1057,6 @@ export function LatestPollsOverviewPage() {
 
   const pollRollingReport = useMemo(
     () => buildRollingWindowReport(polls, pollSummaryWindowDays),
-    [polls, pollSummaryWindowDays],
-  )
-
-  const pollRollingTrendRows = useMemo(
-    () => buildRollingWindowTrendTransitionRows(polls, pollSummaryWindowDays),
     [polls, pollSummaryWindowDays],
   )
 
@@ -1696,7 +1690,6 @@ export function LatestPollsOverviewPage() {
       ) : showPollSummary ? (
         <PollSummaryPanel
           rows={pollRollingReport.rows}
-          trendTransitionRows={pollRollingTrendRows}
           locale={locale}
           t={t}
           maxStaleDays={pollSummaryWindowDays}

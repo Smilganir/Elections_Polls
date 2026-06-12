@@ -273,7 +273,7 @@ export function buildPollSummaryNarrativeDoc(opts) {
   }
 
   const avgParty = averagePartySeatDeltaAcrossOutlets(rollingRowsRaw)
-  const MAX_PARTY_TREND_BULLETS = 7
+  const MAX_PARTY_TREND_BULLETS = 10
   const ranked = [...avgParty.entries()]
     .filter(
       ([partyKey, v]) =>
@@ -295,7 +295,7 @@ export function buildPollSummaryNarrativeDoc(opts) {
     heBullets.push(partyBulletHe(partyKey, avg, nc, partyHebByKey))
   }
 
-  const maxBullets = 8
+  const maxBullets = 11
   return {
     asOfUtc: asOfDate,
     locales: {
