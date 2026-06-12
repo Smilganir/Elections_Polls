@@ -7,10 +7,10 @@ import type { RollingWindowRow } from './pollRollingWindow'
  * Keep aligned with DEFAULT_BACKGROUND_* in scripts/build-poll-summary-narrative.mjs.
  */
 export const EDITORIAL_BACKGROUND_EN =
-  "With the Knesset's self-dissolution bill through its first reading and the vote set to be moved up from October 27 into a September 8–October 20 window, the campaign opens amid the Haredi parties' break with Netanyahu over the failed draft-exemption law and a still-raging Lebanon front where the latest U.S.-brokered ceasefire was just rejected by Hezbollah, while Bennett and Lapid run a united Yahad ticket led by Bennett that folds in Yesh Atid, with latest polls still showing the opposition and anti-Netanyahu camp ahead across most major outlets."
+  "With the Knesset dissolution bill through its unanimous first reading but coalition factions still fighting over an election window of September 8–October 20, the race opens amid the Haredi parties' break with Netanyahu over failed draft-exemption legislation and an emerging deal to advance Basic Law: Torah Study, while Lebanon remains on the boil after Hezbollah rejected the latest U.S.-brokered conditional ceasefire, as Bennett and Lapid's united Yahad ticket competes with Eisenkot's Yashar in a crowded field where latest polls still show the opposition and anti-Netanyahu camp ahead at most major outlets."
 
 export const EDITORIAL_BACKGROUND_HE =
-  'רקע: לאחר שהצעת החוק לפיזור הכנסת עברה בקריאה ראשונה ומועד הבחירות צפוי לעבור מ-27 באוקטובר לחלון שבין 8 בספטמבר ל-20 באוקטובר, מסע הבחירות נפתח על רקע הקרע בין המפלגות החרדיות לנתניהו סביב כישלון חוק הגיוס ולחימה נמשכת בלבנון שבה הפסקת האש האחרונה בתיווך אמריקני נדחתה זה עתה על ידי חיזבאללה, כשבנט ולפיד מתמודדים ברשימת יחד מאוחדת בראשות בנט שמכניסה את יש עתיד למסע נגד נתניהו, ובסקרים האחרונים נשמרת עדיפות האופוזיציה והגוש נגד נתניהו אצל רוב הסוקרים.'
+  'רקע: לאחר שהצעת פיזור הכנסת עברה בקריאה ראשונה ללא התנגדות והמחלוקת נמשכת על מועד הבחירות בין 8 בספטמבר ל-20 באוקטובר, מסע הבחירות נפתח על רקע הקרע בין המפלגות החרדיות לנתניהו סביב כישלון חוק הפטור מגיוס ומגע לאישור חוק יסוד: לימוד תורה, תוך לחימה מתמשכת בלבנון לאחר שחיזבאללה דחה את הפסקת האש המותנית האחרונה בתיווך אמריקני, כשבנט ולפיד מתמודדים ברשימת יחד מאוחדת מול ישר! בראשות אייזנקוט, ובסקרים האחרונים נשמרת עדיפות האופוזיציה והגוש נגד נתניהו אצל רוב הסוקרים.'
 
 function maxIsoDateInRollingRows(rows: RollingWindowRow[]): string | null {
   if (rows.length === 0) return null
