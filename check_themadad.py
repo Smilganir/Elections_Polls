@@ -1,21 +1,31 @@
 """
-Compare themadad.com max Poll ID to a cached fingerprint (for GitHub Actions).
+Compare themadad.com sync fingerprint to the cached copy (for GitHub Actions + local).
+
+Fingerprint format (v2): ``{maxPollId}:{rowCount}:{sha20}`` — full wide-table content hash
+after ETL dedupe rules. Legacy files with only a Poll ID still work (max-ID compare only).
 
 Writes GitHub Actions outputs when GITHUB_OUTPUT is set:
   changed=true|false
-  fingerprint=<int>   (current max poll id from site, or empty if parse failed)
+  fingerprint=<string>
 """
 from __future__ import annotations
 
 import os
 import sys
 
-from run_polls import DATA_URL, fetch_html, max_poll_id_from_html
+from run_polls import (
+    DATA_URL,
+    FINGERPRINT_FILE,
+    fetch_html,
+    max_poll_id_from_fingerprint,
+    sync_fingerprint_from_html,
+    sync_fingerprints_differ,
+)
 
-FINGERPRINT_FILE = '.themadad-fingerprint'
+FINGERPRINT_FILE_LEGACY = '.themadad-fingerprint'
 
 
-def _write_output(changed: bool, fingerprint: int | None) -> None:
+def _write_output(changed: bool, fingerprint: str | None) -> None:
     path = os.environ.get('GITHUB_OUTPUT')
     if not path:
         return
@@ -24,30 +34,34 @@ def _write_output(changed: bool, fingerprint: int | None) -> None:
         f.write(f'fingerprint={fingerprint if fingerprint is not None else ""}\n')
 
 
+def _read_previous_fingerprint() -> str | None:
+    path = FINGERPRINT_FILE if os.path.isfile(FINGERPRINT_FILE) else FINGERPRINT_FILE_LEGACY
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding='utf-8') as fp:
+        raw = fp.read().strip()
+    return raw or None
+
+
 def main() -> int:
-    previous: int | None = None
-    if os.path.isfile(FINGERPRINT_FILE):
-        try:
-            with open(FINGERPRINT_FILE, encoding='utf-8') as fp:
-                raw = fp.read().strip()
-            if raw:
-                previous = int(raw)
-        except ValueError:
-            previous = None
+    previous = _read_previous_fingerprint()
 
     print(f'Fetching {DATA_URL} ...')
     html = fetch_html(DATA_URL)
-    current = max_poll_id_from_html(html)
+    current = sync_fingerprint_from_html(html)
     if current is None:
         print('Could not parse poll table or no rows.', file=sys.stderr)
         _write_output(changed=False, fingerprint=None)
         return 1
 
-    print(f'  Max Poll ID on site (after dedupe rules): {current}')
+    max_id = max_poll_id_from_fingerprint(current)
+    print(f'  Sync fingerprint: {current}')
+    if max_id is not None:
+        print(f'  Max Poll ID (after dedupe): {max_id}')
     if previous is not None:
         print(f'  Cached fingerprint: {previous}')
 
-    changed = previous is None or current != previous
+    changed = sync_fingerprints_differ(previous, current)
     _write_output(changed=changed, fingerprint=current)
 
     if not changed:

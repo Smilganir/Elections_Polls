@@ -12,6 +12,7 @@ reputation), even with curl_cffi TLS impersonation. Practical options:
   • Actions: workflow_dispatch only, or attach a self-hosted runner to the repo.
   • Set HTTPS_PROXY (or HTTP_PROXY) to a residential proxy URL if you use one (also as a secret on CI).
 """
+import hashlib
 import json
 import os
 import time
@@ -70,6 +71,7 @@ _REPO_DIR = Path(__file__).resolve().parent
 SPREADSHEET_ID = '1RIqzrv_ViVWBqeXkM-rOAvusoXryyRFX5Xmu2S-uEw4'
 KEY_FILE = str(_REPO_DIR / 'google-sheets-service-account.json')
 DATA_URL = 'https://themadad.com/allpolls/'
+FINGERPRINT_FILE = str(_REPO_DIR / '.themadad-fingerprint')
 
 ORIGINAL_SHEET_RANGE = "'Elections Polls Data'!A1"
 UNPIVOT_SHEET_RANGE = "'UnpivotData'!A1"
@@ -273,66 +275,15 @@ def fetch_html(url: str) -> str:
     return resp.text
 
 
-def max_poll_id_from_html(html: str) -> int | None:
+def _wide_polls_from_html(html: str, *, verbose: bool = False) -> pd.DataFrame | None:
     """
-    Same table parse + dedupe rules as process_data(); returns max Poll ID we would upload.
-    Used by CI to detect new polls without uploading.
+    Parse themadad HTML → wide table after outlet corrections and (Date, Media Outlet) dedupe.
+    Same rules as ``process_data()`` / upload. ``Date`` is timezone-naive datetime.
     """
     dataframes = pd.read_html(StringIO(html), encoding='utf-8')
     data_df = max(dataframes, key=lambda df: len(df.columns)).copy()
-    # No iloc[1:] skip: site now serves newest-first with a proper <thead>, so row 0 is
-    # the latest poll. The old skip was only safe when Poll ID 1 was always at row 0.
-    # Poll ID 1 is prepended manually below and then filtered out by 'Poll ID > 1'.
-
-    expected_cols = len(HEADERS)
-    if len(data_df.columns) > expected_cols:
-        data_df = data_df.iloc[:, :expected_cols]
-    elif len(data_df.columns) < expected_cols:
-        return None
-
-    data_df.columns = HEADERS
-
-    poll_1_df = pd.DataFrame(POLL_ID_1_DATA)
-    data_df = pd.concat([poll_1_df, data_df], ignore_index=True)
-
-    data_df['Poll ID'] = pd.to_numeric(data_df['Poll ID'], errors='coerce')
-    data_df['Date'] = pd.to_datetime(data_df['Date'], errors='coerce', dayfirst=True, format='mixed')
-
-    dup = (data_df['Media Outlet'] == 'ערוץ 14') & (data_df['Poll ID'] == 153)
-    data_df = data_df[~dup].copy()
-    data_df = _apply_ch12_558_instead_of_559_wide(data_df)
-    data_df = _prefer_split_arabs_on_same_day(data_df)
-
-    data_df = data_df[data_df['Poll ID'] > 1].copy()
-
-    data_df[VALUE_VARS] = data_df[VALUE_VARS].apply(pd.to_numeric, errors='coerce')
-    data_df = data_df.dropna(subset=['Date']).copy()
-    data_df['Poll ID'] = data_df['Poll ID'].fillna(-999).astype(int)
-
-    data_df = data_df.sort_values('Poll ID', ascending=False)
-    data_df = data_df.drop_duplicates(subset=['Date', 'Media Outlet'], keep='first').copy()
-
-    if data_df.empty:
-        return None
-    return int(data_df['Poll ID'].max())
-
-
-def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
-    """
-    Fetch themadad wide table: one row per (Date, Media Outlet) after Poll ID dedupe.
-    ``Date`` is timezone-naive datetime. Returns None if fetch/parse fails or no rows.
-    """
-    if verbose:
-        print("Fetching data from themadad.com ...")
-    html = fetch_html(DATA_URL)
-    if verbose:
-        print(f"  HTML fetched: {len(html):,} chars")
-
-    dataframes = pd.read_html(StringIO(html), encoding='utf-8')
-    data_df = max(dataframes, key=lambda df: len(df.columns)).copy()
-    # No iloc[1:] skip: site now serves newest-first with a proper <thead>, so row 0 is
-    # the latest poll. The old skip was only safe when Poll ID 1 was always at row 0.
-    # Poll ID 1 is prepended manually below and then filtered out by 'Poll ID > 1'.
+    # No iloc[1:] skip: site serves newest-first with a proper <thead>. Poll ID 1 is
+    # prepended manually below and filtered out by ``Poll ID > 1``.
 
     expected_cols = len(HEADERS)
     if len(data_df.columns) > expected_cols:
@@ -373,11 +324,95 @@ def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
     return data_df
 
 
+def sync_fingerprint_from_wide(data_df: pd.DataFrame) -> str:
+    """
+    Stable content fingerprint for the wide table we upload.
+    Format: ``{maxPollId}:{rowCount}:{sha256hex20}`` — detects new polls, row drops, and vote edits.
+    """
+    lines: list[str] = []
+    for _, row in data_df.sort_values(['Poll ID', 'Media Outlet', 'Date']).iterrows():
+        day = pd.Timestamp(row['Date']).strftime('%Y-%m-%d')
+        mo = str(row['Media Outlet']).strip()
+        pid = int(row['Poll ID'])
+        votes = ';'.join(f"{c}={int(_poll_num(row[c]))}" for c in VALUE_VARS)
+        lines.append(f"{pid}|{day}|{mo}|{votes}")
+    digest = hashlib.sha256('\n'.join(lines).encode('utf-8')).hexdigest()[:20]
+    max_id = int(data_df['Poll ID'].max())
+    return f"{max_id}:{len(data_df)}:{digest}"
+
+
+def sync_fingerprint_from_html(html: str) -> str | None:
+    """Fingerprint after the same ETL rules as upload; None if parse fails."""
+    data_df = _wide_polls_from_html(html, verbose=False)
+    if data_df is None:
+        return None
+    return sync_fingerprint_from_wide(data_df)
+
+
+def max_poll_id_from_fingerprint(fingerprint: str) -> int | None:
+    try:
+        return int(fingerprint.strip().split(':', 1)[0])
+    except ValueError:
+        return None
+
+
+def sync_fingerprints_differ(previous: str | None, current: str) -> bool:
+    """
+    True when upload should run. Legacy fingerprints (max Poll ID only) compare on max ID;
+    v2 fingerprints (``max:rows:hash``) compare the full string.
+    """
+    if previous is None:
+        return True
+    prev = previous.strip()
+    if not prev:
+        return True
+    cur = current.strip()
+    if ':' not in prev:
+        prev_max = max_poll_id_from_fingerprint(prev)
+        cur_max = max_poll_id_from_fingerprint(cur)
+        if prev_max is None or cur_max is None:
+            return True
+        return prev_max != cur_max
+    return prev != cur
+
+
+def write_sync_fingerprint(fingerprint: str, path: str | None = None) -> None:
+    target = path or FINGERPRINT_FILE
+    with open(target, 'w', encoding='utf-8') as fp:
+        fp.write(fingerprint.strip())
+        fp.write('\n')
+
+
+def max_poll_id_from_html(html: str) -> int | None:
+    """
+    Max Poll ID after dedupe rules (same table as upload). Prefer ``sync_fingerprint_from_html``.
+    """
+    fp = sync_fingerprint_from_html(html)
+    if fp is None:
+        return None
+    return max_poll_id_from_fingerprint(fp)
+
+
+def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
+    """
+    Fetch themadad wide table: one row per (Date, Media Outlet) after Poll ID dedupe.
+    ``Date`` is timezone-naive datetime. Returns None if fetch/parse fails or no rows.
+    """
+    if verbose:
+        print("Fetching data from themadad.com ...")
+    html = fetch_html(DATA_URL)
+    if verbose:
+        print(f"  HTML fetched: {len(html):,} chars")
+    return _wide_polls_from_html(html, verbose=verbose)
+
+
 def process_data():
-    """Fetch, clean, sort, filter, unpivot."""
+    """Fetch, clean, sort, filter, unpivot. Returns (wide values, unpivot values, sync fingerprint)."""
     data_df = get_wide_polls_dataframe(verbose=True)
     if data_df is None:
-        return None, None
+        return None, None, None
+
+    sync_fp = sync_fingerprint_from_wide(data_df)
 
     # Historical average votes per party per media outlet (for rank tie-breaking)
     temp = data_df.melt(id_vars=['Media Outlet', 'Poll ID'], value_vars=VALUE_VARS,
@@ -425,18 +460,19 @@ def process_data():
     orig_values = [data_df.columns.tolist()] + data_df.values.tolist()
     unpivot_values = [unpivot_df.columns.tolist()] + unpivot_df.values.tolist()
 
-    return orig_values, unpivot_values
+    return orig_values, unpivot_values, sync_fp
 
 
 def upload():
     print("Starting fetch-transform-upload pipeline ...\n")
-    orig, unpivot = process_data()
+    orig, unpivot, sync_fp = process_data()
 
     if orig is None or len(orig) <= 1:
         print("No data. Aborting.")
         return
 
     print(f"\nProcessed {len(orig)-1} wide rows, {len(unpivot)-1} unpivot rows.")
+    print(f"  Sync fingerprint: {sync_fp}")
 
     creds = _load_credentials()
     service = build('sheets', 'v4', credentials=creds)
@@ -480,6 +516,8 @@ def upload():
         what='Update unpivot sheet',
     )
     print(f"  Unpivot done. Cells updated: {result.get('updatedCells')}")
+    write_sync_fingerprint(sync_fp)
+    print(f"  Fingerprint written to {FINGERPRINT_FILE}")
     print("\nAll done!")
 
 
