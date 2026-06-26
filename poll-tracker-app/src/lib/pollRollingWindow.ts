@@ -83,6 +83,8 @@ export type ChangedParty = {
   currentVotes: number
   previousVotes: number
   delta: number
+  /** Outlets whose prior poll showed a seat change (cross-outlet hero chips only). */
+  deltaOutletCount?: number
 }
 
 export type RollingWindowRow = {
@@ -146,9 +148,91 @@ function changedPartiesBetween(current: RollingPoll, previous: RollingPoll | nul
 }
 
 /**
- * Mean seat change vs prior poll per outlet, by party key. Built only from each row's
- * `changedParties` — same deltas as the poll-summary party chip strip.
+ * Cross-outlet mean seats per party for the hero chip strip (latest poll per outlet in window).
+ * Deltas use the same mean-vs-prior rule as narrative trend bullets.
  */
+export function buildCrossOutletAverageChipRow(
+  rows: RollingWindowRow[],
+): { current: RollingPoll; changedParties: ChangedParty[] } | null {
+  if (rows.length === 0) return null
+
+  const voteSum = new Map<string, number>()
+  const voteCount = new Map<string, number>()
+  const segmentByParty = new Map<string, Segment>()
+  const partyIdByParty = new Map<string, number>()
+
+  for (const { current } of rows) {
+    for (const p of current.parties) {
+      if (p.votes <= 0) continue
+      voteSum.set(p.party, (voteSum.get(p.party) ?? 0) + p.votes)
+      voteCount.set(p.party, (voteCount.get(p.party) ?? 0) + 1)
+      if (!segmentByParty.has(p.party)) {
+        segmentByParty.set(p.party, p.segment)
+        partyIdByParty.set(p.party, p.partyId)
+      }
+    }
+  }
+
+  const parties: RollingPollParty[] = [...voteSum.entries()]
+    .map(([party, sum]) => {
+      const n = voteCount.get(party) ?? 1
+      return {
+        party,
+        votes: round1(sum / n),
+        segment: segmentByParty.get(party) ?? 'Opposition',
+        partyId: partyIdByParty.get(party) ?? 0,
+      }
+    })
+    .filter((p) => p.votes > 0)
+    .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party))
+
+  if (parties.length === 0) return null
+
+  const outletCountByParty = new Map<string, number>()
+  for (const { changedParties } of rows) {
+    for (const cp of changedParties) {
+      outletCountByParty.set(cp.party, (outletCountByParty.get(cp.party) ?? 0) + 1)
+    }
+  }
+
+  const avgDeltas = averagePartySeatDeltaAcrossOutlets(rows)
+  const changedParties: ChangedParty[] = []
+  for (const [party, avgDelta] of avgDeltas) {
+    const rd = round1(avgDelta)
+    if (rd === 0) continue
+    const avgV = parties.find((p) => p.party === party)?.votes ?? 0
+    changedParties.push({
+      party,
+      segment: segmentByParty.get(party) ?? 'Opposition',
+      currentVotes: avgV,
+      previousVotes: round1(avgV - rd),
+      delta: rd,
+      deltaOutletCount: outletCountByParty.get(party) ?? 0,
+    })
+  }
+  changedParties.sort(
+    (a, b) => Math.abs(b.delta) - Math.abs(a.delta) || a.party.localeCompare(b.party),
+  )
+
+  const maxDate = rows.reduce(
+    (max, r) => (r.current.date.localeCompare(max) > 0 ? r.current.date : max),
+    rows[0]!.current.date,
+  )
+
+  return {
+    current: {
+      pollId: -1,
+      date: maxDate,
+      mediaOutlet: '',
+      coalitionTotal: 0,
+      oppositionTotal: 0,
+      arabsTotal: 0,
+      parties,
+    },
+    changedParties,
+  }
+}
+
 export function averagePartySeatDeltaAcrossOutlets(rows: RollingWindowRow[]): Map<string, number> {
   const sum = new Map<string, number>()
   const count = new Map<string, number>()

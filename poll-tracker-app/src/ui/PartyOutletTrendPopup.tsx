@@ -370,6 +370,7 @@ export function PartyOutletTrendPanel({
   lines,
   locale,
   t,
+  noDataMessage,
 }: {
   open: boolean
   onClose: () => void
@@ -377,6 +378,7 @@ export function PartyOutletTrendPanel({
   lines: PartyTrendLine[]
   locale: AppLocale
   t: UiStrings
+  noDataMessage?: string
 }) {
   const panelRef = useRef<HTMLElement>(null)
 
@@ -434,7 +436,9 @@ export function PartyOutletTrendPanel({
         </ul>
       ) : null}
       {!hasData ? (
-        <p className="lpo-ps-trend-popup-empty">{t.pollSummaryPartyTrendNoData}</p>
+        <p className="lpo-ps-trend-popup-empty">
+          {noDataMessage ?? t.pollSummaryPartyTrendNoData}
+        </p>
       ) : (
         <MultiPartyOutletTrendChart
           lines={lines.filter((l) => l.data.length > 0)}

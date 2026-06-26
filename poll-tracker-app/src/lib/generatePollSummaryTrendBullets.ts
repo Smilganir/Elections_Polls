@@ -108,6 +108,40 @@ function partyTrendBulletHtml(
 const MAX_BULLETS = 11
 const MAX_PARTY_TREND_BULLETS = 10
 
+export type PollSummaryTrendBulletOpts = {
+  locale: AppLocale
+  windowDays: number
+  displayMediaOutlet: (outlet: string) => string
+  displayParty: (partyKey: string) => string
+}
+
+/**
+ * Coalition outlier line when up to 3 outlets move opposite the cross-outlet mean.
+ * Rendered above the outlet table, not in the party-trend list.
+ */
+export function generatePollSummaryOutlierBullet(
+  rows: RollingWindowRow[],
+  summary: RollingWindowSummary,
+  opts: Pick<PollSummaryTrendBulletOpts, 'locale' | 'displayMediaOutlet'>,
+): string | null {
+  const { locale, displayMediaOutlet } = opts
+  const nRollPrior = summary.nWithPrior
+  const deltaC = summary.deltaCoalition
+  if (nRollPrior === 0 || rows.length === 0) return null
+
+  const meanSignC = Math.sign(deltaC)
+  if (meanSignC === 0 || Math.abs(deltaC) < 0.2) return null
+
+  const outliers = rows.filter((r) => {
+    if (!r.previous) return false
+    const dC = r.current.coalitionTotal - r.previous.coalitionTotal
+    return dC !== 0 && Math.sign(dC) !== meanSignC
+  })
+  if (outliers.length === 0 || outliers.length > 3) return null
+
+  return outlierTrendBullets(outliers, displayMediaOutlet, locale)
+}
+
 /**
  * Data-driven poll summary trend bullets: matches rules in scripts/build-poll-summary-narrative.mjs
  * (no aggregate hero restatement, no flat-outlet lines, no Arab-segment party trend lines).
@@ -116,17 +150,11 @@ const MAX_PARTY_TREND_BULLETS = 10
 export function generatePollSummaryTrendBullets(
   rows: RollingWindowRow[],
   summary: RollingWindowSummary,
-  opts: {
-    locale: AppLocale
-    windowDays: number
-    displayMediaOutlet: (outlet: string) => string
-    displayParty: (partyKey: string) => string
-  },
+  opts: PollSummaryTrendBulletOpts,
 ): string[] {
-  const { locale, windowDays, displayMediaOutlet, displayParty } = opts
+  const { locale, windowDays, displayParty } = opts
   const rn = rows.length
   const nRollPrior = summary.nWithPrior
-  const deltaC = summary.deltaCoalition
 
   const bullets: string[] = []
 
@@ -154,18 +182,6 @@ export function generatePollSummaryTrendBullets(
       )
     }
     return bullets
-  }
-
-  const meanSignC = Math.sign(deltaC)
-  if (meanSignC !== 0 && Math.abs(deltaC) >= 0.2) {
-    const outliers = rows.filter((r) => {
-      if (!r.previous) return false
-      const dC = r.current.coalitionTotal - r.previous.coalitionTotal
-      return dC !== 0 && Math.sign(dC) !== meanSignC
-    })
-    if (outliers.length > 0 && outliers.length <= 3) {
-      bullets.push(outlierTrendBullets(outliers, displayMediaOutlet, locale))
-    }
   }
 
   const stats = partyTrendStatsFromRows(rows)

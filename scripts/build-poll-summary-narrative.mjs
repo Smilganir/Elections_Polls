@@ -42,9 +42,9 @@ const ENGLISH_PARTY_OVERRIDES = {
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
 const DEFAULT_BACKGROUND_EN =
-  "With the Knesset dissolution bill through its unanimous first reading but coalition factions still fighting over an election window of September 8–October 20, the race opens amid the Haredi parties' break with Netanyahu over failed draft-exemption legislation and an emerging deal to advance Basic Law: Torah Study, while Lebanon remains on the boil after Hezbollah rejected the latest U.S.-brokered conditional ceasefire, as Bennett and Lapid's united Yahad ticket competes with Eisenkot's Yashar in a crowded field where latest polls still show the opposition and anti-Netanyahu camp ahead at most major outlets."
+  "With Haredi leaders' agreement with Netanyahu to target October 20 elections and advance Basic Law: Torah Study and protections against arresting draft evaders before the Knesset is expected to dissolve by July 17—while backing an Oct. 7 political commission and the attorney-general split—the race unfolds amid fragile U.S.-brokered Lebanon ceasefire talks after Hezbollah rejected the latest conditional truce, as Bennett and Lapid's united Yahad ticket competes with Eisenkot's Yashar in a crowded field where the anti-Netanyahu camp still leads at most major pollsters."
 const DEFAULT_BACKGROUND_HE =
-  'רקע: לאחר שהצעת פיזור הכנסת עברה בקריאה ראשונה ללא התנגדות והמחלוקת נמשכת על מועד הבחירות בין 8 בספטמבר ל-20 באוקטובר, מסע הבחירות נפתח על רקע הקרע בין המפלגות החרדיות לנתניהו סביב כישלון חוק הפטור מגיוס ומגע לאישור חוק יסוד: לימוד תורה, תוך לחימה מתמשכת בלבנון לאחר שחיזבאללה דחה את הפסקת האש המותנית האחרונה בתיווך אמריקני, כשבנט ולפיד מתמודדים ברשימת יחד מאוחדת מול ישר! בראשות אייזנקוט, ובסקרים האחרונים נשמרת עדיפות האופוזיציה והגוש נגד נתניהו אצל רוב הסוקרים.'
+  'רקע: לאחר הסכמה בין המנהיגים החרדיים לנתניהו על בחירות ב-20 באוקטובר וקידום חוק יסוד: לימוד תורה והגנה מפני מעצרי סרבני גיוס עד פיזור הכנסת הצפוי ב-17 ביולי—תוך תמיכה בוועדת חקירה מדינית ל-7 באוקטובר ובפיצול תפקיד היועמ"ש—מסע הבחירות מתנהל על רקע מגעים שבריריים לפסקת אש בלבנון בתיווך אמריקני לאחר שחיזבאללה דחה את העסקה המותנית האחרונה, כשיחד של בנט ולפיד מתמודדת מול ישר! בראשות אייזנקוט, וברוב הסוקרים נשמרת עדיפות גוש אנטי נתניהו.'
 
 function round1(x) {
   return Math.round(x * 10) / 10
@@ -314,6 +314,17 @@ export function buildPollSummaryNarrativeDoc(opts) {
 export function writePollSummaryNarrativeFromRolling(opts) {
   const doc = buildPollSummaryNarrativeDoc(opts)
   const outPath = path.join(__dirname, '../poll-tracker-app/src/content/poll-summary-narrative.json')
+  if (fs.existsSync(outPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(outPath, 'utf8'))
+      for (const loc of ['en', 'he']) {
+        const bg = (existing.locales?.[loc]?.background ?? '').trim()
+        if (bg) doc.locales[loc].background = bg
+      }
+    } catch {
+      /* keep defaults from buildPollSummaryNarrativeDoc */
+    }
+  }
   fs.writeFileSync(outPath, `${JSON.stringify(doc, null, 2)}\n`, 'utf8')
   return outPath
 }

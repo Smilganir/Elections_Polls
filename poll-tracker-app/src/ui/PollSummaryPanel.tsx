@@ -12,47 +12,29 @@ import {
   type ChangedParty,
   type RollingPoll,
   type RollingWindowRow,
+  buildCrossOutletAverageChipRow,
   summaryFromRollingRows,
 } from '../lib/pollRollingWindow'
 import { buildPartyOutletTrendSeries } from '../lib/partyOutletTrendSeries'
 import { blocTrendLineColors, segmentForPartyKey } from '../lib/partyTrendLineColors'
-import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
+import {
+  generatePollSummaryOutlierBullet,
+} from '../lib/generatePollSummaryTrendBullets'
 import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSummaryNarrative'
 import { IconWithFallback } from './IconWithFallback'
 import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
-import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
-import { mediaBiasAppUrl } from '../utils/publicUrl'
 import { PartyOutletTrendPanel } from './PartyOutletTrendPopup'
 import { RotateLandscapeHint } from './RotateLandscapeHint'
+import { mediaBiasAppUrl } from '../utils/publicUrl'
 
 const KNESSET = 120
 const MAJ_SEATS = 60
 
-/** Party column = max label width + pad so short names don’t leave a huge gutter before deltas. */
-const NARRATIVE_PARTY_LABEL_PAD_PX = 10
+type TrendFocus = { outlet: string; parties: string[] }
 
-function syncNarrativePartyLabelColumnWidth(ul: HTMLUListElement) {
-  const labels = ul.querySelectorAll<HTMLElement>('.lpo-ps-narrative-party-label')
-  if (labels.length === 0) {
-    ul.style.removeProperty('--lpo-ps-narrative-party-label-w')
-    return
-  }
-  const probe = document.createElement('span')
-  probe.className = 'lpo-ps-narrative-party-label'
-  probe.setAttribute('aria-hidden', 'true')
-  probe.style.cssText =
-    'position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;white-space:nowrap;width:max-content;max-width:none;box-sizing:border-box'
-  ul.appendChild(probe)
-  let maxW = 0
-  labels.forEach((label) => {
-    probe.innerHTML = label.innerHTML
-    maxW = Math.max(maxW, probe.scrollWidth)
-  })
-  ul.removeChild(probe)
-  ul.style.setProperty(
-    '--lpo-ps-narrative-party-label-w',
-    `${Math.ceil(maxW + NARRATIVE_PARTY_LABEL_PAD_PX)}px`,
-  )
+function formatChipNum(n: number): string {
+  const r = Math.round(n * 10) / 10
+  return Number.isInteger(r) ? String(r) : r.toFixed(1)
 }
 
 function PsSegmentBar({
@@ -335,8 +317,11 @@ function PollSummaryChipsStrip({
   displayParty,
   displayMediaOutlet,
   onPartyTrendClick,
+  trendContext = 'outlet',
+  trendOutletForAria,
   selectedTrendParties,
   trendLineColorsByParty,
+  showDeltaOutletCount = false,
 }: {
   current: RollingPoll
   changedParties: ChangedParty[]
@@ -345,8 +330,14 @@ function PollSummaryChipsStrip({
   displayParty: (partyKey: string) => string
   displayMediaOutlet: (outlet: string) => string
   onPartyTrendClick?: (party: string) => void
+  /** Hero chips use cross-outlet average trend; per-outlet rows use outlet trend. */
+  trendContext?: 'outlet' | 'average'
+  /** When `current.mediaOutlet` is empty (e.g. hero averages), used in trend button aria. */
+  trendOutletForAria?: string
   selectedTrendParties?: ReadonlySet<string>
   trendLineColorsByParty?: ReadonlyMap<string, string>
+  /** Hero average chips: show (n) below Δ = outlets with a seat change. */
+  showDeltaOutletCount?: boolean
 }) {
   const changedByParty = useMemo(
     () => new Map(changedParties.map((cp) => [cp.party, cp])),
@@ -366,20 +357,40 @@ function PollSummaryChipsStrip({
   }
 
   return (
-    <ul className="lpo-ps-chips">
+    <ul
+      className={`lpo-ps-chips${showDeltaOutletCount ? ' lpo-ps-chips--with-outlet-count' : ''}`}
+    >
       {partiesWithSeats.map((p) => {
         const cp = changedByParty.get(p.party)
         const isChanged = cp !== undefined
+        const outletCount =
+          showDeltaOutletCount && cp && cp.deltaOutletCount && cp.deltaOutletCount > 0
+            ? cp.deltaOutletCount
+            : null
+        const outletCountTitle =
+          outletCount !== null
+            ? t.pollSummaryChipDeltaOutletCountTitle.replace(/\{n\}/g, String(outletCount))
+            : undefined
         const tip = isChanged
-          ? `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta})`
+          ? outletCountTitle
+            ? `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta}) · ${outletCountTitle}`
+            : `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta})`
           : `${displayParty(p.party)} · ${p.votes} ${t.seats}`
         const ringColor =
           trendLineColorsByParty?.get(p.party) ??
           segmentRingColorForSummary(p.segment, combineArabsWithOpposition)
         const trendAria = onPartyTrendClick
-          ? t.pollSummaryPartyTrendOpenAria
-              .replace(/\{party\}/g, displayParty(p.party))
-              .replace(/\{outlet\}/g, displayMediaOutlet(current.mediaOutlet))
+          ? trendContext === 'average'
+            ? t.pollSummaryHeroPartyTrendOpenAria.replace(
+                /\{party\}/g,
+                displayParty(p.party),
+              )
+            : t.pollSummaryPartyTrendOpenAria
+                .replace(/\{party\}/g, displayParty(p.party))
+                .replace(
+                  /\{outlet\}/g,
+                  displayMediaOutlet(trendOutletForAria ?? current.mediaOutlet),
+                )
           : undefined
         const isTrendSelected = selectedTrendParties?.has(p.party) ?? false
         const chipStyle = {
@@ -394,7 +405,7 @@ function PollSummaryChipsStrip({
             style={chipStyle}
           >
             <span className="lpo-ps-chip-votes" dir="ltr">
-              {p.votes}
+              {formatChipNum(p.votes)}
             </span>
             {onPartyTrendClick ? (
               <button
@@ -419,9 +430,27 @@ function PollSummaryChipsStrip({
               </div>
             )}
             {isChanged ? (
-              <span className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`} dir="ltr">
-                {cp.delta > 0 ? '+' : '-'}
-                {Math.abs(cp.delta)}
+              <span
+                className="lpo-ps-chip-delta-stack"
+                title={outletCountTitle}
+                aria-label={
+                  outletCountTitle
+                    ? `${cp.delta > 0 ? '+' : '-'}${formatChipNum(Math.abs(cp.delta))} · ${outletCountTitle}`
+                    : undefined
+                }
+              >
+                <span
+                  className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`}
+                  dir="ltr"
+                >
+                  {cp.delta > 0 ? '+' : '-'}
+                  {formatChipNum(Math.abs(cp.delta))}
+                </span>
+                {outletCount !== null ? (
+                  <span className="lpo-ps-chip-delta-outlets" dir="ltr" aria-hidden>
+                    ({outletCount})
+                  </span>
+                ) : null}
               </span>
             ) : (
               <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
@@ -450,7 +479,21 @@ export function PollSummaryPanel({
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY'
   const bgText = narrativeBackground.trim()
 
-  const [trendFocus, setTrendFocus] = useState<{ outlet: string; parties: string[] } | null>(null)
+  const [trendFocus, setTrendFocus] = useState<TrendFocus | null>(null)
+
+  const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
+  const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
+  const filteredRows = useMemo(
+    () =>
+      excludedOutlets.size === 0
+        ? rows
+        : rows.filter((r) => !excludedOutlets.has(r.current.mediaOutlet)),
+    [rows, excludedOutlets],
+  )
+  const heroAvgChips = useMemo(
+    () => buildCrossOutletAverageChipRow(filteredRows),
+    [filteredRows],
+  )
 
   const segmentForPartyAtOutlet = useCallback(
     (outlet: string, party: string) => {
@@ -462,14 +505,24 @@ export function PollSummaryPanel({
     [rows],
   )
 
+  const segmentForTrendParty = useCallback(
+    (party: string) => {
+      if (trendFocus) {
+        return segmentForPartyAtOutlet(trendFocus.outlet, party)
+      }
+      return segmentForPartyKey(party, undefined)
+    },
+    [trendFocus, segmentForPartyAtOutlet],
+  )
+
   const trendLineColorByParty = useMemo(() => {
     if (!trendFocus) return new Map<string, string>()
     return blocTrendLineColors(
       trendFocus.parties,
-      (party) => segmentForPartyAtOutlet(trendFocus.outlet, party),
+      segmentForTrendParty,
       combineArabsWithOpposition,
     )
-  }, [trendFocus, segmentForPartyAtOutlet, combineArabsWithOpposition])
+  }, [trendFocus, segmentForTrendParty, combineArabsWithOpposition])
 
   const handlePartyTrendClick = useCallback((outlet: string, party: string) => {
     setTrendFocus((prev) => {
@@ -493,10 +546,7 @@ export function PollSummaryPanel({
       partyDisplay: displayParty(party),
       color:
         trendLineColorByParty.get(party) ??
-        segmentRingColorForSummary(
-          segmentForPartyAtOutlet(trendFocus.outlet, party),
-          combineArabsWithOpposition,
-        ),
+        segmentRingColorForSummary(segmentForTrendParty(party), combineArabsWithOpposition),
       data: buildPartyOutletTrendSeries(pollHistory, trendFocus.outlet, party),
     }))
   }, [
@@ -504,7 +554,7 @@ export function PollSummaryPanel({
     pollHistory,
     displayParty,
     trendLineColorByParty,
-    segmentForPartyAtOutlet,
+    segmentForTrendParty,
     combineArabsWithOpposition,
   ])
 
@@ -513,15 +563,6 @@ export function PollSummaryPanel({
     [trendFocus],
   )
 
-  const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
-  const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
-  const filteredRows = useMemo(
-    () =>
-      excludedOutlets.size === 0
-        ? rows
-        : rows.filter((r) => !excludedOutlets.has(r.current.mediaOutlet)),
-    [rows, excludedOutlets],
-  )
   const visibleRows = useMemo(() => {
     if (!trendFocus) return filteredRows
     return filteredRows.filter((r) => r.current.mediaOutlet === trendFocus.outlet)
@@ -537,15 +578,23 @@ export function PollSummaryPanel({
   const clearExcluded = useCallback(() => setExcludedOutlets(new Set()), [])
 
   const summary = useMemo(() => summaryFromRollingRows(filteredRows), [filteredRows])
-  const trendBullets = useMemo(
-    () =>
-      generatePollSummaryTrendBullets(filteredRows, summary, {
-        locale,
-        windowDays: maxStaleDays,
-        displayMediaOutlet,
-        displayParty,
-      }),
-    [filteredRows, summary, locale, maxStaleDays, displayMediaOutlet, displayParty],
+  const trendPanelTitle = useMemo(() => {
+    if (!trendFocus) return ''
+    return displayMediaOutlet(trendFocus.outlet)
+  }, [trendFocus, displayMediaOutlet])
+  const trendPanelNoData = t.pollSummaryPartyTrendNoData
+  const trendBulletOpts = useMemo(
+    () => ({
+      locale,
+      windowDays: maxStaleDays,
+      displayMediaOutlet,
+      displayParty,
+    }),
+    [locale, maxStaleDays, displayMediaOutlet, displayParty],
+  )
+  const outlierBullet = useMemo(
+    () => generatePollSummaryOutlierBullet(filteredRows, summary, trendBulletOpts),
+    [filteredRows, summary, trendBulletOpts],
   )
   const narrativeAsOfDisplay = useMemo(() => {
     if (filteredRows.length === 0) return undefined
@@ -554,15 +603,12 @@ export function PollSummaryPanel({
 
   const hasPrior = summary.nWithPrior > 0
   const hasNarrativeTop = Boolean(narrativeAsOfDisplay) || Boolean(bgText)
-  const hasNarrativeTrends = trendBullets.length > 0
-  const trendBulletsKey = trendBullets.join('\n')
 
   const hasUnifiedPartyRows = visibleRows.some((r) =>
     r.current.parties.some((p) => p.votes > 0),
   )
   const chipRowIdsKey = visibleRows.map((r) => r.current.pollId).join(',')
   const unifiedSplitRef = useRef<HTMLDivElement | null>(null)
-  const narrativeTrendsListRef = useRef<HTMLUListElement | null>(null)
   const leftRowByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
   const partyLineByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
 
@@ -638,25 +684,6 @@ export function PollSummaryPanel({
     }
   }, [hasUnifiedPartyRows, chipRowIdsKey])
 
-  useLayoutEffect(() => {
-    if (!hasNarrativeTrends) return
-    const list = narrativeTrendsListRef.current
-    if (!list) return
-
-    const run = () => {
-      syncNarrativePartyLabelColumnWidth(list)
-    }
-    run()
-    const ro = new ResizeObserver(() => {
-      run()
-    })
-    ro.observe(list)
-    return () => {
-      ro.disconnect()
-      list.style.removeProperty('--lpo-ps-narrative-party-label-w')
-    }
-  }, [hasNarrativeTrends, trendBulletsKey, locale])
-
   if (rows.length === 0) {
     return (
       <div className="lpo-ps-wrap">
@@ -674,22 +701,40 @@ export function PollSummaryPanel({
 
   const showEmptyFilterMsg = visibleRows.length === 0
 
-  const outletFilterSubtitle = trendFocus ? null : (
-    <div className="lpo-ps-subtitle-bar" dir="ltr">
-      <OutletFilterDropdown
-        allOutlets={allOutletKeys}
-        excludedOutlets={excludedOutlets}
-        onToggle={toggleOutlet}
-        onClear={clearExcluded}
-        locale={locale}
-        displayMediaOutlet={displayMediaOutlet}
-      />
+  const outletFilterSubtitle =
+    trendFocus ? null : (
+    <div className="lpo-ps-outlets-intro">
+      <div className="lpo-ps-subtitle-bar" dir="ltr">
+        <OutletFilterDropdown
+          allOutlets={allOutletKeys}
+          excludedOutlets={excludedOutlets}
+          onToggle={toggleOutlet}
+          onClear={clearExcluded}
+          locale={locale}
+          displayMediaOutlet={displayMediaOutlet}
+        />
+        <p
+          className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
+        >
+          <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
+          {t.pollSummaryOutletsBreakdownTail}
+        </p>
+      </div>
+      {outlierBullet ? (
+        <p
+          className="lpo-ps-outliers-note"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
+          dangerouslySetInnerHTML={{
+            __html: narrativeHtmlWithBlocHighlights(outlierBullet),
+          }}
+        />
+      ) : null}
       <p
-        className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
+        className="lpo-ps-subtitle lpo-ps-subtitle--outlets-trend-hint"
         dir={locale === 'he' ? 'rtl' : 'ltr'}
       >
-        <strong>{t.pollSummaryOutletsBreakdownLead}</strong>
-        {t.pollSummaryOutletsBreakdownTail}
+        {t.pollSummaryOutletsBreakdownTrendHint}
       </p>
     </div>
   )
@@ -697,44 +742,6 @@ export function PollSummaryPanel({
   return (
     <div className="lpo-ps-wrap">
       <section className="lpo-ps-hero" aria-label={t.pollSummaryHeroAria}>
-        <div className="lpo-ps-hero-bar-stack lpo-ps-bar-ltr">
-          <div className="lpo-ps-blocs-nums-band">
-            <div className="lpo-ps-hero-nums-between" dir="ltr">
-              <div className="lpo-ps-hero-side lpo-ps-hero-side--opp">
-                <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--opp">{t.opposition}</span>
-                <span className="lpo-ps-hero-num lpo-ps-hero-num--opp">
-                  {combineArabsWithOpposition ? summary.avgOppositionPlusArabs : summary.avgOpposition}
-                </span>
-                {hasPrior ? (
-                  <DeltaBadge
-                    delta={
-                      combineArabsWithOpposition
-                        ? summary.deltaOppositionPlusArabs
-                        : summary.deltaOpposition
-                    }
-                  />
-                ) : null}
-              </div>
-              <div className="lpo-ps-hero-side lpo-ps-hero-side--coal">
-                <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--coal">{t.coalition}</span>
-                <span className="lpo-ps-hero-num lpo-ps-hero-num--coal">{summary.avgCoalition}</span>
-                {hasPrior ? <DeltaBadge delta={summary.deltaCoalition} /> : null}
-              </div>
-            </div>
-            <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--12" aria-hidden>
-              60
-            </span>
-          </div>
-          <PsSegmentBar
-            coalition={summary.avgCoalition}
-            opposition={summary.avgOpposition}
-            arabs={summary.avgArabs}
-            mergeArabsWithOpposition={combineArabsWithOpposition}
-            showMajLine
-            mini={false}
-            className="lpo-ps-hero-bar"
-          />
-        </div>
         {hasNarrativeTop ? (
           <div
             className="lpo-ps-narrative-top"
@@ -753,6 +760,88 @@ export function PollSummaryPanel({
               />
             ) : null}
           </div>
+        ) : null}
+        <div className="lpo-ps-hero-summary-row">
+          <div className="lpo-ps-hero-bar-stack lpo-ps-bar-ltr">
+            <div className="lpo-ps-blocs-nums-band">
+              <div className="lpo-ps-hero-nums-between" dir="ltr">
+                <div className="lpo-ps-hero-side lpo-ps-hero-side--opp">
+                  <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--opp">{t.opposition}</span>
+                  <span className="lpo-ps-hero-num lpo-ps-hero-num--opp">
+                    {combineArabsWithOpposition
+                      ? summary.avgOppositionPlusArabs
+                      : summary.avgOpposition}
+                  </span>
+                  {hasPrior ? (
+                    <DeltaBadge
+                      delta={
+                        combineArabsWithOpposition
+                          ? summary.deltaOppositionPlusArabs
+                          : summary.deltaOpposition
+                      }
+                    />
+                  ) : null}
+                </div>
+                <div className="lpo-ps-hero-side lpo-ps-hero-side--coal">
+                  <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--coal">{t.coalition}</span>
+                  <span className="lpo-ps-hero-num lpo-ps-hero-num--coal">
+                    {summary.avgCoalition}
+                  </span>
+                  {hasPrior ? <DeltaBadge delta={summary.deltaCoalition} /> : null}
+                </div>
+              </div>
+              <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--12" aria-hidden>
+                60
+              </span>
+            </div>
+            <PsSegmentBar
+              coalition={summary.avgCoalition}
+              opposition={summary.avgOpposition}
+              arabs={summary.avgArabs}
+              mergeArabsWithOpposition={combineArabsWithOpposition}
+              showMajLine
+              mini={false}
+              className="lpo-ps-hero-bar"
+            />
+          </div>
+          {heroAvgChips ? (
+            <div
+              className="lpo-ps-hero-parties-wrap"
+              role="region"
+              aria-label={t.pollSummaryHeroAvgPartiesAria}
+            >
+              <div className="lpo-ps-hero-parties-scroll">
+                <PollSummaryChipsStrip
+                  current={heroAvgChips.current}
+                  changedParties={heroAvgChips.changedParties}
+                  t={t}
+                  combineArabsWithOpposition={combineArabsWithOpposition}
+                  displayParty={displayParty}
+                  displayMediaOutlet={displayMediaOutlet}
+                  showDeltaOutletCount
+                />
+              </div>
+              {hasPrior && heroAvgChips.changedParties.length > 0 ? (
+                <p
+                  className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets"
+                  dir={locale === 'he' ? 'rtl' : 'ltr'}
+                >
+                  {t.pollSummaryHeroChipOutletCountLegend}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+        {trendFocus && pollHistory?.length ? (
+          <PartyOutletTrendPanel
+            open
+            onClose={closePartyTrend}
+            outletDisplay={trendPanelTitle}
+            lines={trendLines}
+            locale={locale}
+            t={t}
+            noDataMessage={trendPanelNoData}
+          />
         ) : null}
       </section>
 
@@ -835,16 +924,6 @@ export function PollSummaryPanel({
               </div>
             </div>
           </div>
-          {trendFocus ? (
-            <PartyOutletTrendPanel
-              open
-              onClose={closePartyTrend}
-              outletDisplay={displayMediaOutlet(trendFocus.outlet)}
-              lines={trendLines}
-              locale={locale}
-              t={t}
-            />
-          ) : null}
         </div>
       ) : (
         <>
@@ -878,36 +957,17 @@ export function PollSummaryPanel({
         </>
       )}
 
-      {hasNarrativeTrends ? (
-        <section
-          className="lpo-ps-narrative-trends"
-          dir={locale === 'he' ? 'rtl' : 'ltr'}
-          aria-label={t.pollSummaryNarrativeTrendsAria}
+      <div className="lpo-ps-narrative-trends-link-wrap">
+        <a
+          className="lpo-ps-nav-btn"
+          href={mediaBiasAppUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t.mediaBiasNarrativeLinkAria}
         >
-          <ul ref={narrativeTrendsListRef} className="lpo-ps-narrative-trends-list">
-            {trendBullets.map((html, i) => (
-              <PollSummaryNarrativeBulletLi
-                key={i}
-                html={html}
-                displayParty={displayParty}
-                index={i}
-                mergeArabsWithOpposition={combineArabsWithOpposition}
-              />
-            ))}
-          </ul>
-          <div className="lpo-ps-narrative-trends-link-wrap">
-            <a
-              className="lpo-ps-nav-btn"
-              href={mediaBiasAppUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t.mediaBiasNarrativeLinkAria}
-            >
-              {t.mediaBiasOpenBtn}
-            </a>
-          </div>
-        </section>
-      ) : null}
+          {t.mediaBiasOpenBtn}
+        </a>
+      </div>
       <RotateLandscapeHint
         locale={locale}
         title={t.rotateLandscapeTitle}

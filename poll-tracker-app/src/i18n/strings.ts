@@ -42,8 +42,19 @@ export type UiStrings = {
   /** Bold lead + tail; shown above per-outlet rows in poll summary */
   pollSummaryOutletsBreakdownLead: string
   pollSummaryOutletsBreakdownTail: string
+  pollSummaryOutletsBreakdownTrendHint: string
   pollSummaryNoOutlets: string
   pollSummaryHeroAria: string
+  pollSummaryHeroAvgPartiesAria: string
+  /** Tooltip on hero chip (n) = outlets with a seat change vs prior */
+  pollSummaryChipDeltaOutletCountTitle: string
+  /** One-line legend under hero chips for (n) poll count */
+  pollSummaryHeroChipOutletCountLegend: string
+  /** Hero trend panel header; {n} = rolling window days */
+  pollSummaryHeroTrendPanelTitle: string
+  /** Hero chip → cross-outlet average trend */
+  pollSummaryHeroPartyTrendOpenAria: string
+  pollSummaryHeroPartyTrendNoData: string
   pollSummaryRowsAria: string
   pollSummaryChangedPartiesAria: string
   pollSummaryOpenAria: string
@@ -149,8 +160,16 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryOutletsBreakdownLead: 'Poll breakdown',
     pollSummaryOutletsBreakdownTail:
       ' (all parties with seats; faded icons = unchanged, Δ = change vs previous poll)',
+    pollSummaryOutletsBreakdownTrendHint: 'Click a party in an outlet to view its trend',
     pollSummaryNoOutlets: 'No polls from the last {n} days.',
     pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
+    pollSummaryHeroAvgPartiesAria:
+      'Average seats per party across outlets in the window; mandate changes vs previous poll highlighted; number in parentheses is how many polls showed that change',
+    pollSummaryChipDeltaOutletCountTitle: '{n} polls with a seat change vs prior',
+    pollSummaryHeroChipOutletCountLegend: '(n) = polls with a seat change vs prior',
+    pollSummaryHeroTrendPanelTitle: 'Cross-outlet average · {n}-day window',
+    pollSummaryHeroPartyTrendOpenAria: 'Show cross-outlet average seat trend for {party}',
+    pollSummaryHeroPartyTrendNoData: 'No poll history for this party in the window.',
     pollSummaryRowsAria: 'Latest poll per outlet in window',
     pollSummaryChangedPartiesAria:
       'All parties with seats in the latest poll; mandate changes vs previous poll highlighted',
@@ -247,8 +266,16 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryOutletsBreakdownLead: 'פירוט הסקרים',
     pollSummaryOutletsBreakdownTail:
       ' (כל המפלגות עם מנדטים; אייקון מעומעם = ללא שינוי, Δ = שינוי מול סקר קודם)',
+    pollSummaryOutletsBreakdownTrendHint: 'לחצו על מפלגה בערוץ כדי לראות טרנד',
     pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
     pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
+    pollSummaryHeroAvgPartiesAria:
+      'ממוצע מנדטים לפי מפלגה בין הערוצים בחלון; שינוי מול הסקר הקודם מודגש; המספר בסוגריים = כמה סקרים הציגו את השינוי',
+    pollSummaryChipDeltaOutletCountTitle: '{n} סקרים עם שינוי מול הסקר הקודם',
+    pollSummaryHeroChipOutletCountLegend: '(מספר) = סקרים עם שינוי מול הסקר הקודם',
+    pollSummaryHeroTrendPanelTitle: 'ממוצע ערוצים · חלון {n} ימים',
+    pollSummaryHeroPartyTrendOpenAria: 'הצג מגמת מנדטים ממוצעת בין ערוצים עבור {party}',
+    pollSummaryHeroPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בחלון.',
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
     pollSummaryChangedPartiesAria:
       'כל המפלגות עם מנדטים בסקר האחרון; שינוי מול סקר קודם מסומן ב-Δ',
