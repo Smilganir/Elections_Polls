@@ -3893,11 +3893,54 @@ a.lpo-ps-nav-btn {
   min-width: 0;
 }
 
-.lpo-ps-rows-unified--with-unified-split .lpo-ps-unified-split {
+.lpo-ps-rows-unified--with-unified-split .lpo-ps-unified-outlets {
   margin-inline: 0;
 }
 
-/* Left: outlet + bloc bars | Right: one horizontal scroll for all party chip rows. Zebra: JS gradient on split. */
+.lpo-ps-unified-outlets {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  min-width: 0;
+  unicode-bidi: isolate;
+}
+
+.lpo-ps-unified-outlet-block {
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+}
+
+.lpo-ps-unified-outlet-block--alt {
+  background: #1a222e;
+}
+
+.lpo-ps-unified-outlet-block:hover {
+  background: rgba(58, 123, 213, 0.06);
+}
+
+.lpo-ps-unified-outlet-block--alt:hover {
+  background: rgba(58, 123, 213, 0.08);
+}
+
+.lpo-ps-unified-outlet-block--trend-open {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.lpo-ps-unified-split-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  gap: 0;
+}
+
+/* Legacy wrapper — kept for any remaining references */
 .lpo-ps-unified-split {
   display: flex;
   flex-direction: row;
@@ -3924,9 +3967,14 @@ a.lpo-ps-nav-btn {
   display: flex;
   align-items: center;
   padding: 0.5rem 0.65rem 0.55rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   box-sizing: border-box;
   background: transparent;
+  flex: 0 0 auto;
+  min-width: min-content;
+}
+
+.lpo-ps-unified-split-row .lpo-ps-unified-fixed-row {
+  border-bottom: none;
 }
 
 .lpo-ps-unified-fixed-row--alt {
@@ -4013,8 +4061,16 @@ a.lpo-ps-nav-btn {
   max-width: none;
   padding-block: 0.4rem 0.45rem;
   padding-inline: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   box-sizing: border-box;
+  background: transparent;
+}
+
+.lpo-ps-unified-split-row .lpo-ps-unified-parties-line {
+  min-height: 100%;
+  border-bottom: none;
+}
+
+.lpo-ps-unified-split-row .lpo-ps-unified-parties-line:hover {
   background: transparent;
 }
 
@@ -4528,7 +4584,18 @@ a.lpo-ps-nav-btn {
   box-sizing: border-box;
 }
 
-/* Party trend panel (inline below hero summary or focused outlet row) */
+.lpo-ps-unified-outlet-block .lpo-ps-trend-panel {
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Party trend panel (inline below focused outlet row) */
 .lpo-ps-trend-panel {
   margin-top: 0.75rem;
   padding: 0.85rem 1rem 1rem;

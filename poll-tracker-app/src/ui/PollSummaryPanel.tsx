@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
@@ -607,82 +607,33 @@ export function PollSummaryPanel({
   const hasUnifiedPartyRows = visibleRows.some((r) =>
     r.current.parties.some((p) => p.votes > 0),
   )
-  const chipRowIdsKey = visibleRows.map((r) => r.current.pollId).join(',')
-  const unifiedSplitRef = useRef<HTMLDivElement | null>(null)
-  const leftRowByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
-  const partyLineByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
+  const partiesScrollSyncRef = useRef(false)
+  const partiesScrollEls = useRef<(HTMLDivElement | null)[]>([])
 
-  useLayoutEffect(() => {
-    if (!hasUnifiedPartyRows) return
-
-    const split = unifiedSplitRef.current
-    if (!split) return
-
-    const syncRowHeightsAndZebra = () => {
-      for (const r of visibleRows) {
-        const id = r.current.pollId
-        const left = leftRowByPollId.current.get(id)
-        const line = partyLineByPollId.current.get(id)
-        if (left && line) {
-          left.style.minHeight = ''
-          line.style.minHeight = ''
-        }
-      }
-
-      const heightPxByPollId = new Map<number, number>()
-      for (const r of visibleRows) {
-        const id = r.current.pollId
-        const left = leftRowByPollId.current.get(id)
-        const line = partyLineByPollId.current.get(id)
-        if (left && line) {
-          const h = Math.max(
-            Math.ceil(left.getBoundingClientRect().height),
-            Math.ceil(line.getBoundingClientRect().height),
-          )
-          heightPxByPollId.set(id, h)
-          const px = `${h}px`
-          left.style.minHeight = px
-          line.style.minHeight = px
-        }
-      }
-
-      let acc = 0
-      const parts: string[] = []
-      for (let i = 0; i < visibleRows.length; i++) {
-        const id = visibleRows[i].current.pollId
-        const h = heightPxByPollId.get(id) ?? 0
-        if (h <= 0) continue
-        const color = i % 2 === 1 ? '#1a222e' : 'transparent'
-        parts.push(`${color} ${acc}px`, `${color} ${acc + h}px`)
-        acc += h
-      }
-      split.style.backgroundImage =
-        parts.length > 0 ? `linear-gradient(to bottom, ${parts.join(', ')})` : ''
-    }
-
-    syncRowHeightsAndZebra()
-    const ro = new ResizeObserver(() => {
-      syncRowHeightsAndZebra()
+  const handlePartiesScroll = useCallback((sourceIdx: number) => {
+    if (partiesScrollSyncRef.current) return
+    const source = partiesScrollEls.current[sourceIdx]
+    if (!source) return
+    partiesScrollSyncRef.current = true
+    const { scrollLeft } = source
+    partiesScrollEls.current.forEach((el, i) => {
+      if (i !== sourceIdx && el) el.scrollLeft = scrollLeft
     })
-    ro.observe(split)
-    for (const r of visibleRows) {
-      const left = leftRowByPollId.current.get(r.current.pollId)
-      const line = partyLineByPollId.current.get(r.current.pollId)
-      if (left) ro.observe(left)
-      if (line) ro.observe(line)
-    }
-    return () => {
-      ro.disconnect()
-      split.style.backgroundImage = ''
-      for (const r of visibleRows) {
-        const id = r.current.pollId
-        const left = leftRowByPollId.current.get(id)
-        const line = partyLineByPollId.current.get(id)
-        if (left) left.style.minHeight = ''
-        if (line) line.style.minHeight = ''
-      }
-    }
-  }, [hasUnifiedPartyRows, chipRowIdsKey])
+    partiesScrollSyncRef.current = false
+  }, [])
+
+  const trendPanel =
+    trendFocus && pollHistory?.length ? (
+      <PartyOutletTrendPanel
+        open
+        onClose={closePartyTrend}
+        outletDisplay={trendPanelTitle}
+        lines={trendLines}
+        locale={locale}
+        t={t}
+        noDataMessage={trendPanelNoData}
+      />
+    ) : null
 
   if (rows.length === 0) {
     return (
@@ -832,97 +783,72 @@ export function PollSummaryPanel({
             </div>
           ) : null}
         </div>
-        {trendFocus && pollHistory?.length ? (
-          <PartyOutletTrendPanel
-            open
-            onClose={closePartyTrend}
-            outletDisplay={trendPanelTitle}
-            lines={trendLines}
-            locale={locale}
-            t={t}
-            noDataMessage={trendPanelNoData}
-          />
-        ) : null}
       </section>
 
       {hasUnifiedPartyRows ? (
         <div className="lpo-ps-rows-unified lpo-ps-rows-unified--with-unified-split">
           {outletFilterSubtitle}
-          <div
-            ref={unifiedSplitRef}
-            className="lpo-ps-unified-split"
-            dir="ltr"
-            aria-label={t.pollSummaryRowsAria}
-          >
-            <div className="lpo-ps-unified-fixed" role="presentation">
-              {visibleRows.map(({ current, previous }, rowIdx) => (
+          <div className="lpo-ps-unified-outlets" aria-label={t.pollSummaryRowsAria}>
+            {visibleRows.map(({ current, previous, changedParties }, rowIdx) => {
+              const isTrendOutlet = trendFocus?.outlet === current.mediaOutlet
+              return (
                 <div
                   key={current.pollId}
-                  ref={(el) => {
-                    const id = current.pollId
-                    if (el) leftRowByPollId.current.set(id, el)
-                    else leftRowByPollId.current.delete(id)
-                  }}
-                  className={`lpo-ps-unified-fixed-row${rowIdx % 2 === 1 ? ' lpo-ps-unified-fixed-row--alt' : ''}`}
+                  className={`lpo-ps-unified-outlet-block${rowIdx % 2 === 1 ? ' lpo-ps-unified-outlet-block--alt' : ''}${isTrendOutlet ? ' lpo-ps-unified-outlet-block--trend-open' : ''}`}
                 >
-                  <PollSummaryRowMain
-                    current={current}
-                    previous={previous}
-                    locale={locale}
-                    t={t}
-                    dateFmt={dateFmt}
-                    combineArabsWithOpposition={combineArabsWithOpposition}
-                    displayMediaOutlet={displayMediaOutlet}
-                  />
-                </div>
-              ))}
-            </div>
-            <div
-              className="lpo-ps-unified-parties-wrap"
-              role="region"
-              tabIndex={0}
-              aria-label={t.pollSummaryChangedPartiesAria}
-            >
-              <div className="lpo-ps-unified-parties-scroll">
-                <div className="lpo-ps-unified-parties-track">
-                  {visibleRows.map(({ current, changedParties }, rowIdx) => (
-                    <div
-                      key={current.pollId}
-                      ref={(el) => {
-                        const id = current.pollId
-                        if (el) partyLineByPollId.current.set(id, el)
-                        else partyLineByPollId.current.delete(id)
-                      }}
-                      className={`lpo-ps-unified-parties-line${rowIdx % 2 === 1 ? ' lpo-ps-unified-parties-line--alt' : ''}`}
-                    >
-                      <PollSummaryChipsStrip
+                  <div className="lpo-ps-unified-split-row" dir="ltr">
+                    <div className="lpo-ps-unified-fixed-row">
+                      <PollSummaryRowMain
                         current={current}
-                        changedParties={changedParties}
+                        previous={previous}
+                        locale={locale}
                         t={t}
+                        dateFmt={dateFmt}
                         combineArabsWithOpposition={combineArabsWithOpposition}
-                        displayParty={displayParty}
                         displayMediaOutlet={displayMediaOutlet}
-                        onPartyTrendClick={
-                          pollHistory?.length
-                            ? (party) => handlePartyTrendClick(current.mediaOutlet, party)
-                            : undefined
-                        }
-                        selectedTrendParties={
-                          trendFocus?.outlet === current.mediaOutlet
-                            ? selectedTrendParties
-                            : undefined
-                        }
-                        trendLineColorsByParty={
-                          trendFocus?.outlet === current.mediaOutlet
-                            ? trendLineColorByParty
-                            : undefined
-                        }
                       />
                     </div>
-                  ))}
+                    <div
+                      className="lpo-ps-unified-parties-wrap"
+                      role="region"
+                      tabIndex={0}
+                      aria-label={t.pollSummaryChangedPartiesAria}
+                    >
+                      <div
+                        className="lpo-ps-unified-parties-scroll"
+                        ref={(el) => {
+                          partiesScrollEls.current[rowIdx] = el
+                        }}
+                        onScroll={() => handlePartiesScroll(rowIdx)}
+                      >
+                        <div className="lpo-ps-unified-parties-line">
+                          <PollSummaryChipsStrip
+                            current={current}
+                            changedParties={changedParties}
+                            t={t}
+                            combineArabsWithOpposition={combineArabsWithOpposition}
+                            displayParty={displayParty}
+                            displayMediaOutlet={displayMediaOutlet}
+                            onPartyTrendClick={
+                              pollHistory?.length
+                                ? (party) => handlePartyTrendClick(current.mediaOutlet, party)
+                                : undefined
+                            }
+                            selectedTrendParties={
+                              isTrendOutlet ? selectedTrendParties : undefined
+                            }
+                            trendLineColorsByParty={
+                              isTrendOutlet ? trendLineColorByParty : undefined
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {isTrendOutlet ? trendPanel : null}
                 </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
         </div>
       ) : (
