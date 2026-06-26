@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
@@ -308,6 +308,43 @@ function PollSummaryRowMain({
   )
 }
 
+function UnifiedPartyNamesGrid({
+  partyOrder,
+  locale,
+  displayParty,
+  ariaLabel,
+}: {
+  partyOrder: readonly string[]
+  locale: AppLocale
+  displayParty: (partyKey: string) => string
+  ariaLabel: string
+}) {
+  if (partyOrder.length === 0) return null
+
+  return (
+    <ul
+      className="lpo-ps-unified-party-names lpo-ps-chips--unified-grid"
+      style={
+        {
+          '--lpo-ps-unified-party-cols': partyOrder.length,
+        } as React.CSSProperties
+      }
+      aria-label={ariaLabel}
+    >
+      {partyOrder.map((party) => (
+        <li
+          key={party}
+          className="lpo-ps-unified-party-name"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
+          title={displayParty(party)}
+        >
+          {displayParty(party)}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function PollSummaryChipsStrip({
   current,
   changedParties,
@@ -321,6 +358,7 @@ function PollSummaryChipsStrip({
   selectedTrendParties,
   trendLineColorsByParty,
   showDeltaOutletCount = false,
+  partyOrder,
 }: {
   current: RollingPoll
   changedParties: ChangedParty[]
@@ -337,19 +375,34 @@ function PollSummaryChipsStrip({
   trendLineColorsByParty?: ReadonlyMap<string, string>
   /** Hero average chips: show (n) below Δ = outlets with a seat change. */
   showDeltaOutletCount?: boolean
+  /** When set, columns follow this order (avg rank) with empty slots for missing parties. */
+  partyOrder?: readonly string[]
 }) {
   const changedByParty = useMemo(
     () => new Map(changedParties.map((cp) => [cp.party, cp])),
     [changedParties],
   )
 
-  const partiesWithSeats = useMemo(
-    () =>
-      [...current.parties]
-        .filter((p) => p.votes > 0)
-        .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party)),
-    [current.parties],
-  )
+  const partiesWithSeats = useMemo(() => {
+    const byParty = new Map(current.parties.map((p) => [p.party, p]))
+    if (partyOrder?.length) {
+      return partyOrder.map((party) => {
+        const row = byParty.get(party)
+        return {
+          party,
+          votes: row?.votes ?? 0,
+          segment: row?.segment ?? 'Opposition',
+          partyId: row?.partyId ?? 0,
+        }
+      })
+    }
+    return [...current.parties]
+      .filter((p) => p.votes > 0)
+      .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party))
+  }, [current.parties, partyOrder])
+
+  const unifiedGrid =
+    partyOrder !== undefined && partyOrder.length > 0 ? partyOrder.length : undefined
 
   if (partiesWithSeats.length === 0) {
     return <div className="lpo-ps-combo-chips-placeholder" aria-hidden />
@@ -357,9 +410,33 @@ function PollSummaryChipsStrip({
 
   return (
     <ul
-      className={`lpo-ps-chips${showDeltaOutletCount ? ' lpo-ps-chips--with-outlet-count' : ''}`}
+      className={`lpo-ps-chips${showDeltaOutletCount ? ' lpo-ps-chips--with-outlet-count' : ''}${unifiedGrid ? ' lpo-ps-chips--unified-grid' : ''}`}
+      style={
+        unifiedGrid
+          ? ({
+              '--lpo-ps-unified-party-cols': unifiedGrid,
+            } as React.CSSProperties)
+          : undefined
+      }
     >
       {partiesWithSeats.map((p) => {
+        if (p.votes <= 0 && unifiedGrid) {
+          return (
+            <li
+              key={p.party}
+              className="lpo-ps-chip lpo-ps-chip--empty"
+              aria-hidden
+            >
+              <span className="lpo-ps-chip-votes" dir="ltr">
+                {'\u00a0'}
+              </span>
+              <div className="lpo-ps-chip-ring lpo-ps-chip-ring--empty" />
+              <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
+            </li>
+          )
+        }
+        if (p.votes <= 0) return null
+
         const cp = changedByParty.get(p.party)
         const isChanged = cp !== undefined
         const outletCount =
@@ -493,6 +570,11 @@ export function PollSummaryPanel({
     () => buildCrossOutletAverageChipRow(filteredRows),
     [filteredRows],
   )
+  /** Cross-outlet column order: hero average seat rank (high → low). */
+  const unifiedPartyOrder = useMemo(
+    () => heroAvgChips?.current.parties.map((p) => p.party) ?? [],
+    [heroAvgChips],
+  )
 
   const segmentForPartyAtOutlet = useCallback(
     (outlet: string, party: string) => {
@@ -608,16 +690,56 @@ export function PollSummaryPanel({
   )
   const partiesScrollSyncRef = useRef(false)
   const partiesScrollEls = useRef<(HTMLDivElement | null)[]>([])
+  const partyNamesScrollRef = useRef<HTMLDivElement | null>(null)
+  const heroPartyNamesScrollRef = useRef<HTMLDivElement | null>(null)
+  const heroPartiesScrollRef = useRef<HTMLDivElement | null>(null)
+  const unifiedFixedWidthRef = useRef<HTMLDivElement | null>(null)
+  const unifiedSplitWrapRef = useRef<HTMLDivElement | null>(null)
 
-  const handlePartiesScroll = useCallback((sourceIdx: number) => {
+  useLayoutEffect(() => {
+    if (!hasUnifiedPartyRows) return
+    const measureEl = unifiedFixedWidthRef.current
+    const wrap = unifiedSplitWrapRef.current
+    if (!measureEl || !wrap) return
+    const apply = () => {
+      wrap.style.setProperty('--lpo-ps-unified-fixed-measured-w', `${measureEl.offsetWidth}px`)
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(measureEl)
+    return () => ro.disconnect()
+  }, [hasUnifiedPartyRows, visibleRows.length, trendFocus])
+
+  const handlePartiesScroll = useCallback((sourceIdx: number | 'names') => {
     if (partiesScrollSyncRef.current) return
-    const source = partiesScrollEls.current[sourceIdx]
+    const source =
+      sourceIdx === 'names' ? partyNamesScrollRef.current : partiesScrollEls.current[sourceIdx]
     if (!source) return
     partiesScrollSyncRef.current = true
     const { scrollLeft } = source
+    if (partyNamesScrollRef.current && source !== partyNamesScrollRef.current) {
+      partyNamesScrollRef.current.scrollLeft = scrollLeft
+    }
     partiesScrollEls.current.forEach((el, i) => {
-      if (i !== sourceIdx && el) el.scrollLeft = scrollLeft
+      if (sourceIdx !== 'names' && i === sourceIdx) return
+      if (el) el.scrollLeft = scrollLeft
     })
+    partiesScrollSyncRef.current = false
+  }, [])
+
+  const handleHeroPartiesScroll = useCallback((source: 'names' | 'chips') => {
+    if (partiesScrollSyncRef.current) return
+    const sourceEl =
+      source === 'names' ? heroPartyNamesScrollRef.current : heroPartiesScrollRef.current
+    if (!sourceEl) return
+    partiesScrollSyncRef.current = true
+    const { scrollLeft } = sourceEl
+    if (heroPartyNamesScrollRef.current && source !== 'names') {
+      heroPartyNamesScrollRef.current.scrollLeft = scrollLeft
+    }
+    if (heroPartiesScrollRef.current && source !== 'chips') {
+      heroPartiesScrollRef.current.scrollLeft = scrollLeft
+    }
     partiesScrollSyncRef.current = false
   }, [])
 
@@ -749,7 +871,50 @@ export function PollSummaryPanel({
               className="lpo-ps-hero-bar"
             />
           </div>
-          {heroAvgChips ? (
+          {heroAvgChips && unifiedPartyOrder.length > 0 ? (
+            <div
+              className="lpo-ps-hero-parties-wrap"
+              role="region"
+              aria-label={t.pollSummaryHeroAvgPartiesAria}
+            >
+              <div
+                className="lpo-ps-hero-parties-names-scroll"
+                ref={heroPartyNamesScrollRef}
+                onScroll={() => handleHeroPartiesScroll('names')}
+              >
+                <UnifiedPartyNamesGrid
+                  partyOrder={unifiedPartyOrder}
+                  locale={locale}
+                  displayParty={displayParty}
+                  ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
+                />
+              </div>
+              <div
+                className="lpo-ps-hero-parties-scroll"
+                ref={heroPartiesScrollRef}
+                onScroll={() => handleHeroPartiesScroll('chips')}
+              >
+                <PollSummaryChipsStrip
+                  current={heroAvgChips.current}
+                  changedParties={heroAvgChips.changedParties}
+                  t={t}
+                  combineArabsWithOpposition={combineArabsWithOpposition}
+                  displayParty={displayParty}
+                  displayMediaOutlet={displayMediaOutlet}
+                  partyOrder={unifiedPartyOrder}
+                  showDeltaOutletCount
+                />
+              </div>
+              {hasPrior && heroAvgChips.changedParties.length > 0 ? (
+                <p
+                  className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets"
+                  dir={locale === 'he' ? 'rtl' : 'ltr'}
+                >
+                  {t.pollSummaryHeroChipOutletCountLegend}
+                </p>
+              ) : null}
+            </div>
+          ) : heroAvgChips ? (
             <div
               className="lpo-ps-hero-parties-wrap"
               role="region"
@@ -780,8 +945,33 @@ export function PollSummaryPanel({
       </section>
 
       {hasUnifiedPartyRows ? (
-        <div className="lpo-ps-rows-unified lpo-ps-rows-unified--with-unified-split">
+        <div
+          ref={unifiedSplitWrapRef}
+          className="lpo-ps-rows-unified lpo-ps-rows-unified--with-unified-split"
+        >
           {outletFilterSubtitle}
+          {unifiedPartyOrder.length > 0 ? (
+            <div
+              className="lpo-ps-unified-parties-header-row lpo-ps-unified-split-grid"
+              dir="ltr"
+            >
+              <div className="lpo-ps-unified-split-grid-corner" aria-hidden />
+              <div className="lpo-ps-unified-parties-wrap lpo-ps-unified-parties-wrap--header">
+                <div
+                  className="lpo-ps-unified-parties-scroll lpo-ps-unified-parties-scroll--header"
+                  ref={partyNamesScrollRef}
+                  onScroll={() => handlePartiesScroll('names')}
+                >
+                  <UnifiedPartyNamesGrid
+                    partyOrder={unifiedPartyOrder}
+                    locale={locale}
+                    displayParty={displayParty}
+                    ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="lpo-ps-unified-outlets" aria-label={t.pollSummaryRowsAria}>
             {visibleRows.map(({ current, previous, changedParties }, rowIdx) => {
               const isTrendOutlet = trendFocus?.outlet === current.mediaOutlet
@@ -790,8 +980,21 @@ export function PollSummaryPanel({
                   key={current.pollId}
                   className={`lpo-ps-unified-outlet-block${rowIdx % 2 === 1 ? ' lpo-ps-unified-outlet-block--alt' : ''}${isTrendOutlet ? ' lpo-ps-unified-outlet-block--trend-open' : ''}`}
                 >
-                  <div className="lpo-ps-unified-split-row" dir="ltr">
-                    <div className="lpo-ps-unified-fixed-row">
+                  <div className="lpo-ps-unified-split-row lpo-ps-unified-split-grid" dir="ltr">
+                    <div
+                      className="lpo-ps-unified-fixed-row"
+                      ref={(el) => {
+                        if (rowIdx === 0) {
+                          unifiedFixedWidthRef.current = el
+                          if (el && unifiedSplitWrapRef.current) {
+                            unifiedSplitWrapRef.current.style.setProperty(
+                              '--lpo-ps-unified-fixed-measured-w',
+                              `${el.offsetWidth}px`,
+                            )
+                          }
+                        }
+                      }}
+                    >
                       <PollSummaryRowMain
                         current={current}
                         previous={previous}
@@ -823,6 +1026,7 @@ export function PollSummaryPanel({
                             combineArabsWithOpposition={combineArabsWithOpposition}
                             displayParty={displayParty}
                             displayMediaOutlet={displayMediaOutlet}
+                            partyOrder={unifiedPartyOrder}
                             onPartyTrendClick={
                               pollHistory?.length
                                 ? (party) => handlePartyTrendClick(current.mediaOutlet, party)

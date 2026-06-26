@@ -57,6 +57,8 @@ export type UiStrings = {
   pollSummaryHeroPartyTrendNoData: string
   pollSummaryRowsAria: string
   pollSummaryChangedPartiesAria: string
+  /** Sticky party-name column header above unified outlet rows */
+  pollSummaryUnifiedPartyNamesAria: string
   pollSummaryOpenAria: string
   pollSummaryCloseAria: string
   /** Region label for general background sentence under poll summary hero */
@@ -173,6 +175,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryRowsAria: 'Latest poll per outlet in window',
     pollSummaryChangedPartiesAria:
       'All parties with seats in the latest poll; mandate changes vs previous poll highlighted',
+    pollSummaryUnifiedPartyNamesAria: 'Party columns ordered by cross-outlet average rank',
     pollSummaryOpenAria: 'Show poll summary for the last {n} days',
     pollSummaryCloseAria: 'Back to all polls',
     pollSummaryNarrativeBackgroundAria: 'General political context for this poll window',
@@ -279,6 +282,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
     pollSummaryChangedPartiesAria:
       'כל המפלגות עם מנדטים בסקר האחרון; שינוי מול סקר קודם מסומן ב-Δ',
+    pollSummaryUnifiedPartyNamesAria: 'עמודות מפלגות לפי דירוג ממוצע בין הערוצים',
     pollSummaryOpenAria: 'הצג סיכום סקרים ל-{n} הימים האחרונים',
     pollSummaryCloseAria: 'חזרה לכל הסקרים',
     pollSummaryNarrativeBackgroundAria: 'רקע כללי לחלון הסקרים',
