@@ -212,6 +212,8 @@ export default defineConfig({
   base,
   /** Repo-root `data/` CSV (Knesset 25 snapshot) is imported from `src/` via `?raw`. */
   server: {
+    port: 5175,
+    strictPort: true,
     fs: {
       allow: [appDir, path.resolve(appDir, '..')],
     },

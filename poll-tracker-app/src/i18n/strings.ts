@@ -68,6 +68,9 @@ export type UiStrings = {
   pollSummaryPartyTrendMaxLabel: string
   pollSummaryPartyTrendRecentLabel: string
   pollSummaryPartyTrendNoData: string
+  /** Narrow portrait: one-time rotate-to-landscape hint on poll summary */
+  rotateLandscapeTitle: string
+  rotateLandscapeDismiss: string
 
   // ── Media Bias Panel ──────────────────────────────────────────────────────
   mediaBiasOpenBtn: string
@@ -168,6 +171,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryPartyTrendMaxLabel: 'Max',
     pollSummaryPartyTrendRecentLabel: 'Recent',
     pollSummaryPartyTrendNoData: 'No poll history for this party at this outlet.',
+    rotateLandscapeTitle: 'Rotate to landscape',
+    rotateLandscapeDismiss: 'Got it',
 
     // ── Media Bias Panel ────────────────────────────────────────────────────
     mediaBiasOpenBtn: 'Media bias',
@@ -264,6 +269,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryPartyTrendMaxLabel: 'מקס׳',
     pollSummaryPartyTrendRecentLabel: 'אחרון',
     pollSummaryPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בערוץ זה.',
+    rotateLandscapeTitle: 'סובבו את המכשיר לרוחב',
+    rotateLandscapeDismiss: 'הבנתי',
 
     // ── פאנל הטיית מדיה ─────────────────────────────────────────────────────
     mediaBiasOpenBtn: 'הטיית מדיה',

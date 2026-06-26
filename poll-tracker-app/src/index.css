@@ -3941,7 +3941,7 @@ a.lpo-ps-nav-btn {
 }
 
 .lpo-ps-combo-chips-placeholder {
-  min-height: calc(10px + 1px + 30px + 1px + 11px);
+  min-height: calc(10px + 1px + 30px + 1px + 17px + 13px);
   min-width: 0;
 }
 
@@ -4184,6 +4184,7 @@ a.lpo-ps-nav-btn {
 }
 
 .lpo-ps-chip {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4191,6 +4192,11 @@ a.lpo-ps-nav-btn {
   gap: 1px;
   flex-shrink: 0;
   width: 30px;
+  --lpo-ps-chip-delta-h: 17px;
+  --lpo-ps-chip-dash-gap: 10px;
+  --lpo-ps-chip-dash-h: 3px;
+  padding-bottom: calc(var(--lpo-ps-chip-dash-gap) + var(--lpo-ps-chip-dash-h));
+  box-sizing: border-box;
 }
 
 /* Inset segment ring (same idea as .lpo-ps-narrative-party-ico-ring) */
@@ -4205,6 +4211,7 @@ a.lpo-ps-nav-btn {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: inset 0 0 0 2px var(--lpo-ps-chip-segment, #8da2be);
 }
 
 .lpo-ps-chip-ring .mapped-icon,
@@ -4231,24 +4238,29 @@ a.lpo-ps-nav-btn {
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
-  min-height: 11px;
+  height: var(--lpo-ps-chip-delta-h, 17px);
+  min-height: var(--lpo-ps-chip-delta-h, 17px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   text-align: center;
   width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  padding-top: 1px;
 }
 
-.lpo-ps-chip--trend-active .lpo-ps-chip-delta--spacer {
-  visibility: visible;
-  color: transparent;
-}
-
-.lpo-ps-chip--trend-active .lpo-ps-chip-delta::after {
-  content: '';
-  display: block;
-  width: 11px;
-  height: 2px;
-  margin: 2px auto 0;
-  border-radius: 1px;
+.lpo-ps-chip-trend-dash {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 16px;
+  height: var(--lpo-ps-chip-dash-h, 3px);
+  margin: 0;
+  border-radius: 1.5px;
   background: var(--lpo-ps-chip-trend-dash, rgba(255, 255, 255, 0.88));
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .lpo-ps-chip-delta--spacer {
@@ -4264,7 +4276,11 @@ a.lpo-ps-nav-btn {
   color: #e74c3c;
 }
 
-/* Unchanged parties: faded portrait, full segment ring (coalition / opposition / Arabs). */
+/* Unchanged parties: faded portrait; ring + vote count share muted segment color. */
+.lpo-ps-chip--muted .lpo-ps-chip-ring {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lpo-ps-chip-segment, #8da2be) 55%, transparent);
+}
+
 .lpo-ps-chip--muted .lpo-ps-chip-ring .mapped-icon,
 .lpo-ps-chip--muted .lpo-ps-chip-ring .icon-fallback {
   opacity: 0.38;
@@ -4282,10 +4298,11 @@ a.lpo-ps-nav-btn {
   min-height: 10px;
   text-align: center;
   width: 100%;
+  color: var(--lpo-ps-chip-segment, #8da2be);
 }
 
 .lpo-ps-chip--muted .lpo-ps-chip-votes {
-  opacity: 0.55;
+  color: color-mix(in srgb, var(--lpo-ps-chip-segment, #8da2be) 55%, transparent);
 }
 
 .lpo-ps-chip-icon-btn {
@@ -4313,7 +4330,13 @@ a.lpo-ps-nav-btn {
 .lpo-ps-chip--trend-active .lpo-ps-chip-ring {
   filter: brightness(1.15);
   box-shadow:
-    inset 0 0 0 2px currentColor,
+    inset 0 0 0 2px var(--lpo-ps-chip-segment, #8da2be),
+    0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.lpo-ps-chip--trend-active.lpo-ps-chip--muted .lpo-ps-chip-ring {
+  box-shadow:
+    inset 0 0 0 2px var(--lpo-ps-chip-segment, #8da2be),
     0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
@@ -4322,8 +4345,9 @@ a.lpo-ps-nav-btn {
   opacity: 1;
 }
 
-.lpo-ps-chip--trend-active .lpo-ps-chip-votes {
-  opacity: 1;
+.lpo-ps-chip--trend-active .lpo-ps-chip-votes,
+.lpo-ps-chip--trend-active.lpo-ps-chip--muted .lpo-ps-chip-votes {
+  color: var(--lpo-ps-chip-segment, #8da2be);
   font-weight: 700;
 }
 
@@ -4452,6 +4476,38 @@ a.lpo-ps-nav-btn {
   pointer-events: none;
 }
 
+/* Party head at each line’s first point (multi-party charts only). */
+.lpo-ps-trend-line-start-icon {
+  position: absolute;
+  z-index: 3;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 0 2px var(--lpo-ps-trend-line-color, #8da2be);
+  background: #121820;
+  transform: translate(calc(-100% - 4px), -50%);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lpo-ps-trend-line-start-icon .mapped-icon,
+.lpo-ps-trend-line-start-icon .icon-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.lpo-ps-trend-line-start-icon .icon-fallback {
+  font-size: 7px;
+  font-weight: 700;
+  color: #8da2be;
+}
+
 .lpo-ps-trend-hover-dot {
   position: absolute;
   z-index: 4;
@@ -4516,5 +4572,89 @@ a.lpo-ps-nav-btn {
 
 html[lang='he'] .lpo-ps-trend-vote-label,
 html[lang='he'] .lpo-ps-trend-panel-outlet {
+  font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* ── Poll summary: narrow portrait rotate-to-landscape hint ─────────────── */
+
+.lpo-rotate-hint-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  pointer-events: auto;
+}
+
+.lpo-rotate-hint-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 10, 18, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.lpo-rotate-hint-dialog {
+  position: relative;
+  max-width: 20rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.35rem 1.25rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(165deg, #1f2d48 0%, #182236 52%, #141c2a 100%);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(124, 175, 235, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.95rem;
+  text-align: center;
+  color: #e8ecf2;
+}
+
+.lpo-rotate-hint-svg {
+  width: 4.65rem;
+  height: 4.65rem;
+  color: #e8ecf2;
+  flex-shrink: 0;
+}
+
+.lpo-rotate-hint-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.lpo-rotate-hint-btn {
+  margin-top: 0.25rem;
+  appearance: none;
+  border: 1px solid rgba(124, 175, 235, 0.55);
+  border-radius: 999px;
+  padding: 0.45rem 1.35rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #b8daf8;
+  background: linear-gradient(180deg, rgba(52, 78, 128, 0.98), rgba(32, 48, 82, 1));
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.lpo-rotate-hint-btn:focus-visible {
+  outline: 2px solid rgba(122, 196, 255, 0.85);
+  outline-offset: 2px;
+}
+
+.lpo-rotate-hint-btn:active {
+  transform: translateY(1px);
+}
+
+html[lang='he'] .lpo-rotate-hint-title {
   font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }

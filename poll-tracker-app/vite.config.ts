@@ -175,5 +175,9 @@ export default defineConfig({
   root: appDir,
   envDir: appDir,
   base,
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
   plugins: [react(), sheetsApiPlugin()],
 })

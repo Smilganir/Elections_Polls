@@ -4,7 +4,6 @@ import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
   MEDIA_ICON_MAP,
-  PARTY_COLOR_MAP,
   PARTY_ICON_MAP,
   SEGMENT_COLORS,
   segmentRingColorForSummary,
@@ -16,6 +15,7 @@ import {
   summaryFromRollingRows,
 } from '../lib/pollRollingWindow'
 import { buildPartyOutletTrendSeries } from '../lib/partyOutletTrendSeries'
+import { blocTrendLineColors, segmentForPartyKey } from '../lib/partyTrendLineColors'
 import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
 import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSummaryNarrative'
 import { IconWithFallback } from './IconWithFallback'
@@ -23,6 +23,7 @@ import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
 import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
 import { mediaBiasAppUrl } from '../utils/publicUrl'
 import { PartyOutletTrendPanel } from './PartyOutletTrendPopup'
+import { RotateLandscapeHint } from './RotateLandscapeHint'
 
 const KNESSET = 120
 const MAJ_SEATS = 60
@@ -335,6 +336,7 @@ function PollSummaryChipsStrip({
   displayMediaOutlet,
   onPartyTrendClick,
   selectedTrendParties,
+  trendLineColorsByParty,
 }: {
   current: RollingPoll
   changedParties: ChangedParty[]
@@ -344,6 +346,7 @@ function PollSummaryChipsStrip({
   displayMediaOutlet: (outlet: string) => string
   onPartyTrendClick?: (party: string) => void
   selectedTrendParties?: ReadonlySet<string>
+  trendLineColorsByParty?: ReadonlyMap<string, string>
 }) {
   const changedByParty = useMemo(
     () => new Map(changedParties.map((cp) => [cp.party, cp])),
@@ -370,29 +373,27 @@ function PollSummaryChipsStrip({
         const tip = isChanged
           ? `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta})`
           : `${displayParty(p.party)} · ${p.votes} ${t.seats}`
-        const ringColor = segmentRingColorForSummary(p.segment, combineArabsWithOpposition)
+        const ringColor =
+          trendLineColorsByParty?.get(p.party) ??
+          segmentRingColorForSummary(p.segment, combineArabsWithOpposition)
         const trendAria = onPartyTrendClick
           ? t.pollSummaryPartyTrendOpenAria
               .replace(/\{party\}/g, displayParty(p.party))
               .replace(/\{outlet\}/g, displayMediaOutlet(current.mediaOutlet))
           : undefined
         const isTrendSelected = selectedTrendParties?.has(p.party) ?? false
+        const chipStyle = {
+          '--lpo-ps-chip-segment': ringColor,
+          ...(isTrendSelected ? { '--lpo-ps-chip-trend-dash': ringColor } : {}),
+        } as React.CSSProperties
         return (
           <li
             key={p.party}
             className={`lpo-ps-chip${isChanged ? '' : ' lpo-ps-chip--muted'}${isTrendSelected ? ' lpo-ps-chip--trend-active' : ''}`}
             title={tip}
-            style={
-              isTrendSelected
-                ? ({ '--lpo-ps-chip-trend-dash': ringColor } as React.CSSProperties)
-                : undefined
-            }
+            style={chipStyle}
           >
-            <span
-              className="lpo-ps-chip-votes"
-              dir="ltr"
-              style={{ color: ringColor }}
-            >
+            <span className="lpo-ps-chip-votes" dir="ltr">
               {p.votes}
             </span>
             {onPartyTrendClick ? (
@@ -402,10 +403,7 @@ function PollSummaryChipsStrip({
                 aria-label={trendAria}
                 onClick={() => onPartyTrendClick(p.party)}
               >
-                <div
-                  className="lpo-ps-chip-ring"
-                  style={{ boxShadow: `inset 0 0 0 2px ${ringColor}` }}
-                >
+                <div className="lpo-ps-chip-ring">
                   <IconWithFallback
                     src={PARTY_ICON_MAP[p.party]}
                     label={displayParty(p.party)}
@@ -413,10 +411,7 @@ function PollSummaryChipsStrip({
                 </div>
               </button>
             ) : (
-              <div
-                className="lpo-ps-chip-ring"
-                style={{ boxShadow: `inset 0 0 0 2px ${ringColor}` }}
-              >
+              <div className="lpo-ps-chip-ring">
                 <IconWithFallback
                   src={PARTY_ICON_MAP[p.party]}
                   label={displayParty(p.party)}
@@ -431,6 +426,9 @@ function PollSummaryChipsStrip({
             ) : (
               <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
             )}
+            {isTrendSelected ? (
+              <span className="lpo-ps-chip-trend-dash" aria-hidden />
+            ) : null}
           </li>
         )
       })}
@@ -454,16 +452,24 @@ export function PollSummaryPanel({
 
   const [trendFocus, setTrendFocus] = useState<{ outlet: string; parties: string[] } | null>(null)
 
-  const partyLineColor = useCallback(
+  const segmentForPartyAtOutlet = useCallback(
     (outlet: string, party: string) => {
       const row = rows
         .find((r) => r.current.mediaOutlet === outlet)
         ?.current.parties.find((p) => p.party === party)
-      if (row) return segmentRingColorForSummary(row.segment, combineArabsWithOpposition)
-      return PARTY_COLOR_MAP[party] ?? SEGMENT_COLORS.Opposition
+      return segmentForPartyKey(party, row?.segment)
     },
-    [rows, combineArabsWithOpposition],
+    [rows],
   )
+
+  const trendLineColorByParty = useMemo(() => {
+    if (!trendFocus) return new Map<string, string>()
+    return blocTrendLineColors(
+      trendFocus.parties,
+      (party) => segmentForPartyAtOutlet(trendFocus.outlet, party),
+      combineArabsWithOpposition,
+    )
+  }, [trendFocus, segmentForPartyAtOutlet, combineArabsWithOpposition])
 
   const handlePartyTrendClick = useCallback((outlet: string, party: string) => {
     setTrendFocus((prev) => {
@@ -485,10 +491,22 @@ export function PollSummaryPanel({
     return trendFocus.parties.map((party) => ({
       party,
       partyDisplay: displayParty(party),
-      color: partyLineColor(trendFocus.outlet, party),
+      color:
+        trendLineColorByParty.get(party) ??
+        segmentRingColorForSummary(
+          segmentForPartyAtOutlet(trendFocus.outlet, party),
+          combineArabsWithOpposition,
+        ),
       data: buildPartyOutletTrendSeries(pollHistory, trendFocus.outlet, party),
     }))
-  }, [trendFocus, pollHistory, displayParty, partyLineColor])
+  }, [
+    trendFocus,
+    pollHistory,
+    displayParty,
+    trendLineColorByParty,
+    segmentForPartyAtOutlet,
+    combineArabsWithOpposition,
+  ])
 
   const selectedTrendParties = useMemo(
     () => (trendFocus ? new Set(trendFocus.parties) : undefined),
@@ -645,6 +663,11 @@ export function PollSummaryPanel({
         <p className="lpo-ps-empty">
           {t.pollSummaryNoOutlets.replace(/\{n\}/g, String(maxStaleDays))}
         </p>
+        <RotateLandscapeHint
+          locale={locale}
+          title={t.rotateLandscapeTitle}
+          dismissLabel={t.rotateLandscapeDismiss}
+        />
       </div>
     )
   }
@@ -800,6 +823,11 @@ export function PollSummaryPanel({
                             ? selectedTrendParties
                             : undefined
                         }
+                        trendLineColorsByParty={
+                          trendFocus?.outlet === current.mediaOutlet
+                            ? trendLineColorByParty
+                            : undefined
+                        }
                       />
                     </div>
                   ))}
@@ -871,6 +899,8 @@ export function PollSummaryPanel({
             <a
               className="lpo-ps-nav-btn"
               href={mediaBiasAppUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label={t.mediaBiasNarrativeLinkAria}
             >
               {t.mediaBiasOpenBtn}
@@ -878,6 +908,11 @@ export function PollSummaryPanel({
           </div>
         </section>
       ) : null}
+      <RotateLandscapeHint
+        locale={locale}
+        title={t.rotateLandscapeTitle}
+        dismissLabel={t.rotateLandscapeDismiss}
+      />
     </div>
   )
 }

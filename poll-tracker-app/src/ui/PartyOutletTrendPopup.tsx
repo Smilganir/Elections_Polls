@@ -174,6 +174,32 @@ function MultiPartyOutletTrendChart({
   }, [hover, chartLines, rangeT, toX, toY])
 
   const hasMultiPointLine = chartLines.some((l) => l.data.length >= 2)
+  const showStartIcons = chartLines.length > 1
+
+  /** Multi-party: only the highest recent seat count gets the end label (avoids stack at max date). */
+  const recentLabelParty = useMemo(() => {
+    if (chartLines.length <= 1) return null
+    let bestParty: string | null = null
+    let bestV = -Infinity
+    for (const line of chartLines) {
+      const v = line.latestExtrema?.recentV
+      if (v === undefined) continue
+      if (
+        bestParty === null ||
+        v > bestV ||
+        (v === bestV && line.party.localeCompare(bestParty) < 0)
+      ) {
+        bestV = v
+        bestParty = line.party
+      }
+    }
+    return bestParty
+  }, [chartLines])
+
+  const showRecentLabel = useCallback(
+    (party: string) => chartLines.length <= 1 || party === recentLabelParty,
+    [chartLines.length, recentLabelParty],
+  )
 
   return (
     <div className="lpo-ps-trend-chart">
@@ -214,6 +240,32 @@ function MultiPartyOutletTrendChart({
             />
           ) : null}
         </svg>
+        {showStartIcons
+          ? chartLines.map((line) => {
+              if (line.data.length === 0) return null
+              const singlePoint = line.data.length === 1
+              const cx = singlePoint ? pad.l + cw / 2 : toX(line.ts[0]!)
+              const cy = toY(line.vals[0]!)
+              return (
+                <span
+                  key={`start-icon-${line.party}`}
+                  className="lpo-ps-trend-line-start-icon"
+                  style={{
+                    left: `${(cx / W) * 100}%`,
+                    top: `${(cy / H) * 100}%`,
+                    '--lpo-ps-trend-line-color': line.color,
+                  } as React.CSSProperties}
+                  title={line.partyDisplay}
+                  aria-hidden
+                >
+                  <IconWithFallback
+                    src={PARTY_ICON_MAP[line.party]}
+                    label={line.partyDisplay}
+                  />
+                </span>
+              )
+            })
+          : null}
         {chartLines.map((line) => {
           if (line.data.length === 0) return null
           const i = line.data.length - 1
@@ -262,23 +314,25 @@ function MultiPartyOutletTrendChart({
                   {latestExtrema.maxV}
                 </span>
               ) : null}
-              <span
-                className="lpo-ps-trend-vote-label lpo-ps-trend-vote-label--recent"
-                style={{
-                  left: `${(toX(line.ts[latestExtrema.recentIdx]!) / W) * 100}%`,
-                  top: `${(toY(line.vals[latestExtrema.recentIdx]!) / H) * 100}%`,
-                  color: line.color,
-                }}
-                title={`${line.data[latestExtrema.recentIdx]!.date} · ${line.partyDisplay} · ${recentLabel} ${latestExtrema.recentV} ${seatsLabel}`}
-              >
-                {latestExtrema.maxIdx === latestExtrema.recentIdx &&
-                !latestExtrema.flat ? (
-                  <span className="lpo-ps-trend-vote-label-tag">{maxLabel}</span>
-                ) : (
-                  <span className="lpo-ps-trend-vote-label-tag">{recentLabel}</span>
-                )}
-                {latestExtrema.recentV}
-              </span>
+              {showRecentLabel(line.party) ? (
+                <span
+                  className="lpo-ps-trend-vote-label lpo-ps-trend-vote-label--recent"
+                  style={{
+                    left: `${(toX(line.ts[latestExtrema.recentIdx]!) / W) * 100}%`,
+                    top: `${(toY(line.vals[latestExtrema.recentIdx]!) / H) * 100}%`,
+                    color: line.color,
+                  }}
+                  title={`${line.data[latestExtrema.recentIdx]!.date} · ${line.partyDisplay} · ${recentLabel} ${latestExtrema.recentV} ${seatsLabel}`}
+                >
+                  {latestExtrema.maxIdx === latestExtrema.recentIdx &&
+                  !latestExtrema.flat ? (
+                    <span className="lpo-ps-trend-vote-label-tag">{maxLabel}</span>
+                  ) : (
+                    <span className="lpo-ps-trend-vote-label-tag">{recentLabel}</span>
+                  )}
+                  {latestExtrema.recentV}
+                </span>
+              ) : null}
             </span>
           )
         })}
