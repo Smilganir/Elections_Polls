@@ -1,6 +1,7 @@
 import { UI } from './i18n/strings'
 import { useLocale } from './i18n/useLocale'
 import { LatestPollsOverviewPage } from './pages/LatestPollsOverviewPage'
+import { RotateLandscapeHint } from './ui/RotateLandscapeHint'
 
 function AppFooter() {
   const { locale } = useLocale()
@@ -33,16 +34,21 @@ function AppFooter() {
 }
 
 function App() {
-  return (
-    <div className="app-shell">
-      <main className="page-content">
-        <LatestPollsOverviewPage />
-      </main>
+  const { locale } = useLocale()
 
-      <footer className="app-footer">
-        <AppFooter />
-      </footer>
-    </div>
+  return (
+    <>
+      <RotateLandscapeHint locale={locale} />
+      <div className="app-shell">
+        <main className="page-content">
+          <LatestPollsOverviewPage />
+        </main>
+
+        <footer className="app-footer">
+          <AppFooter />
+        </footer>
+      </div>
+    </>
   )
 }
 

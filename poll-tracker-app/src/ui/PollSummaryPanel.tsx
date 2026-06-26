@@ -24,7 +24,6 @@ import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSumma
 import { IconWithFallback } from './IconWithFallback'
 import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
 import { PartyOutletTrendPanel } from './PartyOutletTrendPopup'
-import { RotateLandscapeHint } from './RotateLandscapeHint'
 import { mediaBiasAppUrl } from '../utils/publicUrl'
 
 const KNESSET = 120
@@ -641,11 +640,6 @@ export function PollSummaryPanel({
         <p className="lpo-ps-empty">
           {t.pollSummaryNoOutlets.replace(/\{n\}/g, String(maxStaleDays))}
         </p>
-        <RotateLandscapeHint
-          locale={locale}
-          title={t.rotateLandscapeTitle}
-          dismissLabel={t.rotateLandscapeDismiss}
-        />
       </div>
     )
   }
@@ -894,11 +888,6 @@ export function PollSummaryPanel({
           {t.mediaBiasOpenBtn}
         </a>
       </div>
-      <RotateLandscapeHint
-        locale={locale}
-        title={t.rotateLandscapeTitle}
-        dismissLabel={t.rotateLandscapeDismiss}
-      />
     </div>
   )
 }

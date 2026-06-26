@@ -1,20 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
+import { UI } from '../i18n/strings'
 
-const STORAGE_KEY = 'lpo-ps-landscape-hint-dismissed-v1'
-/** Max viewport width while still triggering the portrait-phone hint */
-const MAX_WIDTH_PX = 520
+/** Bump when hint eligibility / persistence rules change so users aren't stuck on old dismiss flags. */
+const STORAGE_KEY = 'lpo-ps-landscape-hint-dismissed-v2'
+/** Same breakpoint as LPO portrait-mobile behavior (LatestPollsOverviewPage). */
+const PORTRAIT_MOBILE_MQ = '(max-width: 768px) and (orientation: portrait)'
+
+function viewportSize(): { w: number; h: number } {
+  const vv = window.visualViewport
+  return {
+    w: vv?.width ?? window.innerWidth,
+    h: vv?.height ?? window.innerHeight,
+  }
+}
 
 function isNarrowPortrait(): boolean {
   if (typeof window === 'undefined') return false
-  return window.innerWidth <= MAX_WIDTH_PX && window.innerHeight > window.innerWidth
+  try {
+    if (window.matchMedia(PORTRAIT_MOBILE_MQ).matches) return true
+  } catch {
+    /* fall through */
+  }
+  // Android Chrome can lag orientation media queries; shortest-edge portrait fallback.
+  const { w, h } = viewportSize()
+  return Math.min(w, h) <= 768 && h >= w
 }
 
 function wasDismissed(): boolean {
   try {
     return window.localStorage.getItem(STORAGE_KEY) === '1'
   } catch {
-    return true
+    return false
   }
 }
 
@@ -53,53 +71,64 @@ function RotateToLandscapeGlyph({ className }: { className?: string }) {
   )
 }
 
-export function RotateLandscapeHint({
-  locale,
-  title,
-  dismissLabel,
-}: {
-  locale: AppLocale
-  title: string
-  dismissLabel: string
-}) {
+type Props = { locale: AppLocale }
+
+export function RotateLandscapeHint({ locale }: Props) {
+  const t = UI[locale]
   const [open, setOpen] = useState(false)
   const dismissedRef = useRef(typeof window !== 'undefined' ? wasDismissed() : false)
   const openRef = useRef(false)
 
-  const dismissAndPersist = useCallback(() => {
-    persistDismissed()
-    dismissedRef.current = true
+  const closeOverlay = useCallback(() => {
     setOpen(false)
     openRef.current = false
   }, [])
 
+  const dismissAndPersist = useCallback(() => {
+    persistDismissed()
+    dismissedRef.current = true
+    closeOverlay()
+  }, [closeOverlay])
+
   const syncViewport = useCallback(() => {
     if (typeof window === 'undefined') return
-    if (dismissedRef.current) return
+    if (dismissedRef.current || wasDismissed()) return
 
     const narrowPortrait = isNarrowPortrait()
 
-    if (narrowPortrait && !openRef.current && !wasDismissed()) {
+    if (narrowPortrait && !openRef.current) {
       openRef.current = true
       setOpen(true)
     } else if (!narrowPortrait && openRef.current) {
-      dismissAndPersist()
+      closeOverlay()
     }
-  }, [dismissAndPersist])
+  }, [closeOverlay])
 
   useEffect(() => {
     dismissedRef.current = wasDismissed()
-    if (!dismissedRef.current && isNarrowPortrait()) {
-      syncViewport()
-    }
-  }, [syncViewport])
+    syncViewport()
 
-  useEffect(() => {
+    const mq = window.matchMedia(PORTRAIT_MOBILE_MQ)
+    mq.addEventListener('change', syncViewport)
     window.addEventListener('resize', syncViewport)
-    window.addEventListener('orientationchange', syncViewport)
+    window.visualViewport?.addEventListener('resize', syncViewport)
+
+    let orientTimeout: ReturnType<typeof setTimeout> | undefined
+    const onOrientationChange = () => {
+      if (orientTimeout !== undefined) clearTimeout(orientTimeout)
+      orientTimeout = setTimeout(syncViewport, 120)
+    }
+    window.addEventListener('orientationchange', onOrientationChange)
+
+    const mountTimeout = setTimeout(syncViewport, 150)
+
     return () => {
+      mq.removeEventListener('change', syncViewport)
       window.removeEventListener('resize', syncViewport)
-      window.removeEventListener('orientationchange', syncViewport)
+      window.visualViewport?.removeEventListener('resize', syncViewport)
+      window.removeEventListener('orientationchange', onOrientationChange)
+      clearTimeout(mountTimeout)
+      if (orientTimeout !== undefined) clearTimeout(orientTimeout)
     }
   }, [syncViewport])
 
@@ -116,7 +145,7 @@ export function RotateLandscapeHint({
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="lpo-rotate-hint-overlay" dir={dir} role="presentation">
       <div className="lpo-rotate-hint-scrim" aria-hidden onClick={dismissAndPersist} />
       <div
@@ -127,12 +156,13 @@ export function RotateLandscapeHint({
       >
         <RotateToLandscapeGlyph className="lpo-rotate-hint-svg" />
         <h2 id="lpo-rotate-hint-heading" className="lpo-rotate-hint-title">
-          {title}
+          {t.rotateLandscapeTitle}
         </h2>
         <button type="button" className="lpo-rotate-hint-btn" onClick={dismissAndPersist}>
-          {dismissLabel}
+          {t.rotateLandscapeDismiss}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
