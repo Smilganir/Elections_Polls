@@ -2942,7 +2942,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   /* Max party icons in chip strip (changedParties); bump --lpo-ps-wrap-party-icons-max if UI shows more. */
   --lpo-ps-wrap-party-icons-max: 8;
   --lpo-ps-wrap-chip: 30px;
-  --lpo-ps-wrap-chip-gap: 0.5rem;
+  --lpo-ps-wrap-chip-gap: 0.65rem;
   --lpo-ps-wrap-chips-pad-x: 4px;
   /* .lpo-ps-chips row width: n×ring + (n−1)×gap + horizontal padding */
   --lpo-ps-wrap-chips-w: calc(
@@ -2950,12 +2950,16 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
       (var(--lpo-ps-wrap-party-icons-max) - 1) * var(--lpo-ps-wrap-chip-gap) + var(--lpo-ps-wrap-chips-pad-x)
   );
   /* Minimum width for unified Δ strip (scroll column); max() below keeps wrap wide enough when chips-w is smaller. */
-  --lpo-ps-unified-parties-col-min-w: 400px;
+  --lpo-ps-unified-parties-col-min-w: 480px;
+  /* Bar column widths (30% narrower than prior 100/150/170px caps). */
+  --lpo-ps-bar-col-min: 70px;
+  --lpo-ps-bar-col-md: 105px;
+  --lpo-ps-bar-col-max: 119px;
   /*
    * Unified row: media cap + row-main gap (900px tier) + bar + fixed-column padding-end;
-   * parties column adds padding-start before chips (1200px tier). Omit 10rem pad — was over-wide.
+   * parties column adds padding-start before chips (1200px tier).
    */
-  --lpo-ps-wrap-fixed-w: calc(168px + 2.1rem + 238px + 1.85rem);
+  --lpo-ps-wrap-fixed-w: calc(168px + 2.1rem + var(--lpo-ps-bar-col-max) + 1.85rem);
   --lpo-ps-wrap-parties-gutter: 1.85rem;
   /* 2× clamp max from 960px rule (3.25rem), not 1320px 5rem — keeps cap closer to real content */
   --lpo-ps-wrap-outer-pad-x-max: 7rem;
@@ -3810,7 +3814,7 @@ a.lpo-ps-nav-btn {
 }
 
 .lpo-ps-unified-parties-wrap {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
   min-height: 0;
@@ -3851,7 +3855,7 @@ a.lpo-ps-nav-btn {
 .lpo-ps-unified-parties-track {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   width: max-content;
   min-width: max(100%, var(--lpo-ps-unified-parties-col-min-w));
   box-sizing: border-box;
@@ -3862,14 +3866,14 @@ a.lpo-ps-nav-btn {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   flex: 0 0 auto;
-  align-self: flex-start;
-  width: max-content;
-  min-width: 0;
-  max-width: 100%;
-  padding-block: 0.5rem 0.55rem;
-  padding-inline-start: 0.5rem;
-  padding-inline-end: 4px;
+  align-self: stretch;
+  width: 100%;
+  min-width: max-content;
+  max-width: none;
+  padding-block: 0.4rem 0.45rem;
+  padding-inline: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   box-sizing: border-box;
   background: transparent;
@@ -3911,14 +3915,10 @@ a.lpo-ps-nav-btn {
   }
 }
 
-/* Gutter (2) bloc bar ↔ party strip */
+/* Gutter (2) bloc bar ↔ party strip — on fixed column only; party lines align flush to inline-end. */
 @media (min-width: 501px) {
   .lpo-ps-unified-fixed-row {
     padding-inline-end: 0.95rem;
-  }
-
-  .lpo-ps-unified-parties-line {
-    padding-inline-start: 0.95rem;
   }
 }
 
@@ -3926,19 +3926,11 @@ a.lpo-ps-nav-btn {
   .lpo-ps-unified-fixed-row {
     padding-inline-end: 1.25rem;
   }
-
-  .lpo-ps-unified-parties-line {
-    padding-inline-start: 1.25rem;
-  }
 }
 
 @media (min-width: 900px) {
   .lpo-ps-unified-fixed-row {
     padding-inline-end: 1.4rem;
-  }
-
-  .lpo-ps-unified-parties-line {
-    padding-inline-start: 1.4rem;
   }
 }
 
@@ -3946,14 +3938,10 @@ a.lpo-ps-nav-btn {
   .lpo-ps-unified-fixed-row {
     padding-inline-end: 1.85rem;
   }
-
-  .lpo-ps-unified-parties-line {
-    padding-inline-start: 1.85rem;
-  }
 }
 
 .lpo-ps-combo-chips-placeholder {
-  min-height: 2.75rem;
+  min-height: calc(10px + 1px + 30px + 1px + 11px);
   min-width: 0;
 }
 
@@ -4084,53 +4072,53 @@ a.lpo-ps-nav-btn {
   min-width: 0;
 }
 
-/* Bar + nums: bounded 100px–200px; from 640px up wider cap (238px ≈ prior 340px − 30%). */
+/* Bar + nums: bounded min–max in unified rows (narrower to widen party strip). */
 .lpo-ps-row-bar-aligned {
-  width: max(100px, min(100%, 200px));
+  width: max(var(--lpo-ps-bar-col-min), min(100%, var(--lpo-ps-bar-col-max)));
   flex: 0 0 auto;
   box-sizing: border-box;
 }
 
 @media (min-width: 640px) {
   .lpo-ps-row-bar-aligned {
-    width: max(100px, min(100%, 238px));
+    width: max(var(--lpo-ps-bar-col-min), min(100%, var(--lpo-ps-bar-col-max)));
   }
 
   /*
    * Unified rows: .lpo-ps-row-main is width:max-content and .lpo-ps-row-bar-stack is shrink-wrapped,
-   * so min(100%, …) on the bar sees an indefinite % base and collapses to max(100px, …) = 100px.
+   * so min(100%, …) on the bar sees an indefinite % base and collapses to max(min, …).
    * Give the bar column a definite flex basis; inner stack fills it so nums + PsSegmentBar match width.
    */
   .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
-    flex: 0 1 238px;
-    width: 238px;
-    min-width: 100px;
+    flex: 0 1 var(--lpo-ps-bar-col-max);
+    width: var(--lpo-ps-bar-col-max);
+    min-width: var(--lpo-ps-bar-col-min);
   }
 }
 
 /* Viewports up to 500px wide: fixed bar width for dense mobile rows. */
 @media (max-width: 500px) {
   .lpo-ps-row-bar-aligned {
-    width: 100px;
-    min-width: 100px;
-    max-width: 100px;
+    width: var(--lpo-ps-bar-col-min);
+    min-width: var(--lpo-ps-bar-col-min);
+    max-width: var(--lpo-ps-bar-col-min);
   }
 
-  /* Keep bar column from flex-shrinking so the 100px bar + border stay inside layout (no clipped right cap). */
+  /* Keep bar column from flex-shrinking so the bar + border stay inside layout (no clipped right cap). */
   .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
-    flex: 0 0 100px;
-    width: 100px;
-    min-width: 100px;
-    max-width: 100px;
+    flex: 0 0 var(--lpo-ps-bar-col-min);
+    width: var(--lpo-ps-bar-col-min);
+    min-width: var(--lpo-ps-bar-col-min);
+    max-width: var(--lpo-ps-bar-col-min);
   }
 }
 
-/* Unified 501–639: same indefinite-% issue as at 640+; use 200px cap (design max below large bump). */
+/* Unified 501–639: same indefinite-% issue as at 640+; use md cap. */
 @media (min-width: 501px) and (max-width: 639px) {
   .lpo-ps-unified-fixed-row .lpo-ps-row-bar-stack {
-    flex: 0 1 200px;
-    width: 200px;
-    min-width: 100px;
+    flex: 0 1 var(--lpo-ps-bar-col-md);
+    width: var(--lpo-ps-bar-col-md);
+    min-width: var(--lpo-ps-bar-col-min);
   }
 }
 
@@ -4181,11 +4169,12 @@ a.lpo-ps-nav-btn {
 .lpo-ps-chips {
   display: flex;
   flex-wrap: nowrap;
-  gap: 0.4rem 0.5rem;
+  gap: 0.35rem var(--lpo-ps-wrap-chip-gap, 0.65rem);
   list-style: none;
   margin: 0;
-  padding: 0 2px;
+  padding: 0;
   width: max-content;
+  flex-shrink: 0;
 }
 
 .lpo-ps-chips > li {
@@ -4198,8 +4187,10 @@ a.lpo-ps-nav-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.1rem;
+  justify-content: flex-start;
+  gap: 1px;
   flex-shrink: 0;
+  width: 30px;
 }
 
 /* Inset segment ring (same idea as .lpo-ps-narrative-party-ico-ring) */
@@ -4237,8 +4228,32 @@ a.lpo-ps-nav-btn {
 }
 
 .lpo-ps-chip-delta {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1;
+  min-height: 11px;
+  text-align: center;
+  width: 100%;
+}
+
+.lpo-ps-chip--trend-active .lpo-ps-chip-delta--spacer {
+  visibility: visible;
+  color: transparent;
+}
+
+.lpo-ps-chip--trend-active .lpo-ps-chip-delta::after {
+  content: '';
+  display: block;
+  width: 11px;
+  height: 2px;
+  margin: 2px auto 0;
+  border-radius: 1px;
+  background: var(--lpo-ps-chip-trend-dash, rgba(255, 255, 255, 0.88));
+}
+
+.lpo-ps-chip-delta--spacer {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .lpo-ps-chip-delta.up {
@@ -4247,4 +4262,259 @@ a.lpo-ps-nav-btn {
 
 .lpo-ps-chip-delta.down {
   color: #e74c3c;
+}
+
+/* Unchanged parties: faded portrait, full segment ring (coalition / opposition / Arabs). */
+.lpo-ps-chip--muted .lpo-ps-chip-ring .mapped-icon,
+.lpo-ps-chip--muted .lpo-ps-chip-ring .icon-fallback {
+  opacity: 0.38;
+}
+
+.lpo-ps-chip--muted .lpo-ps-chip-ring .icon-fallback {
+  color: #6b7d94;
+}
+
+.lpo-ps-chip-votes {
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  min-height: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.lpo-ps-chip--muted .lpo-ps-chip-votes {
+  opacity: 0.55;
+}
+
+.lpo-ps-chip-icon-btn {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lpo-ps-chip-icon-btn:hover .lpo-ps-chip-ring {
+  filter: brightness(1.12);
+}
+
+.lpo-ps-chip-icon-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
+.lpo-ps-chip--trend-active .lpo-ps-chip-ring {
+  filter: brightness(1.15);
+  box-shadow:
+    inset 0 0 0 2px currentColor,
+    0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.lpo-ps-chip--trend-active.lpo-ps-chip--muted .lpo-ps-chip-ring .mapped-icon,
+.lpo-ps-chip--trend-active.lpo-ps-chip--muted .lpo-ps-chip-ring .icon-fallback {
+  opacity: 1;
+}
+
+.lpo-ps-chip--trend-active .lpo-ps-chip-votes {
+  opacity: 1;
+  font-weight: 700;
+}
+
+/* Party trend panel (inline below focused outlet row) */
+.lpo-ps-trend-panel {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #1a2332 0%, #141c28 100%);
+  color: #e8edf4;
+}
+
+.lpo-ps-trend-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.lpo-ps-trend-panel-titles {
+  min-width: 0;
+}
+
+.lpo-ps-trend-panel-outlet {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.lpo-ps-trend-panel-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: #8fa3ba;
+  line-height: 1.35;
+}
+
+.lpo-ps-trend-panel-back {
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #c8d4e4;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lpo-ps-trend-panel-back:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.lpo-ps-trend-panel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  margin: 0 0 0.65rem;
+  padding: 0;
+  list-style: none;
+}
+
+.lpo-ps-trend-panel-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #c8d4e4;
+}
+
+.lpo-ps-trend-panel-legend-ring {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lpo-ps-trend-panel-legend-ring .mapped-icon,
+.lpo-ps-trend-panel-legend-ring .icon-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.lpo-ps-trend-popup-empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.88rem;
+  color: #9cafc4;
+}
+
+.lpo-ps-trend-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.lpo-ps-trend-chart-plot {
+  position: relative;
+  height: 96px;
+  cursor: crosshair;
+  overflow: visible;
+}
+
+.lpo-ps-trend-chart-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* HTML dots avoid SVG non-uniform scale (preserveAspectRatio none) that squashes <circle> */
+.lpo-ps-trend-latest-dot {
+  position: absolute;
+  z-index: 3;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.lpo-ps-trend-hover-dot {
+  position: absolute;
+  z-index: 4;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.2px solid #fff;
+  background: transparent;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.lpo-ps-trend-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #8fa3ba;
+  padding: 0 0.15rem;
+}
+
+.lpo-ps-trend-vote-label {
+  position: absolute;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.lpo-ps-trend-vote-label-tag {
+  font-size: 8px;
+  font-weight: 500;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.lpo-ps-trend-vote-label--max {
+  transform: translate(-50%, calc(-100% - 6px));
+}
+
+.lpo-ps-trend-vote-label--recent {
+  transform: translate(-50%, calc(-100% - 6px));
+}
+
+.lpo-ps-trend-hover-tooltip {
+  z-index: 10001;
+}
+
+.lpo-ps-trend-hover-row {
+  line-height: 1.35;
+}
+
+html[lang='he'] .lpo-ps-trend-vote-label,
+html[lang='he'] .lpo-ps-trend-panel-outlet {
+  font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }

@@ -56,6 +56,18 @@ export type UiStrings = {
   pollSummaryNarrativeAsOf: string
   /** Link below narrative trends → standalone media-bias page */
   mediaBiasNarrativeLinkAria: string
+  /** Party icon → outlet trend panel */
+  pollSummaryPartyTrendOpenAria: string
+  pollSummaryPartyTrendPopupAria: string
+  pollSummaryPartyTrendCloseAria: string
+  pollSummaryPartyTrendPanelAria: string
+  pollSummaryPartyTrendPanelHint: string
+  pollSummaryPartyTrendBackBtn: string
+  pollSummaryPartyTrendBackAria: string
+  pollSummaryPartyTrendLegendAria: string
+  pollSummaryPartyTrendMaxLabel: string
+  pollSummaryPartyTrendRecentLabel: string
+  pollSummaryPartyTrendNoData: string
 
   // ── Media Bias Panel ──────────────────────────────────────────────────────
   mediaBiasOpenBtn: string
@@ -133,17 +145,29 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
     pollSummaryOutletsBreakdownLead: 'Poll breakdown',
     pollSummaryOutletsBreakdownTail:
-      ' (only parties with a seat change vs. the previous poll are shown)',
+      ' (all parties with seats; faded icons = unchanged, Δ = change vs previous poll)',
     pollSummaryNoOutlets: 'No polls from the last {n} days.',
     pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
     pollSummaryRowsAria: 'Latest poll per outlet in window',
-    pollSummaryChangedPartiesAria: 'Parties with mandate changes vs previous poll',
+    pollSummaryChangedPartiesAria:
+      'All parties with seats in the latest poll; mandate changes vs previous poll highlighted',
     pollSummaryOpenAria: 'Show poll summary for the last {n} days',
     pollSummaryCloseAria: 'Back to all polls',
     pollSummaryNarrativeBackgroundAria: 'General political context for this poll window',
     pollSummaryNarrativeTrendsAria: 'Outlet and party trend notes',
     pollSummaryNarrativeAsOf: 'Context as of {date}',
     mediaBiasNarrativeLinkAria: 'Open media house-effects analysis',
+    pollSummaryPartyTrendOpenAria: 'Show seat trend for {party} at {outlet}',
+    pollSummaryPartyTrendPopupAria: 'Seat trend for {party} at {outlet}',
+    pollSummaryPartyTrendCloseAria: 'Close trend chart',
+    pollSummaryPartyTrendPanelAria: 'Seat trends at {outlet}: {parties}',
+    pollSummaryPartyTrendPanelHint: 'Click party icons above to add or remove lines',
+    pollSummaryPartyTrendBackBtn: 'All outlets',
+    pollSummaryPartyTrendBackAria: 'Show all outlets and close trend chart',
+    pollSummaryPartyTrendLegendAria: 'Parties shown on chart',
+    pollSummaryPartyTrendMaxLabel: 'Max',
+    pollSummaryPartyTrendRecentLabel: 'Recent',
+    pollSummaryPartyTrendNoData: 'No poll history for this party at this outlet.',
 
     // ── Media Bias Panel ────────────────────────────────────────────────────
     mediaBiasOpenBtn: 'Media bias',
@@ -216,17 +240,30 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryWindowDaysAria: 'מספר הימים האחורה לכלול בסיכום הסקרים',
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
     pollSummaryOutletsBreakdownLead: 'פירוט הסקרים',
-    pollSummaryOutletsBreakdownTail: ' (מוצגות רק מפלגות שרשמו שינוי מול סקר קודם)',
+    pollSummaryOutletsBreakdownTail:
+      ' (כל המפלגות עם מנדטים; אייקון מעומעם = ללא שינוי, Δ = שינוי מול סקר קודם)',
     pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
     pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
-    pollSummaryChangedPartiesAria: 'מפלגות עם שינוי במנדטים לעומת הסקר הקודם',
+    pollSummaryChangedPartiesAria:
+      'כל המפלגות עם מנדטים בסקר האחרון; שינוי מול סקר קודם מסומן ב-Δ',
     pollSummaryOpenAria: 'הצג סיכום סקרים ל-{n} הימים האחרונים',
     pollSummaryCloseAria: 'חזרה לכל הסקרים',
     pollSummaryNarrativeBackgroundAria: 'רקע כללי לחלון הסקרים',
     pollSummaryNarrativeTrendsAria: 'הערות מגמה לפי ערוצים ומפלגות',
     pollSummaryNarrativeAsOf: 'הקשר מעודכן ל־{date}',
     mediaBiasNarrativeLinkAria: 'פתיחת ניתוח הטיית מדיה ואפקטי בית',
+    pollSummaryPartyTrendOpenAria: 'הצג מגמת מנדטים עבור {party} ב-{outlet}',
+    pollSummaryPartyTrendPopupAria: 'מגמת מנדטים עבור {party} ב-{outlet}',
+    pollSummaryPartyTrendCloseAria: 'סגור גרף מגמה',
+    pollSummaryPartyTrendPanelAria: 'מגמות מנדטים ב-{outlet}: {parties}',
+    pollSummaryPartyTrendPanelHint: 'לחצו על אייקוני המפלגות למעלה להוספה או הסרה מהגרף',
+    pollSummaryPartyTrendBackBtn: 'כל הערוצים',
+    pollSummaryPartyTrendBackAria: 'הצג את כל הערוצים וסגור את גרף המגמה',
+    pollSummaryPartyTrendLegendAria: 'מפלגות המוצגות בגרף',
+    pollSummaryPartyTrendMaxLabel: 'מקס׳',
+    pollSummaryPartyTrendRecentLabel: 'אחרון',
+    pollSummaryPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בערוץ זה.',
 
     // ── פאנל הטיית מדיה ─────────────────────────────────────────────────────
     mediaBiasOpenBtn: 'הטיית מדיה',

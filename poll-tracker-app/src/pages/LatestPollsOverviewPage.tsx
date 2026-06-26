@@ -1690,6 +1690,7 @@ export function LatestPollsOverviewPage() {
       ) : showPollSummary ? (
         <PollSummaryPanel
           rows={pollRollingReport.rows}
+          pollHistory={polls}
           locale={locale}
           t={t}
           maxStaleDays={pollSummaryWindowDays}

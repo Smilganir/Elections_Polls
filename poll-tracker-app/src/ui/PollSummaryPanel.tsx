@@ -4,6 +4,7 @@ import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
   MEDIA_ICON_MAP,
+  PARTY_COLOR_MAP,
   PARTY_ICON_MAP,
   SEGMENT_COLORS,
   segmentRingColorForSummary,
@@ -14,12 +15,14 @@ import {
   type RollingWindowRow,
   summaryFromRollingRows,
 } from '../lib/pollRollingWindow'
+import { buildPartyOutletTrendSeries } from '../lib/partyOutletTrendSeries'
 import { generatePollSummaryTrendBullets } from '../lib/generatePollSummaryTrendBullets'
 import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSummaryNarrative'
 import { IconWithFallback } from './IconWithFallback'
 import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
 import { PollSummaryNarrativeBulletLi } from './PollSummaryNarrativeBullet'
-import { publicUrl } from '../utils/publicUrl'
+import { mediaBiasAppUrl } from '../utils/publicUrl'
+import { PartyOutletTrendPanel } from './PartyOutletTrendPopup'
 
 const KNESSET = 120
 const MAJ_SEATS = 60
@@ -122,6 +125,8 @@ function DeltaBadge({ delta }: { delta: number }) {
 
 type PollSummaryPanelProps = {
   rows: RollingWindowRow[]
+  /** Full deduped poll history for per-outlet party trend popups */
+  pollHistory?: RollingPoll[]
   locale: AppLocale
   t: UiStrings
   maxStaleDays: number
@@ -322,40 +327,110 @@ function PollSummaryRowMain({
 }
 
 function PollSummaryChipsStrip({
+  current,
   changedParties,
   t,
   combineArabsWithOpposition,
   displayParty,
+  displayMediaOutlet,
+  onPartyTrendClick,
+  selectedTrendParties,
 }: {
+  current: RollingPoll
   changedParties: ChangedParty[]
   t: UiStrings
   combineArabsWithOpposition: boolean
   displayParty: (partyKey: string) => string
+  displayMediaOutlet: (outlet: string) => string
+  onPartyTrendClick?: (party: string) => void
+  selectedTrendParties?: ReadonlySet<string>
 }) {
-  if (changedParties.length === 0) {
+  const changedByParty = useMemo(
+    () => new Map(changedParties.map((cp) => [cp.party, cp])),
+    [changedParties],
+  )
+
+  const partiesWithSeats = useMemo(
+    () =>
+      [...current.parties]
+        .filter((p) => p.votes > 0)
+        .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party)),
+    [current.parties],
+  )
+
+  if (partiesWithSeats.length === 0) {
     return <div className="lpo-ps-combo-chips-placeholder" aria-hidden />
   }
+
   return (
     <ul className="lpo-ps-chips">
-      {changedParties.map((cp) => {
-        const tip = `${displayParty(cp.party)} · ${cp.currentVotes} ${t.seats}`
+      {partiesWithSeats.map((p) => {
+        const cp = changedByParty.get(p.party)
+        const isChanged = cp !== undefined
+        const tip = isChanged
+          ? `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta})`
+          : `${displayParty(p.party)} · ${p.votes} ${t.seats}`
+        const ringColor = segmentRingColorForSummary(p.segment, combineArabsWithOpposition)
+        const trendAria = onPartyTrendClick
+          ? t.pollSummaryPartyTrendOpenAria
+              .replace(/\{party\}/g, displayParty(p.party))
+              .replace(/\{outlet\}/g, displayMediaOutlet(current.mediaOutlet))
+          : undefined
+        const isTrendSelected = selectedTrendParties?.has(p.party) ?? false
         return (
-          <li key={cp.party} className="lpo-ps-chip" title={tip}>
-            <div
-              className="lpo-ps-chip-ring"
-              style={{
-                boxShadow: `inset 0 0 0 2px ${segmentRingColorForSummary(cp.segment, combineArabsWithOpposition)}`,
-              }}
+          <li
+            key={p.party}
+            className={`lpo-ps-chip${isChanged ? '' : ' lpo-ps-chip--muted'}${isTrendSelected ? ' lpo-ps-chip--trend-active' : ''}`}
+            title={tip}
+            style={
+              isTrendSelected
+                ? ({ '--lpo-ps-chip-trend-dash': ringColor } as React.CSSProperties)
+                : undefined
+            }
+          >
+            <span
+              className="lpo-ps-chip-votes"
+              dir="ltr"
+              style={{ color: ringColor }}
             >
-              <IconWithFallback
-                src={PARTY_ICON_MAP[cp.party]}
-                label={displayParty(cp.party)}
-              />
-            </div>
-            <span className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`}>
-              {cp.delta > 0 ? '+' : '-'}
-              {Math.abs(cp.delta)}
+              {p.votes}
             </span>
+            {onPartyTrendClick ? (
+              <button
+                type="button"
+                className="lpo-ps-chip-icon-btn"
+                aria-label={trendAria}
+                onClick={() => onPartyTrendClick(p.party)}
+              >
+                <div
+                  className="lpo-ps-chip-ring"
+                  style={{ boxShadow: `inset 0 0 0 2px ${ringColor}` }}
+                >
+                  <IconWithFallback
+                    src={PARTY_ICON_MAP[p.party]}
+                    label={displayParty(p.party)}
+                  />
+                </div>
+              </button>
+            ) : (
+              <div
+                className="lpo-ps-chip-ring"
+                style={{ boxShadow: `inset 0 0 0 2px ${ringColor}` }}
+              >
+                <IconWithFallback
+                  src={PARTY_ICON_MAP[p.party]}
+                  label={displayParty(p.party)}
+                />
+              </div>
+            )}
+            {isChanged ? (
+              <span className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`} dir="ltr">
+                {cp.delta > 0 ? '+' : '-'}
+                {Math.abs(cp.delta)}
+              </span>
+            ) : (
+              <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
+            )}
           </li>
         )
       })}
@@ -365,6 +440,7 @@ function PollSummaryChipsStrip({
 
 export function PollSummaryPanel({
   rows,
+  pollHistory,
   locale,
   t,
   maxStaleDays,
@@ -376,15 +452,62 @@ export function PollSummaryPanel({
   const dateFmt = locale === 'he' ? 'DD/MM/YYYY' : 'M/D/YYYY'
   const bgText = narrativeBackground.trim()
 
+  const [trendFocus, setTrendFocus] = useState<{ outlet: string; parties: string[] } | null>(null)
+
+  const partyLineColor = useCallback(
+    (outlet: string, party: string) => {
+      const row = rows
+        .find((r) => r.current.mediaOutlet === outlet)
+        ?.current.parties.find((p) => p.party === party)
+      if (row) return segmentRingColorForSummary(row.segment, combineArabsWithOpposition)
+      return PARTY_COLOR_MAP[party] ?? SEGMENT_COLORS.Opposition
+    },
+    [rows, combineArabsWithOpposition],
+  )
+
+  const handlePartyTrendClick = useCallback((outlet: string, party: string) => {
+    setTrendFocus((prev) => {
+      if (!prev || prev.outlet !== outlet) {
+        return { outlet, parties: [party] }
+      }
+      if (prev.parties.includes(party)) {
+        const next = prev.parties.filter((p) => p !== party)
+        return next.length === 0 ? null : { outlet, parties: next }
+      }
+      return { outlet, parties: [...prev.parties, party] }
+    })
+  }, [])
+
+  const closePartyTrend = useCallback(() => setTrendFocus(null), [])
+
+  const trendLines = useMemo(() => {
+    if (!trendFocus || !pollHistory?.length) return []
+    return trendFocus.parties.map((party) => ({
+      party,
+      partyDisplay: displayParty(party),
+      color: partyLineColor(trendFocus.outlet, party),
+      data: buildPartyOutletTrendSeries(pollHistory, trendFocus.outlet, party),
+    }))
+  }, [trendFocus, pollHistory, displayParty, partyLineColor])
+
+  const selectedTrendParties = useMemo(
+    () => (trendFocus ? new Set(trendFocus.parties) : undefined),
+    [trendFocus],
+  )
+
   const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
   const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
-  const visibleRows = useMemo(
+  const filteredRows = useMemo(
     () =>
       excludedOutlets.size === 0
         ? rows
         : rows.filter((r) => !excludedOutlets.has(r.current.mediaOutlet)),
     [rows, excludedOutlets],
   )
+  const visibleRows = useMemo(() => {
+    if (!trendFocus) return filteredRows
+    return filteredRows.filter((r) => r.current.mediaOutlet === trendFocus.outlet)
+  }, [filteredRows, trendFocus])
   const toggleOutlet = useCallback((outlet: string) => {
     setExcludedOutlets((prev) => {
       const next = new Set(prev)
@@ -395,28 +518,30 @@ export function PollSummaryPanel({
   }, [])
   const clearExcluded = useCallback(() => setExcludedOutlets(new Set()), [])
 
-  const summary = useMemo(() => summaryFromRollingRows(visibleRows), [visibleRows])
+  const summary = useMemo(() => summaryFromRollingRows(filteredRows), [filteredRows])
   const trendBullets = useMemo(
     () =>
-      generatePollSummaryTrendBullets(visibleRows, summary, {
+      generatePollSummaryTrendBullets(filteredRows, summary, {
         locale,
         windowDays: maxStaleDays,
         displayMediaOutlet,
         displayParty,
       }),
-    [visibleRows, summary, locale, maxStaleDays, displayMediaOutlet, displayParty],
+    [filteredRows, summary, locale, maxStaleDays, displayMediaOutlet, displayParty],
   )
   const narrativeAsOfDisplay = useMemo(() => {
-    if (visibleRows.length === 0) return undefined
-    return resolvePollSummaryNarrativeAsOfDisplay(visibleRows, locale)
-  }, [visibleRows, locale])
+    if (filteredRows.length === 0) return undefined
+    return resolvePollSummaryNarrativeAsOfDisplay(filteredRows, locale)
+  }, [filteredRows, locale])
 
   const hasPrior = summary.nWithPrior > 0
   const hasNarrativeTop = Boolean(narrativeAsOfDisplay) || Boolean(bgText)
   const hasNarrativeTrends = trendBullets.length > 0
   const trendBulletsKey = trendBullets.join('\n')
 
-  const hasAnyChips = visibleRows.some((r) => r.changedParties.length > 0)
+  const hasUnifiedPartyRows = visibleRows.some((r) =>
+    r.current.parties.some((p) => p.votes > 0),
+  )
   const chipRowIdsKey = visibleRows.map((r) => r.current.pollId).join(',')
   const unifiedSplitRef = useRef<HTMLDivElement | null>(null)
   const narrativeTrendsListRef = useRef<HTMLUListElement | null>(null)
@@ -424,7 +549,7 @@ export function PollSummaryPanel({
   const partyLineByPollId = useRef<Map<number, HTMLDivElement | null>>(new Map())
 
   useLayoutEffect(() => {
-    if (!hasAnyChips) return
+    if (!hasUnifiedPartyRows) return
 
     const split = unifiedSplitRef.current
     if (!split) return
@@ -493,7 +618,7 @@ export function PollSummaryPanel({
         if (line) line.style.minHeight = ''
       }
     }
-  }, [hasAnyChips, chipRowIdsKey])
+  }, [hasUnifiedPartyRows, chipRowIdsKey])
 
   useLayoutEffect(() => {
     if (!hasNarrativeTrends) return
@@ -526,7 +651,7 @@ export function PollSummaryPanel({
 
   const showEmptyFilterMsg = visibleRows.length === 0
 
-  const outletFilterSubtitle = (
+  const outletFilterSubtitle = trendFocus ? null : (
     <div className="lpo-ps-subtitle-bar" dir="ltr">
       <OutletFilterDropdown
         allOutlets={allOutletKeys}
@@ -608,7 +733,7 @@ export function PollSummaryPanel({
         ) : null}
       </section>
 
-      {hasAnyChips ? (
+      {hasUnifiedPartyRows ? (
         <div className="lpo-ps-rows-unified lpo-ps-rows-unified--with-unified-split">
           {outletFilterSubtitle}
           <div
@@ -659,10 +784,22 @@ export function PollSummaryPanel({
                       className={`lpo-ps-unified-parties-line${rowIdx % 2 === 1 ? ' lpo-ps-unified-parties-line--alt' : ''}`}
                     >
                       <PollSummaryChipsStrip
+                        current={current}
                         changedParties={changedParties}
                         t={t}
                         combineArabsWithOpposition={combineArabsWithOpposition}
                         displayParty={displayParty}
+                        displayMediaOutlet={displayMediaOutlet}
+                        onPartyTrendClick={
+                          pollHistory?.length
+                            ? (party) => handlePartyTrendClick(current.mediaOutlet, party)
+                            : undefined
+                        }
+                        selectedTrendParties={
+                          trendFocus?.outlet === current.mediaOutlet
+                            ? selectedTrendParties
+                            : undefined
+                        }
                       />
                     </div>
                   ))}
@@ -670,6 +807,16 @@ export function PollSummaryPanel({
               </div>
             </div>
           </div>
+          {trendFocus ? (
+            <PartyOutletTrendPanel
+              open
+              onClose={closePartyTrend}
+              outletDisplay={displayMediaOutlet(trendFocus.outlet)}
+              lines={trendLines}
+              locale={locale}
+              t={t}
+            />
+          ) : null}
         </div>
       ) : (
         <>
@@ -723,7 +870,7 @@ export function PollSummaryPanel({
           <div className="lpo-ps-narrative-trends-link-wrap">
             <a
               className="lpo-ps-nav-btn"
-              href={publicUrl('media-bias/')}
+              href={mediaBiasAppUrl()}
               aria-label={t.mediaBiasNarrativeLinkAria}
             >
               {t.mediaBiasOpenBtn}
