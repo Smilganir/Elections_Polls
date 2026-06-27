@@ -8,6 +8,12 @@
   --lpo-sticky-header-top: 0px;
 }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
 html[lang='he'] {
   font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
@@ -18,10 +24,16 @@ html[lang='he'] {
 
 body {
   margin: 0;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 #root {
   min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ── App shell ───────────────────────── */
@@ -30,6 +42,9 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   background: linear-gradient(172deg, #0f1520 0%, #171e2c 40%, #1a2236 100%);
 }
 
@@ -97,6 +112,9 @@ body {
   /* Let main shrink inside flex shell so wide poll-summary rows don’t widen the page;
      backgrounds stay full-viewport; horizontal scroll stays inside chip strips. */
   min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .loading-splash {
@@ -147,6 +165,8 @@ body {
   margin: 0 auto;
   max-width: 1440px;
   min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .dashboard-heading {
@@ -2963,20 +2983,16 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   --lpo-ps-wrap-parties-gutter: 1.85rem;
   /* 2× clamp max from 960px rule (3.25rem), not 1320px 5rem — keeps cap closer to real content */
   --lpo-ps-wrap-outer-pad-x-max: 7rem;
+  /* Hero chart btn + outlet filter column — inset from hero card / subtitle bar edge */
+  --lpo-ps-hero-chart-btn-pad-inline: 0.35rem;
 
   width: 100%;
-  min-width: min(100%, 600px);
-  max-width: min(
-    100%,
-    max(
-      600px,
-      calc(
-        var(--lpo-ps-wrap-fixed-w) + var(--lpo-ps-wrap-parties-gutter) +
-          max(var(--lpo-ps-wrap-chips-w), var(--lpo-ps-unified-parties-col-min-w)) +
-          var(--lpo-ps-wrap-outer-pad-x-max)
-      )
-    )
-  );
+  min-width: 0;
+  max-width: 100%;
+  /* clip (not hidden) prevents any descendant from contributing to the page
+     scrollable-overflow area, while still allowing inner overflow-x:auto
+     containers (parties scroll) to function normally. */
+  overflow-x: clip;
   margin-inline: auto;
   margin-block: 0;
   padding: 0 0.65rem 1.25rem;
@@ -2986,6 +3002,18 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 /* Wide viewports: inset poll summary so the block centers in empty side space. */
 @media (min-width: 960px) {
   .lpo-ps-wrap {
+    min-width: min(100%, 600px);
+    max-width: min(
+      100%,
+      max(
+        600px,
+        calc(
+          var(--lpo-ps-wrap-fixed-w) + var(--lpo-ps-wrap-parties-gutter) +
+            max(var(--lpo-ps-wrap-chips-w), var(--lpo-ps-unified-parties-col-min-w)) +
+            var(--lpo-ps-wrap-outer-pad-x-max)
+        )
+      )
+    );
     padding-inline: clamp(1.25rem, 5vw, 3.25rem);
   }
 }
@@ -3055,6 +3083,15 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   flex: 1 1 0;
   margin: 0;
   min-width: 0;
+}
+
+.lpo-ps-subtitle-bar--filter-in-table {
+  justify-content: center;
+}
+
+.lpo-ps-subtitle-bar--filter-in-table > .lpo-ps-subtitle {
+  flex: 1 1 auto;
+  text-align: center;
 }
 
 /*
@@ -3287,8 +3324,10 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   align-items: stretch;
   box-sizing: border-box;
   width: 100%;
-  max-width: 700px;
+  max-width: min(700px, 100%);
+  min-width: 0;
   margin: 0 auto 1.15rem;
+  overflow-x: hidden;
   background: linear-gradient(165deg, rgba(28, 36, 51, 0.95) 0%, rgba(15, 20, 30, 0.98) 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
@@ -3363,6 +3402,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   min-width: 0;
   margin-top: 0.65rem;
   padding-block: 0.28rem;
+  padding-inline-start: var(--lpo-ps-hero-chart-btn-pad-inline, 0.35rem);
   box-sizing: border-box;
 }
 
@@ -3386,12 +3426,14 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-hero-parties-wrap--hero-centered {
-  width: fit-content;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
   margin-top: 0;
-  margin-inline: auto;
+  margin-inline: 0;
   align-items: center;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .lpo-ps-hero-parties-track {
@@ -3423,23 +3465,25 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
 /* Match unified outlet table: filter/chart in fixed column, party grid unchanged. */
 .lpo-ps-hero-parties-wrap--unified-split {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin-inline-end: auto;
   align-items: stretch;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .lpo-ps-hero-parties-wrap--unified-split .lpo-ps-hero-parties-align-row {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin-inline: 0;
+  min-width: 0;
 }
 
 .lpo-ps-hero-parties-wrap--unified-split .lpo-ps-hero-parties-unified-grid {
   grid-template-columns:
     var(--lpo-ps-unified-fixed-measured-w, max-content)
-    minmax(var(--lpo-ps-unified-parties-col-min-w, 480px), max-content);
+    minmax(0, 1fr);
 }
 
 .lpo-ps-hero-parties-chart-cell {
@@ -4091,10 +4135,11 @@ a.lpo-ps-nav-btn {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin-inline: auto;
   min-width: 0;
+  overflow-x: hidden;
 }
 
 .lpo-ps-rows-unified--with-unified-split .lpo-ps-unified-outlets {
@@ -4108,6 +4153,23 @@ a.lpo-ps-nav-btn {
   align-items: stretch;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+  /* Single horizontal scroll container for the entire outlet breakdown. */
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.lpo-ps-unified-table-with-guides::-webkit-scrollbar {
+  height: 6px;
+}
+
+.lpo-ps-unified-table-with-guides::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lpo-ps-unified-table-with-guides::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
 
 .lpo-ps-unified-outlets-with-guides {
@@ -4115,9 +4177,10 @@ a.lpo-ps-nav-btn {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 100%;
-  min-width: 0;
+  /* Expand to full content width so the parent scroll container can measure it. */
+  min-width: max-content;
 }
+
 
 /* One continuous party-column guide layer (outlet rows only; header stays clean). */
 .lpo-ps-rows-unified {
@@ -4125,11 +4188,16 @@ a.lpo-ps-nav-btn {
   --lpo-ps-unified-col-step: calc(
     var(--lpo-ps-unified-party-col-w, 30px) + var(--lpo-ps-wrap-chip-gap, 0.65rem)
   );
+  --lpo-ps-values-votes-row: 17px;
+  --lpo-ps-values-delta-row: 17px;
+  --lpo-ps-values-stdev-dots-row: 6px;
+  --lpo-ps-unified-row-pad-block: 0.28rem;
 }
 
 .lpo-ps-unified-outlets-with-guides .lpo-ps-unified-col-guides {
   position: absolute;
-  inset-block: 0;
+  top: var(--lpo-ps-unified-party-header-h, 0px);
+  inset-block-end: 0;
   inset-inline-start: var(--lpo-ps-unified-fixed-measured-w, max-content);
   inset-inline-end: 0;
   overflow: hidden;
@@ -4170,37 +4238,81 @@ a.lpo-ps-nav-btn {
 }
 
 .lpo-ps-unified-outlet-block {
-  width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  box-sizing: border-box;
-}
-
-.lpo-ps-unified-outlet-block--alt {
-  background: #1a222e;
-}
-
-.lpo-ps-unified-outlet-block:hover {
-  background: rgba(58, 123, 213, 0.06);
-}
-
-.lpo-ps-unified-outlet-block--alt:hover {
-  background: rgba(58, 123, 213, 0.08);
+  display: contents;
 }
 
 .lpo-ps-unified-outlet-block--trend-open {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lpo-ps-unified-body {
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.lpo-ps-unified-fixed-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  /* Sticky so outlet names remain visible as party columns scroll.
+     z-index must exceed the party header-row (z-index: 24) so the fixed
+     column is always painted on top of party content scrolling behind it.
+     overflow: visible so the trend panel can break out to full table width. */
+  position: sticky;
+  left: 0;
+  z-index: 26;
+  overflow: visible;
+  background: #171e2c;
+}
+
+.lpo-ps-unified-fixed-header-spacer {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  /* Match the party header-row gradient so the sticky corner is seamless. */
+  background: linear-gradient(180deg, #171e2c 0%, #171e2c 90%, rgba(23, 30, 44, 0.96) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  pointer-events: auto;
+  padding-bottom: 0.28rem;
+}
+
+.lpo-ps-unified-fixed-header-filter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.lpo-ps-unified-fixed-header-filter .lpo-ps-outlet-filter {
+  position: relative;
+  z-index: 2;
+}
+
+.lpo-ps-unified-fixed-header-filter .lpo-ps-outlet-filter-panel {
+  z-index: 80;
+}
+
+.lpo-ps-unified-outlet-block--trend-open .lpo-ps-unified-fixed-row {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Shared 2-column grid: outlet fixed block | horizontally scrollable parties. */
+/* Shared 2-column grid: sticky outlet column | full-width parties content.
+   The outer lpo-ps-unified-table-with-guides is the single horizontal scroll container. */
 .lpo-ps-unified-split-grid {
   display: grid;
   grid-template-columns:
     var(--lpo-ps-unified-fixed-measured-w, max-content)
-    minmax(var(--lpo-ps-unified-parties-col-min-w, 480px), max-content);
+    max-content;
   align-items: stretch;
-  width: fit-content;
-  max-width: 100%;
-  min-width: 0;
   gap: 0;
   box-sizing: border-box;
 }
@@ -4211,11 +4323,12 @@ a.lpo-ps-nav-btn {
   pointer-events: none;
 }
 
-/* Sticky party-name header — columns match unified outlet chip grid (avg rank order). */
-.lpo-ps-unified-parties-header-row {
+/* Sticky party-name header inside the shared parties scroll track. */
+.lpo-ps-unified-parties-track > .lpo-ps-unified-parties-header-row {
   position: sticky;
   top: var(--lpo-sticky-header-top, 0px);
   z-index: 24;
+  flex-shrink: 0;
   background: linear-gradient(180deg, #171e2c 0%, #171e2c 90%, rgba(23, 30, 44, 0.96) 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
@@ -4290,7 +4403,7 @@ html[lang='he'] .lpo-ps-unified-party-name {
 }
 
 .lpo-ps-unified-parties-line .lpo-ps-chips--unified-grid,
-.lpo-ps-unified-parties-scroll--header .lpo-ps-chips--unified-grid {
+.lpo-ps-unified-parties-track > .lpo-ps-unified-parties-header-row .lpo-ps-chips--unified-grid {
   margin-inline: 0;
 }
 
@@ -4320,7 +4433,8 @@ html[lang='he'] .lpo-ps-unified-party-name {
 .lpo-ps-unified-fixed-row {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0.65rem 0.55rem 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0.65rem;
   box-sizing: border-box;
   background: transparent;
   flex: 0 0 auto;
@@ -4328,19 +4442,21 @@ html[lang='he'] .lpo-ps-unified-party-name {
 }
 
 .lpo-ps-unified-fixed-row--alt {
-  background: transparent;
+  background: #1a222e;
 }
 
-.lpo-ps-unified-fixed-row:hover {
+.lpo-ps-unified-fixed-row:hover,
+.lpo-ps-unified-parties-line:hover {
   background: rgba(58, 123, 213, 0.06);
 }
 
-.lpo-ps-unified-fixed-row--alt:hover {
+.lpo-ps-unified-fixed-row--alt:hover,
+.lpo-ps-unified-parties-line--alt:hover {
   background: rgba(58, 123, 213, 0.08);
 }
 
 .lpo-ps-unified-fixed-row .lpo-ps-row-main {
-  width: max-content;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   align-items: flex-start;
@@ -4362,20 +4478,18 @@ html[lang='he'] .lpo-ps-unified-party-name {
 }
 
 .lpo-ps-unified-split-grid .lpo-ps-unified-parties-wrap {
-  width: 100%;
-  overflow: hidden;
+  align-self: stretch;
+  min-height: 100%;
 }
 
 .lpo-ps-unified-parties-scroll {
+  /* The outer lpo-ps-unified-table-with-guides is now the single scroll container;
+     this element is a transparent pass-through. */
   flex: 1 1 auto;
-  min-width: var(--lpo-ps-unified-parties-col-min-w);
+  min-width: 0;
+  height: 100%;
   min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
-  scrollbar-width: thin;
-  /* No padding-bottom: it shrank the track vs the left column, threw off row sync/zebra, and sat the scrollbar below the fixed column. */
+  overflow: visible;
   box-sizing: border-box;
   background: transparent;
 }
@@ -4398,59 +4512,38 @@ html[lang='he'] .lpo-ps-unified-party-name {
   flex-direction: column;
   align-items: stretch;
   width: max-content;
-  min-width: max(100%, var(--lpo-ps-unified-parties-col-min-w));
   box-sizing: border-box;
   background: transparent;
+}
+
+.lpo-ps-unified-fixed-row,
+.lpo-ps-unified-parties-line {
+  min-height: calc(
+    var(--lpo-ps-values-votes-row, 17px) + var(--lpo-ps-values-delta-row, 17px) +
+      var(--lpo-ps-values-stdev-dots-row, 6px) + 2 * var(--lpo-ps-unified-row-pad-block, 0.28rem)
+  );
+  padding-block: var(--lpo-ps-unified-row-pad-block, 0.28rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
 }
 
 .lpo-ps-unified-parties-line {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
   flex: 0 0 auto;
   align-self: stretch;
   width: 100%;
   min-width: max-content;
   max-width: none;
-  padding-block: 0.4rem 0.45rem;
   padding-inline: 0;
   box-sizing: border-box;
   background: transparent;
 }
 
-.lpo-ps-unified-split-row .lpo-ps-unified-parties-line {
-  min-height: calc(
-    var(--lpo-ps-values-votes-row, 17px) + var(--lpo-ps-values-delta-row, 17px) +
-      var(--lpo-ps-values-stdev-dots-row, 6px) + 0.56rem
-  );
-  padding-block: 0.28rem;
-  border-bottom: none;
-}
-
-.lpo-ps-unified-split-row .lpo-ps-unified-fixed-row {
-  min-height: calc(
-    var(--lpo-ps-values-votes-row, 17px) + var(--lpo-ps-values-delta-row, 17px) +
-      var(--lpo-ps-values-stdev-dots-row, 6px) + 0.56rem
-  );
-  padding-block: 0.28rem;
-  border-bottom: none;
-}
-
-.lpo-ps-unified-split-row .lpo-ps-unified-parties-line:hover {
-  background: transparent;
-}
-
 .lpo-ps-unified-parties-line--alt {
-  background: transparent;
-}
-
-.lpo-ps-unified-parties-line:hover {
-  background: rgba(58, 123, 213, 0.06);
-}
-
-.lpo-ps-unified-parties-line--alt:hover {
-  background: rgba(58, 123, 213, 0.08);
+  background: #1a222e;
 }
 
 .lpo-ps-unified-parties-line .lpo-ps-chips,
@@ -4694,6 +4787,21 @@ html[lang='he'] .lpo-ps-unified-party-name {
 /* Nudge bloc bar slightly off the seam so the rounded cap and coalition numbers aren’t flush against the party column. */
 .lpo-ps-unified-fixed-row .lpo-ps-row-bar-aligned {
   padding-inline-end: 4px;
+}
+
+/* Single-line dates in the unified fixed column: grow media, yield from bar. */
+.lpo-ps-unified-fixed-row .lpo-ps-row-date {
+  white-space: nowrap;
+}
+
+.lpo-ps-unified-fixed-row .lpo-ps-row-meta {
+  overflow: visible;
+  min-width: 0;
+}
+
+.lpo-ps-unified-fixed-row .lpo-ps-row-media {
+  flex: 1 0 max-content;
+  max-width: none;
 }
 
 .lpo-ps-row-nums-between {
@@ -5107,16 +5215,27 @@ html[lang='he'] .lpo-ps-unified-party-name {
 }
 
 .lpo-ps-unified-parties-line .lpo-ps-chips--values-only {
+  flex: 1 1 auto;
   align-self: stretch;
+  width: 100%;
   height: 100%;
+  min-height: 100%;
   padding-block: 0;
+  display: grid;
+  align-content: center;
   align-items: center;
   justify-items: stretch;
 }
 
 .lpo-ps-chips--values-only.lpo-ps-chips--unified-grid {
+  align-content: center;
   align-items: center;
   justify-items: stretch;
+}
+
+.lpo-ps-unified-parties-line .lpo-ps-chips--values-only .lpo-ps-chip {
+  align-self: center;
+  justify-content: center;
 }
 
 .lpo-ps-chip--trend-active .lpo-ps-chip-ring {
@@ -5151,7 +5270,9 @@ html[lang='he'] .lpo-ps-unified-party-name {
 
 .lpo-ps-unified-outlet-block .lpo-ps-trend-panel {
   margin: 0;
-  width: 100%;
+  /* Span the full visible width of the scroll container (set via JS on
+     lpo-ps-unified-table-with-guides as --lpo-ps-unified-table-visible-w). */
+  width: var(--lpo-ps-unified-table-visible-w, 100%);
   box-sizing: border-box;
   border-radius: 0;
   border-left: none;
@@ -5664,10 +5785,13 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   position: fixed;
   inset: 0;
   z-index: 10050;
-  display: grid;
-  place-items: center;
-  padding: 1.25rem;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: max(1.25rem, env(safe-area-inset-top, 0px)) 1.25rem 1.25rem;
+  box-sizing: border-box;
 }
 
 .lpo-rotate-hint-scrim {
@@ -5681,8 +5805,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-rotate-hint-dialog {
   position: relative;
+  z-index: 1;
+  flex-shrink: 0;
   max-width: 20rem;
-  width: 100%;
+  width: min(20rem, 100%);
   box-sizing: border-box;
   padding: 1.35rem 1.25rem 1.25rem;
   border-radius: 14px;
