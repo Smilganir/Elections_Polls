@@ -1074,45 +1074,47 @@ export function PollSummaryPanel({
                 role="region"
                 aria-label={t.pollSummaryHeroAvgPartiesAria}
               >
-                <div
-                  className="lpo-ps-hero-parties-names-scroll"
-                  ref={heroPartyNamesScrollRef}
-                  onScroll={() => handleHeroPartiesScroll('names')}
-                >
-                  <UnifiedPartyNamesGrid
-                    partyOrder={unifiedPartyOrder}
-                    locale={locale}
-                    displayParty={displayParty}
-                    ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
-                  />
-                </div>
-                <div
-                  className="lpo-ps-hero-parties-scroll"
-                  ref={heroPartiesScrollRef}
-                  onScroll={() => handleHeroPartiesScroll('chips')}
-                >
-                  <PollSummaryChipsStrip
-                    current={heroAvgChips.current}
-                    changedParties={heroAvgChips.changedParties}
-                    t={t}
-                    locale={locale}
-                    combineArabsWithOpposition={combineArabsWithOpposition}
-                    displayParty={displayParty}
-                    displayMediaOutlet={displayMediaOutlet}
-                    partyOrder={unifiedPartyOrder}
-                    showDeltaOutletCount
-                  />
-                </div>
-                {hasPrior && heroAvgChips.changedParties.length > 0 ? (
-                  <p
-                    className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets"
-                    dir={locale === 'he' ? 'rtl' : 'ltr'}
+                <div className="lpo-ps-hero-parties-track">
+                  <div
+                    className="lpo-ps-hero-parties-names-scroll"
+                    ref={heroPartyNamesScrollRef}
+                    onScroll={() => handleHeroPartiesScroll('names')}
                   >
-                    {t.pollSummaryHeroChipOutletCountLegend}
-                    {' · '}
-                    {t.pollSummaryHeroChipDeltaColorLegend}
-                  </p>
-                ) : null}
+                    <UnifiedPartyNamesGrid
+                      partyOrder={unifiedPartyOrder}
+                      locale={locale}
+                      displayParty={displayParty}
+                      ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
+                    />
+                  </div>
+                  <div
+                    className="lpo-ps-hero-parties-scroll"
+                    ref={heroPartiesScrollRef}
+                    onScroll={() => handleHeroPartiesScroll('chips')}
+                  >
+                    <PollSummaryChipsStrip
+                      current={heroAvgChips.current}
+                      changedParties={heroAvgChips.changedParties}
+                      t={t}
+                      locale={locale}
+                      combineArabsWithOpposition={combineArabsWithOpposition}
+                      displayParty={displayParty}
+                      displayMediaOutlet={displayMediaOutlet}
+                      partyOrder={unifiedPartyOrder}
+                      showDeltaOutletCount
+                    />
+                  </div>
+                  {hasPrior && heroAvgChips.changedParties.length > 0 ? (
+                    <p
+                      className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets"
+                      dir={locale === 'he' ? 'rtl' : 'ltr'}
+                    >
+                      {t.pollSummaryHeroChipOutletCountLegend}
+                      {' · '}
+                      {t.pollSummaryHeroChipDeltaColorLegend}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           ) : heroAvgChips ? (

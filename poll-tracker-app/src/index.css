@@ -3394,6 +3394,33 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   box-sizing: border-box;
 }
 
+.lpo-ps-hero-parties-track {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.1rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.lpo-ps-hero-parties-wrap--hero-centered .lpo-ps-hero-parties-track {
+  width: 100%;
+  min-width: 0;
+}
+
+.lpo-ps-hero-parties-wrap--hero-centered .lpo-ps-hero-parties-track .lpo-ps-hero-parties-names-scroll,
+.lpo-ps-hero-parties-wrap--hero-centered .lpo-ps-hero-parties-track .lpo-ps-hero-parties-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.lpo-ps-hero-parties-wrap--hero-centered .lpo-ps-hero-parties-track .lpo-ps-hero-chip-outlet-legend {
+  align-self: stretch;
+}
+
 /* Match unified outlet table: filter/chart in fixed column, party grid unchanged. */
 .lpo-ps-hero-parties-wrap--unified-split {
   width: fit-content;
@@ -5369,8 +5396,8 @@ html[lang='he'] .lpo-ps-trend-panel-outlet {
   bottom: 0;
   z-index: 10060;
   display: grid;
-  place-items: center;
-  padding: 1rem;
+  place-items: start center;
+  padding: 0.65rem 1rem 1rem;
   background: rgba(6, 10, 18, 0.78);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -5385,9 +5412,9 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   width: min(100%, 32rem);
   min-height: min(
     720px,
-    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 2rem)
+    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.65rem)
   );
-  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 2rem);
+  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.65rem);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
