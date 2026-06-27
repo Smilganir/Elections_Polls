@@ -271,6 +271,98 @@ export function partyTrendStatsFromRows(
   return out
 }
 
+export type PartyColumnSeatStats = {
+  mean: number
+  stdev: number
+  n: number
+}
+
+/** Per-party seat mean + population stdev across outlet rows (column outlier highlighting). */
+export function partyColumnSeatStats(
+  rows: RollingWindowRow[],
+  partyOrder: readonly string[],
+): Map<string, PartyColumnSeatStats> {
+  const valuesByParty = new Map<string, number[]>()
+  for (const party of partyOrder) {
+    valuesByParty.set(party, [])
+  }
+  for (const { current } of rows) {
+    const byParty = votesByParty(current)
+    for (const party of partyOrder) {
+      const v = byParty.get(party) ?? 0
+      if (v > 0) valuesByParty.get(party)!.push(v)
+    }
+  }
+  const out = new Map<string, PartyColumnSeatStats>()
+  for (const [party, vals] of valuesByParty) {
+    if (vals.length === 0) {
+      out.set(party, { mean: 0, stdev: 0, n: 0 })
+      continue
+    }
+    const mean = vals.reduce((sum, v) => sum + v, 0) / vals.length
+    if (vals.length < 2) {
+      out.set(party, { mean, stdev: 0, n: vals.length })
+      continue
+    }
+    const variance =
+      vals.reduce((sum, v) => sum + (v - mean) ** 2, 0) / vals.length
+    out.set(party, { mean, stdev: Math.sqrt(variance), n: vals.length })
+  }
+  return out
+}
+
+export type PartySeatColumnOutlierResult = {
+  tier: 0 | 1 | 2
+  direction: 'high' | 'low' | null
+  /** |value − mean| / σ when tier > 0 */
+  sigmaMultiple: number
+  mean: number
+}
+
+const NO_PARTY_SEAT_OUTLIER: PartySeatColumnOutlierResult = {
+  tier: 0,
+  direction: null,
+  sigmaMultiple: 0,
+  mean: 0,
+}
+
+/** Cross-outlet column outlier tier, direction, and σ distance for cell styling + tooltips. */
+export function evaluatePartySeatColumnOutlier(
+  party: string,
+  seatValue: number,
+  stats: ReadonlyMap<string, PartyColumnSeatStats>,
+): PartySeatColumnOutlierResult {
+  if (seatValue <= 0) return NO_PARTY_SEAT_OUTLIER
+  const col = stats.get(party)
+  if (!col || col.n < 2 || col.stdev <= 0) return { ...NO_PARTY_SEAT_OUTLIER, mean: col?.mean ?? 0 }
+  const absDiff = Math.abs(seatValue - col.mean)
+  const sigmaMultiple = absDiff / col.stdev
+  if (absDiff <= col.stdev) {
+    return { tier: 0, direction: null, sigmaMultiple, mean: col.mean }
+  }
+  const direction = seatValue > col.mean ? ('high' as const) : ('low' as const)
+  const tier = absDiff > 2 * col.stdev ? (2 as const) : (1 as const)
+  return { tier, direction, sigmaMultiple, mean: col.mean }
+}
+
+/** 0 = normal; 1 = >1σ; 2 = >2σ from column mean (population stdev across outlets). */
+export function partySeatColumnOutlierTier(
+  party: string,
+  seatValue: number,
+  stats: ReadonlyMap<string, PartyColumnSeatStats>,
+): 0 | 1 | 2 {
+  return evaluatePartySeatColumnOutlier(party, seatValue, stats).tier
+}
+
+/** @deprecated Use evaluatePartySeatColumnOutlier — true when tier ≥ 1. */
+export function isPartySeatColumnOutlier(
+  party: string,
+  seatValue: number,
+  stats: ReadonlyMap<string, PartyColumnSeatStats>,
+): boolean {
+  return evaluatePartySeatColumnOutlier(party, seatValue, stats).tier > 0
+}
+
 /**
  * Latest poll per outlet whose date is within maxStaleDays; previous = next-older pollId for that outlet.
  */

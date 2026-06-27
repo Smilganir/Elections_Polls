@@ -13,8 +13,11 @@ import {
   type RollingPoll,
   type RollingWindowRow,
   buildCrossOutletAverageChipRow,
+  evaluatePartySeatColumnOutlier,
+  partyColumnSeatStats,
   summaryFromRollingRows,
 } from '../lib/pollRollingWindow'
+import type { Segment } from '../types/data'
 import { buildPartyOutletTrendSeries } from '../lib/partyOutletTrendSeries'
 import { blocTrendLineColors, segmentForPartyKey } from '../lib/partyTrendLineColors'
 import {
@@ -24,10 +27,12 @@ import { resolvePollSummaryNarrativeAsOfDisplay } from '../content/pickPollSumma
 import { IconWithFallback } from './IconWithFallback'
 import { narrativeHtmlWithBlocHighlights } from './pollNarrativeHtml'
 import { PartyOutletTrendPanel } from './PartyOutletTrendPopup'
+import {
+  PollSummaryHeroPartiesChartButton,
+  PollSummaryHeroPartiesChartPopup,
+} from './PollSummaryHeroPartiesChartPopup'
 import { mediaBiasAppUrl } from '../utils/publicUrl'
-
-const KNESSET = 120
-const MAJ_SEATS = 60
+import { DeltaBadge, PollSummaryHeroBlocBar, PsSegmentBar } from './PollSummaryBlocBar'
 
 type TrendFocus = { outlet: string; parties: string[] }
 
@@ -36,73 +41,95 @@ function formatChipNum(n: number): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(1)
 }
 
-function PsSegmentBar({
-  coalition,
-  opposition,
-  arabs,
-  mergeArabsWithOpposition,
-  showMajLine,
-  mini,
-  className = '',
-}: {
-  coalition: number
-  opposition: number
-  arabs: number
-  mergeArabsWithOpposition: boolean
-  showMajLine: boolean
-  mini: boolean
-  className?: string
-}) {
-  const c = Math.max(0, coalition)
-  const aRaw = Math.max(0, arabs)
-  const oRaw = Math.max(0, opposition)
-  const o = mergeArabsWithOpposition ? oRaw + aRaw : oRaw
-  const a = mergeArabsWithOpposition ? 0 : aRaw
-  const sum = c + o + a
-  const denom = sum > 0 ? sum : 1
-  const wa = (a / denom) * 100
-  const wo = (o / denom) * 100
-
-  const majLeftPct = (MAJ_SEATS / KNESSET) * 100
-
-  return (
-    <div
-      className={`lpo-ps-segbar${mini ? ' lpo-ps-segbar--mini' : ''} ${className}`.trim()}
-      role="img"
-      aria-label={`Coalition ${c}, opposition ${mergeArabsWithOpposition ? o : oRaw}, ${mergeArabsWithOpposition ? '' : `Arabs ${aRaw}, `}total ${sum}`}
-    >
-      <div className="lpo-ps-bar-slot">
-        <div className="lpo-ps-bar-track">
-          {/* Same order as party breakdown multi-poll threshold: Opposition → Arabs → Coalition */}
-          <div className="lpo-ps-seg lpo-ps-seg--opp" style={{ flex: `0 0 ${wo}%` }} />
-          {!mergeArabsWithOpposition && a > 0 ? (
-            <div className="lpo-ps-seg lpo-ps-seg--arabs" style={{ flex: `0 0 ${wa}%` }} />
-          ) : null}
-          {/* flex-grow absorbs subpixel remainder so the track stays full and the rounded cap is not clipped */}
-          <div className="lpo-ps-seg lpo-ps-seg--coal" style={{ flex: '1 1 0' }} />
-        </div>
-        {showMajLine ? (
-          <div
-            className="lpo-ps-maj-line"
-            style={{ left: `${majLeftPct}%` }}
-            aria-hidden
-            title="60"
-          />
-        ) : null}
-      </div>
-    </div>
-  )
+/** Hero average Δ — one decimal when needed (matches seat averages). */
+function formatChipSeatDeltaMagnitude(delta: number): string {
+  return formatChipNum(Math.abs(delta))
 }
 
-function DeltaBadge({ delta }: { delta: number }) {
-  if (delta === 0) return null
-  const up = delta > 0
-  return (
-    <span className={`lpo-ps-delta ${up ? 'up' : 'down'}`}>
-      {up ? '+' : '-'}
-      {Math.abs(delta)}
-    </span>
-  )
+function formatDeltaSigned(delta: number): string {
+  const sign = delta > 0 ? '+' : delta < 0 ? '-' : ''
+  return `${sign}${formatChipNum(Math.abs(delta))}`
+}
+
+/** Force a plain title tooltip line to render right-to-left (mean left, stdev right). */
+function tooltipRtlLine(text: string): string {
+  return `\u2067${text}\u2069`
+}
+
+/** Force a plain title tooltip line to render left-to-right. */
+function tooltipLtrLine(text: string): string {
+  return `\u2066${text}\u2069`
+}
+
+function formatStdevTooltipLine(
+  t: UiStrings,
+  locale: AppLocale,
+  stdevOutlier: ReturnType<typeof evaluatePartySeatColumnOutlier>,
+): string {
+  const sigmaStr = formatChipNum(stdevOutlier.sigmaMultiple)
+  const meanStr = formatChipNum(stdevOutlier.mean)
+  const high = stdevOutlier.direction === 'high'
+
+  if (locale === 'he') {
+    const verb = high ? 'מעל' : 'מתחת'
+    return tooltipRtlLine(
+      `${sigmaStr} סטיית תקן ${verb} ממוצע הערוצים (${meanStr})`,
+    )
+  }
+
+  return (high ? t.pollSummaryCellStdevAboveMean : t.pollSummaryCellStdevBelowMean)
+    .replace(/\{sigma\}/g, sigmaStr)
+    .replace(/\{mean\}/g, meanStr)
+}
+
+function buildValuesOnlyCellTitle(
+  t: UiStrings,
+  locale: AppLocale,
+  partyKey: string,
+  partyLabel: string,
+  seats: number,
+  previous: RollingPoll | null | undefined,
+  stdevOutlier: ReturnType<typeof evaluatePartySeatColumnOutlier> | null,
+): string {
+  const hasPrior = previous != null
+  const priorVotes = hasPrior
+    ? (previous.parties.find((pr) => pr.party === partyKey)?.votes ?? 0)
+    : 0
+
+  const line1 = hasPrior
+    ? t.pollSummaryCellTooltipLine1
+        .replace(/\{party\}/g, partyLabel)
+        .replace(/\{seats\}/g, formatChipNum(seats))
+        .replace(/\{prior\}/g, formatChipNum(priorVotes))
+    : t.pollSummaryCellTooltipNoPrior
+        .replace(/\{party\}/g, partyLabel)
+        .replace(/\{seats\}/g, formatChipNum(seats))
+
+  let line2: string | null = null
+  if (hasPrior) {
+    const delta = seats - priorVotes
+    if (locale === 'he') {
+      line2 =
+        delta !== 0
+          ? tooltipLtrLine(`${formatDeltaSigned(delta)} מול סקר קודם`)
+          : tooltipLtrLine(t.pollSummaryCellTooltipVsPriorUnchanged)
+    } else {
+      line2 =
+        delta !== 0
+          ? t.pollSummaryCellTooltipVsPriorDelta.replace(
+              /\{delta\}/g,
+              formatDeltaSigned(delta),
+            )
+          : t.pollSummaryCellTooltipVsPriorUnchanged
+    }
+  }
+
+  let line3: string | null = null
+  if (stdevOutlier && stdevOutlier.tier > 0) {
+    line3 = formatStdevTooltipLine(t, locale, stdevOutlier)
+  }
+
+  return [line1, line2, line3].filter((line): line is string => line != null).join('\n')
 }
 
 type PollSummaryPanelProps = {
@@ -139,6 +166,7 @@ export function OutletFilterDropdown({
   onClear,
   locale,
   displayMediaOutlet,
+  filterButtonRef,
 }: {
   allOutlets: string[]
   excludedOutlets: Set<string>
@@ -146,6 +174,7 @@ export function OutletFilterDropdown({
   onClear: () => void
   locale: AppLocale
   displayMediaOutlet: (outlet: string) => string
+  filterButtonRef?: React.RefObject<HTMLButtonElement | null>
 }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -170,6 +199,7 @@ export function OutletFilterDropdown({
   return (
     <div className="lpo-ps-outlet-filter" ref={wrapRef}>
       <button
+        ref={filterButtonRef}
         className={`lpo-ps-outlet-filter-btn${hiddenCount > 0 ? ' lpo-ps-outlet-filter-btn--active' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -313,17 +343,24 @@ function UnifiedPartyNamesGrid({
   locale,
   displayParty,
   ariaLabel,
+  showIcons = false,
+  segmentByParty,
+  combineArabsWithOpposition,
 }: {
   partyOrder: readonly string[]
   locale: AppLocale
   displayParty: (partyKey: string) => string
   ariaLabel: string
+  /** Sticky outlet-table header: party icon below each name column. */
+  showIcons?: boolean
+  segmentByParty?: ReadonlyMap<string, Segment>
+  combineArabsWithOpposition?: boolean
 }) {
   if (partyOrder.length === 0) return null
 
   return (
     <ul
-      className="lpo-ps-unified-party-names lpo-ps-chips--unified-grid"
+      className={`lpo-ps-unified-party-names lpo-ps-chips--unified-grid${showIcons ? ' lpo-ps-unified-party-names--with-icons' : ''}`}
       style={
         {
           '--lpo-ps-unified-party-cols': partyOrder.length,
@@ -331,22 +368,49 @@ function UnifiedPartyNamesGrid({
       }
       aria-label={ariaLabel}
     >
-      {partyOrder.map((party) => (
-        <li
-          key={party}
-          className="lpo-ps-unified-party-name"
-          dir={locale === 'he' ? 'rtl' : 'ltr'}
-          title={displayParty(party)}
-        >
-          {displayParty(party)}
-        </li>
-      ))}
+      {partyOrder.map((party) => {
+        const segment = segmentByParty?.get(party)
+        const ringColor =
+          segment !== undefined && combineArabsWithOpposition !== undefined
+            ? segmentRingColorForSummary(segment, combineArabsWithOpposition)
+            : undefined
+        return (
+          <li
+            key={party}
+            className="lpo-ps-unified-party-header-col"
+            title={displayParty(party)}
+          >
+            <span
+              className="lpo-ps-unified-party-name"
+              dir={locale === 'he' ? 'rtl' : 'ltr'}
+            >
+              {displayParty(party)}
+            </span>
+            {showIcons ? (
+              <div
+                className="lpo-ps-chip-ring lpo-ps-unified-party-header-icon"
+                style={
+                  ringColor
+                    ? ({ '--lpo-ps-chip-segment': ringColor } as React.CSSProperties)
+                    : undefined
+                }
+              >
+                <IconWithFallback
+                  src={PARTY_ICON_MAP[party]}
+                  label={displayParty(party)}
+                />
+              </div>
+            ) : null}
+          </li>
+        )
+      })}
     </ul>
   )
 }
 
 function PollSummaryChipsStrip({
   current,
+  previous,
   changedParties,
   t,
   combineArabsWithOpposition,
@@ -359,10 +423,15 @@ function PollSummaryChipsStrip({
   trendLineColorsByParty,
   showDeltaOutletCount = false,
   partyOrder,
+  valuesOnly = false,
+  partyColumnSeatStats: partyColumnSeatStatsProp,
+  locale,
 }: {
   current: RollingPoll
+  previous?: RollingPoll | null
   changedParties: ChangedParty[]
   t: UiStrings
+  locale: AppLocale
   combineArabsWithOpposition: boolean
   displayParty: (partyKey: string) => string
   displayMediaOutlet: (outlet: string) => string
@@ -377,6 +446,13 @@ function PollSummaryChipsStrip({
   showDeltaOutletCount?: boolean
   /** When set, columns follow this order (avg rank) with empty slots for missing parties. */
   partyOrder?: readonly string[]
+  /** Outlet unified grid: seats + Δ only (icons live in sticky header). */
+  valuesOnly?: boolean
+  /** Cross-outlet column mean/stdev for per-cell outlier highlighting. */
+  partyColumnSeatStats?: ReadonlyMap<
+    string,
+    { mean: number; stdev: number; n: number }
+  >
 }) {
   const changedByParty = useMemo(
     () => new Map(changedParties.map((cp) => [cp.party, cp])),
@@ -410,7 +486,7 @@ function PollSummaryChipsStrip({
 
   return (
     <ul
-      className={`lpo-ps-chips${showDeltaOutletCount ? ' lpo-ps-chips--with-outlet-count' : ''}${unifiedGrid ? ' lpo-ps-chips--unified-grid' : ''}`}
+      className={`lpo-ps-chips${showDeltaOutletCount ? ' lpo-ps-chips--with-outlet-count' : ''}${unifiedGrid ? ' lpo-ps-chips--unified-grid' : ''}${valuesOnly ? ' lpo-ps-chips--values-only' : ''}`}
       style={
         unifiedGrid
           ? ({
@@ -424,14 +500,19 @@ function PollSummaryChipsStrip({
           return (
             <li
               key={p.party}
-              className="lpo-ps-chip lpo-ps-chip--empty"
+              className={`lpo-ps-chip lpo-ps-chip--empty${valuesOnly ? ' lpo-ps-chip--values-only' : ''}`}
               aria-hidden
             >
+              {!valuesOnly ? (
+                <div className="lpo-ps-chip-ring lpo-ps-chip-ring--empty" />
+              ) : null}
               <span className="lpo-ps-chip-votes" dir="ltr">
                 {'\u00a0'}
               </span>
-              <div className="lpo-ps-chip-ring lpo-ps-chip-ring--empty" />
               <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
+              {valuesOnly ? (
+                <span className="lpo-ps-chip-stdev-dots" aria-hidden />
+              ) : null}
             </li>
           )
         }
@@ -447,11 +528,6 @@ function PollSummaryChipsStrip({
           outletCount !== null
             ? t.pollSummaryChipDeltaOutletCountTitle.replace(/\{n\}/g, String(outletCount))
             : undefined
-        const tip = isChanged
-          ? outletCountTitle
-            ? `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta}) · ${outletCountTitle}`
-            : `${displayParty(p.party)} · ${cp.currentVotes} ${t.seats} (${cp.delta > 0 ? '+' : ''}${cp.delta})`
-          : `${displayParty(p.party)} · ${p.votes} ${t.seats}`
         const ringColor =
           trendLineColorsByParty?.get(p.party) ??
           segmentRingColorForSummary(p.segment, combineArabsWithOpposition)
@@ -469,69 +545,127 @@ function PollSummaryChipsStrip({
                 )
           : undefined
         const isTrendSelected = selectedTrendParties?.has(p.party) ?? false
+        const stdevOutlier =
+          valuesOnly && partyColumnSeatStatsProp !== undefined
+            ? evaluatePartySeatColumnOutlier(p.party, p.votes, partyColumnSeatStatsProp)
+            : null
+        const stdevOutlierTier = stdevOutlier?.tier ?? 0
+        const cellTitle = valuesOnly
+          ? buildValuesOnlyCellTitle(
+              t,
+              locale,
+              p.party,
+              displayParty(p.party),
+              p.votes,
+              previous,
+              stdevOutlier,
+            )
+          : isChanged
+            ? outletCountTitle
+              ? `${displayParty(p.party)} · ${cp!.currentVotes} ${t.seats} (${cp!.delta > 0 ? '+' : ''}${cp!.delta}) · ${outletCountTitle}`
+              : `${displayParty(p.party)} · ${cp!.currentVotes} ${t.seats} (${cp!.delta > 0 ? '+' : ''}${cp!.delta})`
+            : `${displayParty(p.party)} · ${p.votes} ${t.seats}`
         const chipStyle = {
           '--lpo-ps-chip-segment': ringColor,
-          ...(isTrendSelected ? { '--lpo-ps-chip-trend-dash': ringColor } : {}),
+          ...(isTrendSelected && !valuesOnly
+            ? { '--lpo-ps-chip-trend-dash': ringColor }
+            : {}),
         } as React.CSSProperties
+        const deltaBlock = (() => {
+          if (!isChanged || !cp) {
+            return (
+              <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
+            )
+          }
+          const deltaMagnitude = showDeltaOutletCount
+            ? formatChipSeatDeltaMagnitude(cp.delta)
+            : formatChipNum(Math.abs(cp.delta))
+          return (
+            <span
+              className="lpo-ps-chip-delta-stack"
+              title={outletCountTitle}
+              aria-label={
+                outletCountTitle
+                  ? `${cp.delta > 0 ? '+' : '-'}${deltaMagnitude} · ${outletCountTitle}`
+                  : undefined
+              }
+            >
+              <span
+                className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`}
+                dir="ltr"
+              >
+                {cp.delta > 0 ? '+' : '-'}
+                {deltaMagnitude}
+              </span>
+              {outletCount !== null ? (
+                <span className="lpo-ps-chip-delta-outlets" dir="ltr" aria-hidden>
+                  ({outletCount})
+                </span>
+              ) : null}
+            </span>
+          )
+        })()
+        const stdevDotsBlock = valuesOnly ? (
+          <span className="lpo-ps-chip-stdev-dots" aria-hidden>
+            {stdevOutlierTier >= 1 ? <span className="lpo-ps-chip-stdev-dot" /> : null}
+            {stdevOutlierTier >= 2 ? <span className="lpo-ps-chip-stdev-dot" /> : null}
+          </span>
+        ) : null
+
         return (
           <li
             key={p.party}
-            className={`lpo-ps-chip${isChanged ? '' : ' lpo-ps-chip--muted'}${isTrendSelected ? ' lpo-ps-chip--trend-active' : ''}`}
-            title={tip}
+            className={`lpo-ps-chip${isTrendSelected ? ' lpo-ps-chip--trend-active' : ''}${valuesOnly ? ' lpo-ps-chip--values-only' : ''}`}
+            title={cellTitle}
             style={chipStyle}
           >
-            <span className="lpo-ps-chip-votes" dir="ltr">
-              {formatChipNum(p.votes)}
-            </span>
-            {onPartyTrendClick ? (
+            {valuesOnly && onPartyTrendClick ? (
               <button
                 type="button"
-                className="lpo-ps-chip-icon-btn"
+                className="lpo-ps-chip-values-btn"
                 aria-label={trendAria}
                 onClick={() => onPartyTrendClick(p.party)}
               >
-                <div className="lpo-ps-chip-ring">
-                  <IconWithFallback
-                    src={PARTY_ICON_MAP[p.party]}
-                    label={displayParty(p.party)}
-                  />
-                </div>
+                <span className="lpo-ps-chip-votes" dir="ltr">
+                  {formatChipNum(p.votes)}
+                </span>
+                {deltaBlock}
+                {stdevDotsBlock}
               </button>
             ) : (
-              <div className="lpo-ps-chip-ring">
-                <IconWithFallback
-                  src={PARTY_ICON_MAP[p.party]}
-                  label={displayParty(p.party)}
-                />
-              </div>
-            )}
-            {isChanged ? (
-              <span
-                className="lpo-ps-chip-delta-stack"
-                title={outletCountTitle}
-                aria-label={
-                  outletCountTitle
-                    ? `${cp.delta > 0 ? '+' : '-'}${formatChipNum(Math.abs(cp.delta))} · ${outletCountTitle}`
-                    : undefined
-                }
-              >
-                <span
-                  className={`lpo-ps-chip-delta ${cp.delta > 0 ? 'up' : 'down'}`}
-                  dir="ltr"
-                >
-                  {cp.delta > 0 ? '+' : '-'}
-                  {formatChipNum(Math.abs(cp.delta))}
-                </span>
-                {outletCount !== null ? (
-                  <span className="lpo-ps-chip-delta-outlets" dir="ltr" aria-hidden>
-                    ({outletCount})
-                  </span>
+              <>
+                {!valuesOnly ? (
+                  onPartyTrendClick ? (
+                    <button
+                      type="button"
+                      className="lpo-ps-chip-icon-btn"
+                      aria-label={trendAria}
+                      onClick={() => onPartyTrendClick(p.party)}
+                    >
+                      <div className="lpo-ps-chip-ring">
+                        <IconWithFallback
+                          src={PARTY_ICON_MAP[p.party]}
+                          label={displayParty(p.party)}
+                        />
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="lpo-ps-chip-ring">
+                      <IconWithFallback
+                        src={PARTY_ICON_MAP[p.party]}
+                        label={displayParty(p.party)}
+                      />
+                    </div>
+                  )
                 ) : null}
-              </span>
-            ) : (
-              <span className="lpo-ps-chip-delta lpo-ps-chip-delta--spacer" aria-hidden />
+                <span className="lpo-ps-chip-votes" dir="ltr">
+                  {formatChipNum(p.votes)}
+                </span>
+                {deltaBlock}
+                {valuesOnly ? stdevDotsBlock : null}
+              </>
             )}
-            {isTrendSelected ? (
+            {isTrendSelected && !valuesOnly ? (
               <span className="lpo-ps-chip-trend-dash" aria-hidden />
             ) : null}
           </li>
@@ -556,6 +690,7 @@ export function PollSummaryPanel({
   const bgText = narrativeBackground.trim()
 
   const [trendFocus, setTrendFocus] = useState<TrendFocus | null>(null)
+  const [heroPartiesChartOpen, setHeroPartiesChartOpen] = useState(false)
 
   const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
   const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
@@ -574,6 +709,14 @@ export function PollSummaryPanel({
   const unifiedPartyOrder = useMemo(
     () => heroAvgChips?.current.parties.map((p) => p.party) ?? [],
     [heroAvgChips],
+  )
+  const unifiedHeaderSegmentByParty = useMemo(() => {
+    if (!heroAvgChips) return undefined
+    return new Map(heroAvgChips.current.parties.map((p) => [p.party, p.segment]))
+  }, [heroAvgChips])
+  const partyColumnSeatStatsMap = useMemo(
+    () => partyColumnSeatStats(filteredRows, unifiedPartyOrder),
+    [filteredRows, unifiedPartyOrder],
   )
 
   const segmentForPartyAtOutlet = useCallback(
@@ -695,20 +838,89 @@ export function PollSummaryPanel({
   const heroPartiesScrollRef = useRef<HTMLDivElement | null>(null)
   const unifiedFixedWidthRef = useRef<HTMLDivElement | null>(null)
   const unifiedSplitWrapRef = useRef<HTMLDivElement | null>(null)
+  const psWrapRef = useRef<HTMLDivElement | null>(null)
+  const heroPartiesWrapRef = useRef<HTMLDivElement | null>(null)
+  const heroChartSideColRef = useRef<HTMLDivElement | null>(null)
+  const outletFilterBtnRef = useRef<HTMLButtonElement | null>(null)
+  const colGuidesTrackRef = useRef<HTMLDivElement | null>(null)
+
+  const syncColGuidesScroll = useCallback((scrollLeft: number) => {
+    const track = colGuidesTrackRef.current
+    if (!track) return
+    track.style.transform = `translate3d(${-scrollLeft}px, 0, 0)`
+  }, [])
 
   useLayoutEffect(() => {
     if (!hasUnifiedPartyRows) return
     const measureEl = unifiedFixedWidthRef.current
     const wrap = unifiedSplitWrapRef.current
+    const heroPartiesEl = heroPartiesWrapRef.current
     if (!measureEl || !wrap) return
     const apply = () => {
-      wrap.style.setProperty('--lpo-ps-unified-fixed-measured-w', `${measureEl.offsetWidth}px`)
+      const w = `${measureEl.offsetWidth}px`
+      wrap.style.setProperty('--lpo-ps-unified-fixed-measured-w', w)
+      psWrapRef.current?.style.setProperty('--lpo-ps-unified-fixed-measured-w', w)
+      if (heroPartiesEl && wrap) {
+        const heroChartSideCol = heroChartSideColRef.current
+        const filterBtn = outletFilterBtnRef.current
+        const heroChartBtn = heroChartSideCol?.querySelector<HTMLElement>(
+          '.lpo-ps-hero-parties-chart-btn',
+        )
+        if (heroChartSideCol && filterBtn && heroChartBtn) {
+          const chartCell = heroChartSideCol.querySelector<HTMLElement>(
+            '.lpo-ps-hero-parties-chart-cell',
+          )
+          heroChartSideCol.style.marginInlineStart = '0px'
+          if (chartCell) chartCell.style.marginTop = '0px'
+
+          const dx = filterBtn.getBoundingClientRect().left - heroChartBtn.getBoundingClientRect().left
+          if (Math.abs(dx) > 0.5) {
+            heroChartSideCol.style.marginInlineStart = `${dx}px`
+          }
+
+          const chipIcon = heroPartiesScrollRef.current?.querySelector<HTMLElement>(
+            '.lpo-ps-chip:not(.lpo-ps-chip--empty) .lpo-ps-chip-ring .mapped-icon',
+          )
+          if (chartCell && chipIcon) {
+            const iconRect = chipIcon.getBoundingClientRect()
+            const btnRect = heroChartBtn.getBoundingClientRect()
+            const dy =
+              iconRect.top + iconRect.height / 2 - (btnRect.top + btnRect.height / 2)
+            if (Math.abs(dy) > 0.5) {
+              chartCell.style.marginTop = `${dy}px`
+            }
+          }
+        } else if (heroChartSideCol) {
+          heroChartSideCol.style.marginInlineStart = ''
+          const chartCell = heroChartSideCol.querySelector<HTMLElement>(
+            '.lpo-ps-hero-parties-chart-cell',
+          )
+          if (chartCell) chartCell.style.marginTop = ''
+        }
+        heroPartiesEl.style.marginInlineStart = ''
+        heroPartiesEl.style.removeProperty('--lpo-ps-hero-parties-center-offset')
+      }
     }
     apply()
     const ro = new ResizeObserver(apply)
     ro.observe(measureEl)
-    return () => ro.disconnect()
-  }, [hasUnifiedPartyRows, visibleRows.length, trendFocus])
+    if (heroPartiesEl) ro.observe(heroPartiesEl)
+    if (heroChartSideColRef.current) ro.observe(heroChartSideColRef.current)
+    if (outletFilterBtnRef.current) ro.observe(outletFilterBtnRef.current)
+    if (heroPartiesScrollRef.current) ro.observe(heroPartiesScrollRef.current)
+    ro.observe(wrap)
+    window.addEventListener('resize', apply)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', apply)
+    }
+  }, [hasUnifiedPartyRows, visibleRows.length, trendFocus, unifiedPartyOrder.length])
+
+  useLayoutEffect(() => {
+    if (!hasUnifiedPartyRows) return
+    const scrollLeft = partyNamesScrollRef.current?.scrollLeft ?? 0
+    syncColGuidesScroll(scrollLeft)
+  }, [hasUnifiedPartyRows, unifiedPartyOrder.length, visibleRows.length, syncColGuidesScroll])
 
   const handlePartiesScroll = useCallback((sourceIdx: number | 'names') => {
     if (partiesScrollSyncRef.current) return
@@ -724,8 +936,9 @@ export function PollSummaryPanel({
       if (sourceIdx !== 'names' && i === sourceIdx) return
       if (el) el.scrollLeft = scrollLeft
     })
+    syncColGuidesScroll(scrollLeft)
     partiesScrollSyncRef.current = false
-  }, [])
+  }, [syncColGuidesScroll])
 
   const handleHeroPartiesScroll = useCallback((source: 'names' | 'chips') => {
     if (partiesScrollSyncRef.current) return
@@ -779,6 +992,7 @@ export function PollSummaryPanel({
           onClear={clearExcluded}
           locale={locale}
           displayMediaOutlet={displayMediaOutlet}
+          filterButtonRef={outletFilterBtnRef}
         />
         <p
           className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title lpo-ps-subtitle--outlets-breakdown"
@@ -807,7 +1021,7 @@ export function PollSummaryPanel({
   )
 
   return (
-    <div className="lpo-ps-wrap">
+    <div className="lpo-ps-wrap" ref={psWrapRef}>
       <section className="lpo-ps-hero" aria-label={t.pollSummaryHeroAria}>
         {hasNarrativeTop ? (
           <div
@@ -829,90 +1043,77 @@ export function PollSummaryPanel({
           </div>
         ) : null}
         <div className="lpo-ps-hero-summary-row">
-          <div className="lpo-ps-hero-bar-stack lpo-ps-bar-ltr">
-            <div className="lpo-ps-blocs-nums-band">
-              <div className="lpo-ps-hero-nums-between" dir="ltr">
-                <div className="lpo-ps-hero-side lpo-ps-hero-side--opp">
-                  <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--opp">{t.opposition}</span>
-                  <span className="lpo-ps-hero-num lpo-ps-hero-num--opp">
-                    {combineArabsWithOpposition
-                      ? summary.avgOppositionPlusArabs
-                      : summary.avgOpposition}
-                  </span>
-                  {hasPrior ? (
-                    <DeltaBadge
-                      delta={
-                        combineArabsWithOpposition
-                          ? summary.deltaOppositionPlusArabs
-                          : summary.deltaOpposition
-                      }
-                    />
-                  ) : null}
-                </div>
-                <div className="lpo-ps-hero-side lpo-ps-hero-side--coal">
-                  <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--coal">{t.coalition}</span>
-                  <span className="lpo-ps-hero-num lpo-ps-hero-num--coal">
-                    {summary.avgCoalition}
-                  </span>
-                  {hasPrior ? <DeltaBadge delta={summary.deltaCoalition} /> : null}
-                </div>
-              </div>
-              <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--12" aria-hidden>
-                60
-              </span>
-            </div>
-            <PsSegmentBar
-              coalition={summary.avgCoalition}
-              opposition={summary.avgOpposition}
-              arabs={summary.avgArabs}
-              mergeArabsWithOpposition={combineArabsWithOpposition}
-              showMajLine
-              mini={false}
-              className="lpo-ps-hero-bar"
-            />
-          </div>
+          <PollSummaryHeroBlocBar
+            t={t}
+            combineArabsWithOpposition={combineArabsWithOpposition}
+            hasPrior={hasPrior}
+            avgCoalition={summary.avgCoalition}
+            avgOpposition={summary.avgOpposition}
+            avgArabs={summary.avgArabs}
+            avgOppositionPlusArabs={summary.avgOppositionPlusArabs}
+            deltaCoalition={summary.deltaCoalition}
+            deltaOpposition={summary.deltaOpposition}
+            deltaOppositionPlusArabs={summary.deltaOppositionPlusArabs}
+          />
           {heroAvgChips && unifiedPartyOrder.length > 0 ? (
-            <div
-              className="lpo-ps-hero-parties-wrap"
-              role="region"
-              aria-label={t.pollSummaryHeroAvgPartiesAria}
-            >
+            <div className="lpo-ps-hero-parties-outer">
               <div
-                className="lpo-ps-hero-parties-names-scroll"
-                ref={heroPartyNamesScrollRef}
-                onScroll={() => handleHeroPartiesScroll('names')}
+                ref={heroChartSideColRef}
+                className="lpo-ps-hero-parties-side-col"
               >
-                <UnifiedPartyNamesGrid
-                  partyOrder={unifiedPartyOrder}
-                  locale={locale}
-                  displayParty={displayParty}
-                  ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
-                />
+                <div className="lpo-ps-hero-parties-chart-cell">
+                  <PollSummaryHeroPartiesChartButton
+                    onClick={() => setHeroPartiesChartOpen(true)}
+                    ariaLabel={t.pollSummaryHeroPartiesChartOpenAria}
+                  />
+                </div>
               </div>
               <div
-                className="lpo-ps-hero-parties-scroll"
-                ref={heroPartiesScrollRef}
-                onScroll={() => handleHeroPartiesScroll('chips')}
+                ref={heroPartiesWrapRef}
+                className="lpo-ps-hero-parties-wrap lpo-ps-hero-parties-wrap--hero-centered"
+                role="region"
+                aria-label={t.pollSummaryHeroAvgPartiesAria}
               >
-                <PollSummaryChipsStrip
-                  current={heroAvgChips.current}
-                  changedParties={heroAvgChips.changedParties}
-                  t={t}
-                  combineArabsWithOpposition={combineArabsWithOpposition}
-                  displayParty={displayParty}
-                  displayMediaOutlet={displayMediaOutlet}
-                  partyOrder={unifiedPartyOrder}
-                  showDeltaOutletCount
-                />
-              </div>
-              {hasPrior && heroAvgChips.changedParties.length > 0 ? (
-                <p
-                  className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets"
-                  dir={locale === 'he' ? 'rtl' : 'ltr'}
+                <div
+                  className="lpo-ps-hero-parties-names-scroll"
+                  ref={heroPartyNamesScrollRef}
+                  onScroll={() => handleHeroPartiesScroll('names')}
                 >
-                  {t.pollSummaryHeroChipOutletCountLegend}
-                </p>
-              ) : null}
+                  <UnifiedPartyNamesGrid
+                    partyOrder={unifiedPartyOrder}
+                    locale={locale}
+                    displayParty={displayParty}
+                    ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
+                  />
+                </div>
+                <div
+                  className="lpo-ps-hero-parties-scroll"
+                  ref={heroPartiesScrollRef}
+                  onScroll={() => handleHeroPartiesScroll('chips')}
+                >
+                  <PollSummaryChipsStrip
+                    current={heroAvgChips.current}
+                    changedParties={heroAvgChips.changedParties}
+                    t={t}
+                    locale={locale}
+                    combineArabsWithOpposition={combineArabsWithOpposition}
+                    displayParty={displayParty}
+                    displayMediaOutlet={displayMediaOutlet}
+                    partyOrder={unifiedPartyOrder}
+                    showDeltaOutletCount
+                  />
+                </div>
+                {hasPrior && heroAvgChips.changedParties.length > 0 ? (
+                  <p
+                    className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets"
+                    dir={locale === 'he' ? 'rtl' : 'ltr'}
+                  >
+                    {t.pollSummaryHeroChipOutletCountLegend}
+                    {' · '}
+                    {t.pollSummaryHeroChipDeltaColorLegend}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : heroAvgChips ? (
             <div
@@ -920,16 +1121,23 @@ export function PollSummaryPanel({
               role="region"
               aria-label={t.pollSummaryHeroAvgPartiesAria}
             >
-              <div className="lpo-ps-hero-parties-scroll">
-                <PollSummaryChipsStrip
-                  current={heroAvgChips.current}
-                  changedParties={heroAvgChips.changedParties}
-                  t={t}
-                  combineArabsWithOpposition={combineArabsWithOpposition}
-                  displayParty={displayParty}
-                  displayMediaOutlet={displayMediaOutlet}
-                  showDeltaOutletCount
+              <div className="lpo-ps-hero-parties-align-row" dir="ltr">
+                <PollSummaryHeroPartiesChartButton
+                  onClick={() => setHeroPartiesChartOpen(true)}
+                  ariaLabel={t.pollSummaryHeroPartiesChartOpenAria}
                 />
+                <div className="lpo-ps-hero-parties-scroll">
+                  <PollSummaryChipsStrip
+                    current={heroAvgChips.current}
+                    changedParties={heroAvgChips.changedParties}
+                    t={t}
+                    locale={locale}
+                    combineArabsWithOpposition={combineArabsWithOpposition}
+                    displayParty={displayParty}
+                    displayMediaOutlet={displayMediaOutlet}
+                    showDeltaOutletCount
+                  />
+                </div>
               </div>
               {hasPrior && heroAvgChips.changedParties.length > 0 ? (
                 <p
@@ -937,9 +1145,37 @@ export function PollSummaryPanel({
                   dir={locale === 'he' ? 'rtl' : 'ltr'}
                 >
                   {t.pollSummaryHeroChipOutletCountLegend}
+                  {' · '}
+                  {t.pollSummaryHeroChipDeltaColorLegend}
                 </p>
               ) : null}
             </div>
+          ) : null}
+          {heroAvgChips ? (
+            <PollSummaryHeroPartiesChartPopup
+              open={heroPartiesChartOpen}
+              onClose={() => setHeroPartiesChartOpen(false)}
+              current={heroAvgChips.current}
+              changedParties={heroAvgChips.changedParties}
+              partyOrder={unifiedPartyOrder}
+              combineArabsWithOpposition={combineArabsWithOpposition}
+              displayParty={displayParty}
+              displayMediaOutlet={displayMediaOutlet}
+              locale={locale}
+              t={t}
+              hasPrior={hasPrior}
+              windowDays={maxStaleDays}
+              allOutlets={allOutletKeys}
+              excludedOutlets={excludedOutlets}
+              onToggleOutlet={toggleOutlet}
+              avgCoalition={summary.avgCoalition}
+              avgOpposition={summary.avgOpposition}
+              avgArabs={summary.avgArabs}
+              avgOppositionPlusArabs={summary.avgOppositionPlusArabs}
+              deltaCoalition={summary.deltaCoalition}
+              deltaOpposition={summary.deltaOpposition}
+              deltaOppositionPlusArabs={summary.deltaOppositionPlusArabs}
+            />
           ) : null}
         </div>
       </section>
@@ -948,9 +1184,17 @@ export function PollSummaryPanel({
         <div
           ref={unifiedSplitWrapRef}
           className="lpo-ps-rows-unified lpo-ps-rows-unified--with-unified-split"
+          style={
+            unifiedPartyOrder.length > 0
+              ? ({
+                  '--lpo-ps-unified-party-cols': unifiedPartyOrder.length,
+                } as React.CSSProperties)
+              : undefined
+          }
         >
           {outletFilterSubtitle}
-          {unifiedPartyOrder.length > 0 ? (
+          <div className="lpo-ps-unified-table-with-guides">
+            {unifiedPartyOrder.length > 0 ? (
             <div
               className="lpo-ps-unified-parties-header-row lpo-ps-unified-split-grid"
               dir="ltr"
@@ -967,11 +1211,20 @@ export function PollSummaryPanel({
                     locale={locale}
                     displayParty={displayParty}
                     ariaLabel={t.pollSummaryUnifiedPartyNamesAria}
+                    showIcons
+                    segmentByParty={unifiedHeaderSegmentByParty}
+                    combineArabsWithOpposition={combineArabsWithOpposition}
                   />
                 </div>
               </div>
             </div>
           ) : null}
+          <div className="lpo-ps-unified-outlets-with-guides">
+            {unifiedPartyOrder.length > 0 ? (
+              <div className="lpo-ps-unified-col-guides" aria-hidden>
+                <div ref={colGuidesTrackRef} className="lpo-ps-unified-col-guides-track" />
+              </div>
+            ) : null}
           <div className="lpo-ps-unified-outlets" aria-label={t.pollSummaryRowsAria}>
             {visibleRows.map(({ current, previous, changedParties }, rowIdx) => {
               const isTrendOutlet = trendFocus?.outlet === current.mediaOutlet
@@ -1021,12 +1274,16 @@ export function PollSummaryPanel({
                         <div className="lpo-ps-unified-parties-line">
                           <PollSummaryChipsStrip
                             current={current}
+                            previous={previous}
                             changedParties={changedParties}
                             t={t}
+                            locale={locale}
                             combineArabsWithOpposition={combineArabsWithOpposition}
                             displayParty={displayParty}
                             displayMediaOutlet={displayMediaOutlet}
                             partyOrder={unifiedPartyOrder}
+                            valuesOnly
+                            partyColumnSeatStats={partyColumnSeatStatsMap}
                             onPartyTrendClick={
                               pollHistory?.length
                                 ? (party) => handlePartyTrendClick(current.mediaOutlet, party)
@@ -1047,6 +1304,8 @@ export function PollSummaryPanel({
                 </div>
               )
             })}
+          </div>
+          </div>
           </div>
         </div>
       ) : (

@@ -43,6 +43,18 @@ export type UiStrings = {
   pollSummaryOutletsBreakdownLead: string
   pollSummaryOutletsBreakdownTail: string
   pollSummaryOutletsBreakdownTrendHint: string
+  /** Values-only grid cell tooltip line 1 (with prior poll) */
+  pollSummaryCellTooltipLine1: string
+  /** Values-only grid cell tooltip line 1 when no prior poll exists */
+  pollSummaryCellTooltipNoPrior: string
+  /** Values-only grid cell tooltip: unchanged vs prior */
+  pollSummaryCellTooltipVsPriorUnchanged: string
+  /** Values-only grid cell tooltip: {delta} vs prior poll */
+  pollSummaryCellTooltipVsPriorDelta: string
+  /** Stdev footnote fragment for dot cells (above outlet mean) */
+  pollSummaryCellStdevAboveMean: string
+  /** Stdev footnote fragment for dot cells (below outlet mean) */
+  pollSummaryCellStdevBelowMean: string
   pollSummaryNoOutlets: string
   pollSummaryHeroAria: string
   pollSummaryHeroAvgPartiesAria: string
@@ -50,6 +62,19 @@ export type UiStrings = {
   pollSummaryChipDeltaOutletCountTitle: string
   /** One-line legend under hero chips for (n) poll count */
   pollSummaryHeroChipOutletCountLegend: string
+  /** Hero chip legend: green/red delta meaning */
+  pollSummaryHeroChipDeltaColorLegend: string
+  /** Open cross-outlet average party bar chart (hero) */
+  pollSummaryHeroPartiesChartOpenAria: string
+  pollSummaryHeroPartiesChartTitle: string
+  pollSummaryHeroPartiesChartCloseAria: string
+  /** Appended to chart popup title; {n} = rolling window days */
+  pollSummaryHeroPartiesChartWindowSuffix: string
+  pollSummaryHeroPartiesChartOutletsAria: string
+  pollSummaryHeroPartiesChartOutletExcludeAria: string
+  pollSummaryHeroPartiesChartOutletIncludeAria: string
+  /** Hint under chart popup title (outlet icon toggle) */
+  pollSummaryHeroPartiesChartOutletHint: string
   /** Hero trend panel header; {n} = rolling window days */
   pollSummaryHeroTrendPanelTitle: string
   /** Hero chip → cross-outlet average trend */
@@ -161,14 +186,34 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
     pollSummaryOutletsBreakdownLead: 'Poll breakdown',
     pollSummaryOutletsBreakdownTail:
-      ' (all parties with seats; faded icons = unchanged, Δ = change vs previous poll)',
+      ' (green/red = change vs prior; gray dot under value = unusual vs other outlets; two dots = more unusual)',
     pollSummaryOutletsBreakdownTrendHint: 'Click a party in an outlet to view its trend',
+    pollSummaryCellTooltipLine1:
+      '{party} · {seats} seats · prior poll {prior}',
+    pollSummaryCellTooltipNoPrior: '{party} · {seats} seats · no prior poll',
+    pollSummaryCellTooltipVsPriorUnchanged: 'unchanged vs prior poll',
+    pollSummaryCellTooltipVsPriorDelta: '{delta} vs prior poll',
+    pollSummaryCellStdevAboveMean:
+      '{sigma} standard deviations above outlet average ({mean})',
+    pollSummaryCellStdevBelowMean:
+      '{sigma} standard deviations below outlet average ({mean})',
     pollSummaryNoOutlets: 'No polls from the last {n} days.',
     pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
     pollSummaryHeroAvgPartiesAria:
       'Average seats per party across outlets in the window; mandate changes vs previous poll highlighted; number in parentheses is how many polls showed that change',
     pollSummaryChipDeltaOutletCountTitle: '{n} polls with a seat change vs prior',
     pollSummaryHeroChipOutletCountLegend: '(n) = polls with a seat change vs prior',
+    pollSummaryHeroChipDeltaColorLegend: 'Green/red = change vs prior poll',
+    pollSummaryHeroPartiesChartOpenAria: 'Show cross-outlet party average breakdown',
+    pollSummaryHeroPartiesChartTitle: 'Cross-outlet party averages',
+    pollSummaryHeroPartiesChartCloseAria: 'Close party breakdown',
+    pollSummaryHeroPartiesChartWindowSuffix: ' · {n}-day window',
+    pollSummaryHeroPartiesChartOutletsAria:
+      'Outlets in the rolling window; click to include or exclude from the average',
+    pollSummaryHeroPartiesChartOutletExcludeAria: 'Exclude {outlet} from average',
+    pollSummaryHeroPartiesChartOutletIncludeAria: 'Include {outlet} in average',
+    pollSummaryHeroPartiesChartOutletHint:
+      'Click an outlet icon to include or exclude it from the average',
     pollSummaryHeroTrendPanelTitle: 'Cross-outlet average · {n}-day window',
     pollSummaryHeroPartyTrendOpenAria: 'Show cross-outlet average seat trend for {party}',
     pollSummaryHeroPartyTrendNoData: 'No poll history for this party in the window.',
@@ -268,14 +313,34 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
     pollSummaryOutletsBreakdownLead: 'פירוט הסקרים',
     pollSummaryOutletsBreakdownTail:
-      ' (כל המפלגות עם מנדטים; אייקון מעומעם = ללא שינוי, Δ = שינוי מול סקר קודם)',
+      ' (ירוק/אדום = שינוי מול סקר קודם; נקודה אפורה = חריג מול שאר הערוצים; שתי נקודות = חריג יותר)',
     pollSummaryOutletsBreakdownTrendHint: 'לחצו על מפלגה בערוץ כדי לראות טרנד',
+    pollSummaryCellTooltipLine1:
+      '{party} · {seats} מנדטים · סקר קודם {prior}',
+    pollSummaryCellTooltipNoPrior: '{party} · {seats} מנדטים · אין סקר קודם',
+    pollSummaryCellTooltipVsPriorUnchanged: 'ללא שינוי מול סקר קודם',
+    pollSummaryCellTooltipVsPriorDelta: '{delta} מול סקר קודם',
+    pollSummaryCellStdevAboveMean:
+      '{sigma} סטיית תקן מעל ממוצע הערוצים ({mean})',
+    pollSummaryCellStdevBelowMean:
+      '{sigma} סטיית תקן מתחת ממוצע הערוצים ({mean})',
     pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
     pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
     pollSummaryHeroAvgPartiesAria:
       'ממוצע מנדטים לפי מפלגה בין הערוצים בחלון; שינוי מול הסקר הקודם מודגש; המספר בסוגריים = כמה סקרים הציגו את השינוי',
     pollSummaryChipDeltaOutletCountTitle: '{n} סקרים עם שינוי מול הסקר הקודם',
     pollSummaryHeroChipOutletCountLegend: '(מספר) = סקרים עם שינוי מול הסקר הקודם',
+    pollSummaryHeroChipDeltaColorLegend: 'ירוק/אדום = שינוי מול סקר קודם',
+    pollSummaryHeroPartiesChartOpenAria: 'הצג פירוט ממוצע מנדטים לפי מפלגה בין הערוצים',
+    pollSummaryHeroPartiesChartTitle: 'ממוצע מנדטים לפי מפלגה בין הערוצים',
+    pollSummaryHeroPartiesChartCloseAria: 'סגור פירוט מפלגות',
+    pollSummaryHeroPartiesChartWindowSuffix: ' · חלון {n} ימים',
+    pollSummaryHeroPartiesChartOutletsAria:
+      'ערוצים בחלון הסקרים; לחיצה לכלילה או הוצאה מהממוצע',
+    pollSummaryHeroPartiesChartOutletExcludeAria: 'הוצא את {outlet} מהממוצע',
+    pollSummaryHeroPartiesChartOutletIncludeAria: 'כלול את {outlet} בממוצע',
+    pollSummaryHeroPartiesChartOutletHint:
+      'לחצו על ערוץ כדי לכלול או להוציא אותו מהממוצע',
     pollSummaryHeroTrendPanelTitle: 'ממוצע ערוצים · חלון {n} ימים',
     pollSummaryHeroPartyTrendOpenAria: 'הצג מגמת מנדטים ממוצעת בין ערוצים עבור {party}',
     pollSummaryHeroPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בחלון.',

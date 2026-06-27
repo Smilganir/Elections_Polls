@@ -1,0 +1,105 @@
+# After Maariv's Friday poll lands (~11:00 Asia/Jerusalem), refresh rolling narrative
+# JSON (trend bullets + asOfUtc). Editorial hero background is preserved from JSON;
+# run the israel-poll-rolling-narrative skill (web search) to update background EN/HE
+# when the geopolitical frame shifts — then commit DEFAULT/EDITORIAL mirrors + JSON.
+#
+# Schedule: Fridays 07–11 UTC (≈ 10:00–14:00 IDT; Maariv target ~11:00 IL).
+# Requires secret VITE_GOOGLE_SHEETS_API_KEY (same as Deploy GitHub Pages).
+
+name: Poll summary — Friday Maariv sync
+
+on:
+  schedule:
+    - cron: '0 7,8,9,10,11 * * 5'
+  workflow_dispatch:
+    inputs:
+      force_sync:
+        description: 'Sync even if Maariv fingerprint unchanged'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: poll-summary-friday-maariv
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure sheet API env
+        env:
+          KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
+          SID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::Add repository secret VITE_GOOGLE_SHEETS_API_KEY."
+            exit 1
+          fi
+          printf 'VITE_GOOGLE_SHEETS_API_KEY=%s\n' "$KEY" >> poll-tracker-app/.env
+          if [ -n "$SID" ]; then
+            printf 'VITE_GOOGLE_SHEETS_SPREADSHEET_ID=%s\n' "$SID" >> poll-tracker-app/.env
+          fi
+
+      - name: Check for new Maariv poll
+        id: maariv
+        env:
+          FORCE_FLAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_sync == 'true' && '--force' || '' }}
+        run: node scripts/check-maariv-friday-poll.mjs $FORCE_FLAG
+
+      - name: Refresh poll summary narrative (data)
+        if: steps.maariv.outputs.sync == 'true'
+        run: node scripts/summarize-latest-blocs.mjs
+
+      - name: Update Maariv fingerprint
+        if: steps.maariv.outputs.sync == 'true'
+        run: |
+          echo "${{ steps.maariv.outputs.poll_id }}:${{ steps.maariv.outputs.poll_date }}" > .maariv-narrative-sync
+
+      - name: Commit narrative refresh
+        if: steps.maariv.outputs.sync == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .maariv-narrative-sync poll-tracker-app/src/content/poll-summary-narrative.json scripts/poll-bloc-summary.html
+          git diff --staged --quiet && echo "No file changes — skip commit." && exit 0
+          git commit -m "chore: refresh poll summary after Maariv ${{ steps.maariv.outputs.poll_date }}"
+          git push
+
+      - name: Open background refresh issue
+        if: steps.maariv.outputs.sync == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --search "in:title Poll summary background — Maariv ${{ steps.maariv.outputs.poll_date }}" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "$EXISTING" ] && [ "$EXISTING" != "null" ]; then
+            echo "Issue #$EXISTING already open for this Maariv date."
+            exit 0
+          fi
+          gh issue create \
+            --title "Poll summary background — Maariv ${{ steps.maariv.outputs.poll_date }}" \
+            --body "$(cat <<EOF
+## Data synced
+Rolling narrative JSON and \`poll-bloc-summary.html\` were refreshed after Maariv poll **${{ steps.maariv.outputs.poll_id }}** (${{ steps.maariv.outputs.poll_date }}).
+
+## Still needed — hero background (EN/HE)
+Update the one-line geopolitical **background** via \`.cursor/skills/israel-poll-rolling-narrative/SKILL.md\`:
+
+1. Web search for recent Israeli politics relative to the poll reference date.
+2. Edit \`locales.en.background\` / \`locales.he.background\` in \`poll-summary-narrative.json\`.
+3. Mirror \`DEFAULT_BACKGROUND_*\` in \`scripts/build-poll-summary-narrative.mjs\` and \`EDITORIAL_BACKGROUND_*\` in \`generatePollSummaryHeroNarrative.ts\`.
+4. Bump \`asOfUtc\` if the editorial frame changed.
+5. Commit, push (Pages deploy follows on \`main\`).
+
+Do **not** invent poll numbers — use repo sheet/HTML outputs only for figures.
+EOF
+)"
