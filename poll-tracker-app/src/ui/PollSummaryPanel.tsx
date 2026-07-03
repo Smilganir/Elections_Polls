@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
@@ -188,6 +189,7 @@ export function OutletFilterDropdown({
   locale,
   displayMediaOutlet,
   filterButtonRef,
+  portalPanel = false,
 }: {
   allOutlets: string[]
   excludedOutlets: Set<string>
@@ -196,15 +198,47 @@ export function OutletFilterDropdown({
   locale: AppLocale
   displayMediaOutlet: (outlet: string) => string
   filterButtonRef?: React.RefObject<HTMLButtonElement | null>
+  /** Portals the panel to document.body so it is not clipped by overflow containers. */
+  portalPanel?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
+  const internalBtnRef = useRef<HTMLButtonElement | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const btnRef = filterButtonRef ?? internalBtnRef
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>({})
   const hiddenCount = excludedOutlets.size
+
+  const syncPanelPosition = useCallback(() => {
+    const btn = btnRef.current
+    if (!btn) return
+    const rect = btn.getBoundingClientRect()
+    setPanelStyle({
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      zIndex: 200,
+    })
+  }, [btnRef])
+
+  useLayoutEffect(() => {
+    if (!open || !portalPanel) return
+    syncPanelPosition()
+    window.addEventListener('resize', syncPanelPosition)
+    window.addEventListener('scroll', syncPanelPosition, true)
+    return () => {
+      window.removeEventListener('resize', syncPanelPosition)
+      window.removeEventListener('scroll', syncPanelPosition, true)
+    }
+  }, [open, portalPanel, syncPanelPosition, hiddenCount, allOutlets.length])
 
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      const inWrap = wrapRef.current?.contains(target)
+      const inPanel = panelRef.current?.contains(target)
+      if (!inWrap && !inPanel) setOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false)
@@ -217,10 +251,39 @@ export function OutletFilterDropdown({
     }
   }, [open])
 
+  const panelContent = (
+    <>
+      {hiddenCount > 0 && (
+        <button className="lpo-ps-outlet-filter-all" onClick={onClear}>
+          {locale === 'he' ? 'הצג הכל' : 'Show all'}
+        </button>
+      )}
+      {allOutlets.map((outlet) => {
+        const included = !excludedOutlets.has(outlet)
+        return (
+          <label key={outlet} className="lpo-ps-outlet-filter-item">
+            <input
+              type="checkbox"
+              checked={included}
+              onChange={() => onToggle(outlet)}
+            />
+            <span className="lpo-ps-outlet-filter-ico">
+              <IconWithFallback
+                src={MEDIA_ICON_MAP[outlet]}
+                label={displayMediaOutlet(outlet)}
+              />
+            </span>
+            <span className="lpo-ps-outlet-filter-name">{displayMediaOutlet(outlet)}</span>
+          </label>
+        )
+      })}
+    </>
+  )
+
   return (
     <div className="lpo-ps-outlet-filter" ref={wrapRef}>
       <button
-        ref={filterButtonRef}
+        ref={btnRef}
         className={`lpo-ps-outlet-filter-btn${hiddenCount > 0 ? ' lpo-ps-outlet-filter-btn--active' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -232,34 +295,21 @@ export function OutletFilterDropdown({
           <span className="lpo-ps-outlet-filter-badge">{hiddenCount}</span>
         )}
       </button>
-      {open && (
-        <div className="lpo-ps-outlet-filter-panel">
-          {hiddenCount > 0 && (
-            <button className="lpo-ps-outlet-filter-all" onClick={onClear}>
-              {locale === 'he' ? 'הצג הכל' : 'Show all'}
-            </button>
-          )}
-          {allOutlets.map((outlet) => {
-            const included = !excludedOutlets.has(outlet)
-            return (
-              <label key={outlet} className="lpo-ps-outlet-filter-item">
-                <input
-                  type="checkbox"
-                  checked={included}
-                  onChange={() => onToggle(outlet)}
-                />
-                <span className="lpo-ps-outlet-filter-ico">
-                  <IconWithFallback
-                    src={MEDIA_ICON_MAP[outlet]}
-                    label={displayMediaOutlet(outlet)}
-                  />
-                </span>
-                <span className="lpo-ps-outlet-filter-name">{displayMediaOutlet(outlet)}</span>
-              </label>
-            )
-          })}
-        </div>
-      )}
+      {open && !portalPanel ? (
+        <div className="lpo-ps-outlet-filter-panel">{panelContent}</div>
+      ) : null}
+      {open && portalPanel && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              ref={panelRef}
+              className="lpo-ps-outlet-filter-panel lpo-ps-outlet-filter-panel--portaled"
+              style={panelStyle}
+            >
+              {panelContent}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }
@@ -1067,6 +1117,7 @@ export function PollSummaryPanel({
       locale={locale}
       displayMediaOutlet={displayMediaOutlet}
       filterButtonRef={outletFilterBtnRef}
+      portalPanel={showFilterInTableHeader}
     />
   )
 

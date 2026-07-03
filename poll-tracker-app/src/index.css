@@ -4294,11 +4294,11 @@ a.lpo-ps-nav-btn {
 
 .lpo-ps-unified-fixed-header-filter .lpo-ps-outlet-filter {
   position: relative;
-  z-index: 2;
+  z-index: 28;
 }
 
-.lpo-ps-unified-fixed-header-filter .lpo-ps-outlet-filter-panel {
-  z-index: 80;
+.lpo-ps-outlet-filter-panel--portaled {
+  z-index: 200;
 }
 
 .lpo-ps-unified-outlet-block--trend-open .lpo-ps-unified-fixed-row {
@@ -4321,6 +4321,11 @@ a.lpo-ps-nav-btn {
   min-width: 0;
   min-height: 0;
   pointer-events: none;
+}
+
+/* Header corner hosts the outlet filter — must receive clicks (overrides rule above). */
+.lpo-ps-unified-fixed-header-spacer.lpo-ps-unified-split-grid-corner {
+  pointer-events: auto;
 }
 
 /* Sticky party-name header inside the shared parties scroll track. */

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type CSSProperties } from 'react'
+import { useEffect, useMemo, type CSSProperties, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
@@ -21,6 +21,64 @@ function formatChipNum(n: number): string {
 function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean): string {
   if (mergeArabsWithOpposition && segment === 'Arabs') return SEGMENT_COLORS.Opposition
   return SEGMENT_COLORS[segment]
+}
+
+export function PollSummaryOutletFilterStrip({
+  allOutlets,
+  excludedOutlets,
+  onToggleOutlet,
+  displayMediaOutlet,
+  t,
+  className,
+  stripRef,
+}: {
+  allOutlets: readonly string[]
+  excludedOutlets: ReadonlySet<string>
+  onToggleOutlet: (outlet: string) => void
+  displayMediaOutlet: (outlet: string) => string
+  t: UiStrings
+  className?: string
+  stripRef?: RefObject<HTMLDivElement | null>
+}) {
+  const includedOutletCount = useMemo(
+    () => allOutlets.filter((outlet) => !excludedOutlets.has(outlet)).length,
+    [allOutlets, excludedOutlets],
+  )
+
+  return (
+    <div
+      ref={stripRef}
+      className={`lpo-ps-hero-chart-outlets${className ? ` ${className}` : ''}`}
+      role="group"
+      aria-label={t.pollSummaryHeroPartiesChartOutletsAria}
+    >
+      {allOutlets.map((outlet) => {
+        const included = !excludedOutlets.has(outlet)
+        const outletLabel = displayMediaOutlet(outlet)
+        const toggleAria = (
+          included
+            ? t.pollSummaryHeroPartiesChartOutletExcludeAria
+            : t.pollSummaryHeroPartiesChartOutletIncludeAria
+        ).replace(/\{outlet\}/g, outletLabel)
+        const disableExclude = included && includedOutletCount <= 1
+
+        return (
+          <button
+            key={outlet}
+            type="button"
+            className={`lpo-ps-hero-chart-outlet-btn${included ? '' : ' lpo-ps-hero-chart-outlet-btn--excluded'}`}
+            aria-pressed={included}
+            aria-label={toggleAria}
+            title={outletLabel}
+            disabled={disableExclude}
+            onClick={() => onToggleOutlet(outlet)}
+          >
+            <IconWithFallback src={MEDIA_ICON_MAP[outlet]} label={outletLabel} />
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 export function PollSummaryHeroPartiesChartButton({
@@ -141,11 +199,6 @@ export function PollSummaryHeroPartiesChartPopup({
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const includedOutletCount = useMemo(
-    () => allOutlets.filter((outlet) => !excludedOutlets.has(outlet)).length,
-    [allOutlets, excludedOutlets],
-  )
-
   const changedByParty = useMemo(
     () => new Map(changedParties.map((cp) => [cp.party, cp])),
     [changedParties],
@@ -210,40 +263,13 @@ export function PollSummaryHeroPartiesChartPopup({
             >
               {t.pollSummaryHeroPartiesChartOutletHint}
             </p>
-            <div
-              className="lpo-ps-hero-chart-outlets"
-              role="group"
-              aria-label={t.pollSummaryHeroPartiesChartOutletsAria}
-            >
-              {allOutlets.map((outlet) => {
-                const included = !excludedOutlets.has(outlet)
-                const outletLabel = displayMediaOutlet(outlet)
-                const toggleAria = (
-                  included
-                    ? t.pollSummaryHeroPartiesChartOutletExcludeAria
-                    : t.pollSummaryHeroPartiesChartOutletIncludeAria
-                ).replace(/\{outlet\}/g, outletLabel)
-                const disableExclude = included && includedOutletCount <= 1
-
-                return (
-                  <button
-                    key={outlet}
-                    type="button"
-                    className={`lpo-ps-hero-chart-outlet-btn${included ? '' : ' lpo-ps-hero-chart-outlet-btn--excluded'}`}
-                    aria-pressed={included}
-                    aria-label={toggleAria}
-                    title={outletLabel}
-                    disabled={disableExclude}
-                    onClick={() => onToggleOutlet(outlet)}
-                  >
-                    <IconWithFallback
-                      src={MEDIA_ICON_MAP[outlet]}
-                      label={outletLabel}
-                    />
-                  </button>
-                )
-              })}
-            </div>
+            <PollSummaryOutletFilterStrip
+              allOutlets={allOutlets}
+              excludedOutlets={excludedOutlets}
+              onToggleOutlet={onToggleOutlet}
+              displayMediaOutlet={displayMediaOutlet}
+              t={t}
+            />
           </div>
           <button
             type="button"
