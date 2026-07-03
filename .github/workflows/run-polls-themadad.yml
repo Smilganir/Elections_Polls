@@ -96,4 +96,5 @@ jobs:
           git add .themadad-fingerprint
           git diff --staged --quiet && echo "Fingerprint unchanged in git — skip commit." && exit 0
           git commit -m "chore: update themadad sync fingerprint [skip ci]"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
