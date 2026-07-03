@@ -9,17 +9,16 @@
 #
 # Schedule:
 #   • Hourly :25 UTC — fetch + content fingerprint check; upload when ETL output changed.
-#   • Daily 06:25 UTC — same check (fail-safe if hourly runs were skipped).
 #
 # Fingerprint: committed `.themadad-fingerprint` (v2: maxId:rows:hash) is the source of truth.
-# cancel-in-progress drops stale queued jobs so a backlog on a slow runner does not block fresh polls.
+# cancel-in-progress: false — let the in-flight sync finish; hourly runs queue on the single
+# self-hosted runner instead of killing a slow/hung job (which caused multi-hour upload gaps).
 
 name: Run polls when themadad updates
 
 on:
   schedule:
     - cron: '25 * * * *'
-    - cron: '25 6 * * *'
   workflow_dispatch:
     inputs:
       force_upload:
@@ -33,12 +32,12 @@ permissions:
 
 concurrency:
   group: themadad-poll-sync
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   sync:
     runs-on: [self-hosted, linux]
-    timeout-minutes: 25
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
