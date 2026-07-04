@@ -14,8 +14,10 @@ import {
   type RollingPoll,
   type RollingWindowRow,
   buildCrossOutletAverageChipRow,
+  buildUnifiedPartyOrder,
   evaluatePartySeatColumnOutlier,
   partyColumnSeatStats,
+  segmentForPartyInRows,
   summaryFromRollingRows,
 } from '../lib/pollRollingWindow'
 import type { Segment } from '../types/data'
@@ -567,7 +569,10 @@ function PollSummaryChipsStrip({
       }
     >
       {partiesWithSeats.map((p) => {
-        if (p.votes <= 0 && unifiedGrid) {
+        const cp = changedByParty.get(p.party)
+        const isChanged = cp !== undefined
+
+        if (p.votes <= 0 && unifiedGrid && !isChanged) {
           return (
             <li
               key={p.party}
@@ -587,10 +592,8 @@ function PollSummaryChipsStrip({
             </li>
           )
         }
-        if (p.votes <= 0) return null
+        if (p.votes <= 0 && !isChanged) return null
 
-        const cp = changedByParty.get(p.party)
-        const isChanged = cp !== undefined
         const outletCount =
           showDeltaOutletCount && cp && cp.deltaOutletCount && cp.deltaOutletCount > 0
             ? cp.deltaOutletCount
@@ -776,15 +779,22 @@ export function PollSummaryPanel({
     () => buildCrossOutletAverageChipRow(filteredRows),
     [filteredRows],
   )
-  /** Cross-outlet column order: hero average seat rank (high → low). */
-  const unifiedPartyOrder = useMemo(
-    () => heroAvgChips?.current.parties.map((p) => p.party) ?? [],
-    [heroAvgChips],
-  )
+  /** Cross-outlet column order: hero average rank + parties with a prior-poll Δ on any row. */
+  const unifiedPartyOrder = useMemo(() => {
+    if (!heroAvgChips) return []
+    const base = heroAvgChips.current.parties.map((p) => p.party)
+    return buildUnifiedPartyOrder(base, filteredRows, heroAvgChips.changedParties)
+  }, [heroAvgChips, filteredRows])
   const unifiedHeaderSegmentByParty = useMemo(() => {
     if (!heroAvgChips) return undefined
-    return new Map(heroAvgChips.current.parties.map((p) => [p.party, p.segment]))
-  }, [heroAvgChips])
+    const m = new Map(heroAvgChips.current.parties.map((p) => [p.party, p.segment]))
+    for (const party of unifiedPartyOrder) {
+      if (m.has(party)) continue
+      const seg = segmentForPartyInRows(party, filteredRows)
+      if (seg) m.set(party, seg)
+    }
+    return m
+  }, [heroAvgChips, unifiedPartyOrder, filteredRows])
   const partyColumnSeatStatsMap = useMemo(
     () => partyColumnSeatStats(filteredRows, unifiedPartyOrder),
     [filteredRows, unifiedPartyOrder],

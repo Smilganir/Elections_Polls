@@ -38,6 +38,8 @@ export type UiStrings = {
   pollSummaryPartiesDetailBtn: string
   pollSummaryWindowDaysLabel: string
   pollSummaryWindowDaysAria: string
+  pollSummaryWindowDaysDecreaseAria: string
+  pollSummaryWindowDaysIncreaseAria: string
   pollSummarySubtitle: string
   /** Bold lead + tail; shown above per-outlet rows in poll summary */
   pollSummaryOutletsBreakdownLead: string
@@ -183,6 +185,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryPartiesDetailBtn: 'All polls',
     pollSummaryWindowDaysLabel: 'Days in window',
     pollSummaryWindowDaysAria: 'Number of days to include in the poll summary rolling window',
+    pollSummaryWindowDaysDecreaseAria: 'Decrease days in window',
+    pollSummaryWindowDaysIncreaseAria: 'Increase days in window',
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
     pollSummaryOutletsBreakdownLead: 'Poll breakdown',
     pollSummaryOutletsBreakdownTail:
@@ -310,6 +314,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryPartiesDetailBtn: 'כל הסקרים',
     pollSummaryWindowDaysLabel: 'ימים בחלון',
     pollSummaryWindowDaysAria: 'מספר הימים האחורה לכלול בסיכום הסקרים',
+    pollSummaryWindowDaysDecreaseAria: 'הקטנת מספר הימים בחלון',
+    pollSummaryWindowDaysIncreaseAria: 'הגדלת מספר הימים בחלון',
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
     pollSummaryOutletsBreakdownLead: 'פירוט הסקרים',
     pollSummaryOutletsBreakdownTail:

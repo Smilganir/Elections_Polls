@@ -666,6 +666,103 @@ function Sparkline({ data, eventDates, color, globalMinT, globalMaxT, seatsLabel
   )
 }
 
+function PollSummaryWindowDaysStepper({
+  t,
+  locale,
+  value,
+  onChange,
+}: {
+  t: UiStrings
+  locale: AppLocale
+  value: number
+  onChange: (n: number) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const commitDraft = (raw: string) => {
+    const trimmed = raw.trim()
+    if (trimmed === '') {
+      onChange(DEFAULT_POLL_SUMMARY_WINDOW_DAYS)
+      return
+    }
+    const v = Number(trimmed)
+    if (Number.isNaN(v)) {
+      onChange(DEFAULT_POLL_SUMMARY_WINDOW_DAYS)
+      return
+    }
+    onChange(clampPollSummaryWindowDays(v))
+  }
+
+  const bump = (delta: number) => {
+    setEditing(false)
+    onChange(clampPollSummaryWindowDays(value + delta))
+  }
+
+  return (
+    <label
+      className="lpo-ps-window-days-label"
+      dir={locale === 'he' ? 'rtl' : 'ltr'}
+    >
+      <span>{t.pollSummaryWindowDaysLabel}</span>
+      <div className="lpo-ps-window-days-stepper" dir="ltr">
+        <button
+          type="button"
+          className="lpo-ps-window-days-step-btn"
+          disabled={value <= MIN_POLL_SUMMARY_WINDOW_DAYS}
+          aria-label={t.pollSummaryWindowDaysDecreaseAria}
+          onClick={() => bump(-1)}
+        >
+          <PaginationChevronIcon direction="prev" />
+        </button>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={MIN_POLL_SUMMARY_WINDOW_DAYS}
+          max={MAX_POLL_SUMMARY_WINDOW_DAYS}
+          step={1}
+          value={editing ? draft : String(value)}
+          aria-label={`${t.pollSummaryWindowDaysLabel}. ${t.pollSummaryWindowDaysAria}`}
+          onFocus={() => {
+            setEditing(true)
+            setDraft(String(value))
+          }}
+          onChange={(e) => {
+            const raw = e.target.value
+            if (!/^\d{0,3}$/.test(raw)) return
+            setDraft(raw)
+            if (raw !== '') {
+              onChange(clampPollSummaryWindowDays(Number(raw)))
+            }
+          }}
+          onBlur={() => {
+            setEditing(false)
+            commitDraft(draft)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp') {
+              e.preventDefault()
+              bump(1)
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault()
+              bump(-1)
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="lpo-ps-window-days-step-btn"
+          disabled={value >= MAX_POLL_SUMMARY_WINDOW_DAYS}
+          aria-label={t.pollSummaryWindowDaysIncreaseAria}
+          onClick={() => bump(1)}
+        >
+          <PaginationChevronIcon direction="next" />
+        </button>
+      </div>
+    </label>
+  )
+}
+
 function BlocArabsToggle({
   t,
   combineArabsWithOpposition,
@@ -1559,32 +1656,12 @@ export function LatestPollsOverviewPage() {
                 {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
               </p>
               <div className="lpo-ps-window-days-row">
-                <label
-                  className="lpo-ps-window-days-label"
-                  dir={locale === 'he' ? 'rtl' : 'ltr'}
-                >
-                  <span>{t.pollSummaryWindowDaysLabel}</span>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={MIN_POLL_SUMMARY_WINDOW_DAYS}
-                    max={MAX_POLL_SUMMARY_WINDOW_DAYS}
-                    step={1}
-                    value={pollSummaryWindowDays}
-                    aria-label={`${t.pollSummaryWindowDaysLabel}. ${t.pollSummaryWindowDaysAria}`}
-                    onChange={(e) => {
-                      const v = e.target.valueAsNumber
-                      if (Number.isNaN(v)) return
-                      setPollSummaryWindowDays(clampPollSummaryWindowDays(v))
-                    }}
-                    onBlur={(e) => {
-                      const v = e.target.valueAsNumber
-                      if (Number.isNaN(v)) {
-                        setPollSummaryWindowDays(DEFAULT_POLL_SUMMARY_WINDOW_DAYS)
-                      }
-                    }}
-                  />
-                </label>
+                <PollSummaryWindowDaysStepper
+                  t={t}
+                  locale={locale}
+                  value={pollSummaryWindowDays}
+                  onChange={setPollSummaryWindowDays}
+                />
               </div>
             </div>
           ) : null}

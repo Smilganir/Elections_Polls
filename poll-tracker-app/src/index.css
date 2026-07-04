@@ -174,9 +174,18 @@ body {
   text-align: center;
 }
 
-/* Latest polls: pull header stack up to match party-breakdown vertical rhythm vs page padding. */
+/* Latest polls: was negative margin to tighten vs page padding, but that pulled the
+   title above .dashboard-frame’s clip edge (overflow-x: hidden → vertical clip). */
 .dashboard-heading--lpo {
-  margin-top: -0.65rem;
+  margin-top: 0;
+  --lpo-ps-heading-action-col-width: 5.5rem;
+}
+
+.dashboard-heading--lpo .dashboard-heading-actions-stack .lpo-ps-nav-btn {
+  width: var(--lpo-ps-heading-action-col-width);
+  box-sizing: border-box;
+  text-align: center;
+  padding-inline: 0.35rem;
 }
 
 /* Single grid for title row + toolbar row so column 1 width matches (merge Arabs aligns with party tab). */
@@ -301,7 +310,7 @@ body {
   justify-self: stretch;
   font-size: 1.35rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.35;
   align-self: start;
   color: #867b40;
   letter-spacing: 0.02em;
@@ -314,7 +323,7 @@ body {
   color: #7cafeb;
   font-weight: 700;
   font-size: 20px;
-  line-height: 1.2;
+  line-height: 1.35;
 }
 
 .dashboard-heading-corner-spacer {
@@ -2417,10 +2426,6 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
     padding: 0.9rem 0.7rem;
   }
 
-  .dashboard-heading--lpo {
-    margin-top: -0.45rem;
-  }
-
   .dashboard-heading-bar h2 {
     font-size: 1.15rem;
   }
@@ -2600,10 +2605,6 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
   .page-content {
     padding: 0.6rem 0.4rem;
-  }
-
-  .dashboard-heading--lpo {
-    margin-top: -0.3rem;
   }
 
   .dashboard-heading-bar h2 {
@@ -3266,8 +3267,9 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 .dashboard-heading .lpo-ps-window-days-label {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 0.22rem;
+  width: var(--lpo-ps-heading-action-col-width, 5.5rem);
   font-size: 0.72rem;
   color: #8da2be;
   font-weight: 500;
@@ -3275,29 +3277,124 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .dashboard-heading .lpo-ps-window-days-label span {
-  text-align: end;
+  width: 100%;
+  text-align: center;
   white-space: nowrap;
 }
 
-.dashboard-heading .lpo-ps-window-days-label input {
-  width: 3.35rem;
+.dashboard-heading .lpo-ps-window-days-stepper {
+  display: flex;
+  align-items: stretch;
+  width: var(--lpo-ps-heading-action-col-width, 5.5rem);
   max-width: 100%;
-  padding: 0.22rem 0.4rem;
-  font-size: 0.78rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(22, 30, 44, 0.95);
+  overflow: hidden;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 1.45rem;
+  padding: 0.16rem 0.1rem;
+  border: none;
+  background: rgba(30, 40, 56, 0.95);
+  color: #a8b8ce;
+  cursor: pointer;
+  line-height: 0;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn + input {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-heading .lpo-ps-window-days-stepper input + .lpo-ps-window-days-step-btn {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn svg.icon-pagination-chevron {
+  width: 16px;
+  height: 16px;
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn:hover:not(:disabled) {
+  color: #dce6f4;
+  background: rgba(42, 56, 78, 0.98);
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn:active:not(:disabled) {
+  background: rgba(58, 123, 213, 0.22);
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.dashboard-heading .lpo-ps-window-days-step-btn:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.55);
+  z-index: 1;
+}
+
+.dashboard-heading .lpo-ps-window-days-stepper input {
+  width: 0;
+  min-width: 0;
+  flex: 1 1 0;
+  padding: 0.24rem 0.1rem;
+  font-size: 0.8rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: center;
   color: #e1e8f2;
-  background: rgba(22, 30, 44, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   box-sizing: border-box;
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-.dashboard-heading .lpo-ps-window-days-label input:focus {
-  outline: none;
+.dashboard-heading .lpo-ps-window-days-stepper input::-webkit-outer-spin-button,
+.dashboard-heading .lpo-ps-window-days-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.dashboard-heading .lpo-ps-window-days-stepper:focus-within {
   border-color: rgba(59, 130, 246, 0.55);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.dashboard-heading .lpo-ps-window-days-stepper input:focus {
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .dashboard-heading .lpo-ps-window-days-step-btn {
+    min-width: 1.55rem;
+    min-height: 2.15rem;
+    padding: 0.28rem 0.12rem;
+  }
+
+  .dashboard-heading .lpo-ps-window-days-step-btn svg.icon-pagination-chevron {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dashboard-heading .lpo-ps-window-days-stepper input {
+    padding: 0.34rem 0.1rem;
+    font-size: 0.86rem;
+  }
 }
 
 /* Poll summary subtitle: centered when stacked in meta; spacing from flex gap. */

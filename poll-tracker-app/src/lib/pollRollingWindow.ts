@@ -233,6 +233,49 @@ export function buildCrossOutletAverageChipRow(
   }
 }
 
+/**
+ * Hero average rank order plus parties that show a seat Δ vs prior on any outlet row
+ * (e.g. dropped to 0 seats) so column deltas can sum to bloc totals.
+ */
+export function buildUnifiedPartyOrder(
+  heroParties: readonly string[],
+  rows: RollingWindowRow[],
+  heroChangedParties: readonly ChangedParty[] = [],
+): string[] {
+  const seen = new Set(heroParties)
+  const extraWeight = new Map<string, number>()
+
+  const track = (party: string, delta: number) => {
+    if (seen.has(party) || delta === 0) return
+    extraWeight.set(party, Math.max(extraWeight.get(party) ?? 0, Math.abs(delta)))
+  }
+
+  for (const cp of heroChangedParties) track(cp.party, cp.delta)
+  for (const { changedParties } of rows) {
+    for (const cp of changedParties) track(cp.party, cp.delta)
+  }
+
+  const extras = [...extraWeight.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([party]) => party)
+
+  return [...heroParties, ...extras]
+}
+
+/** Segment for a party from rolling rows (changed-party row first, then current poll). */
+export function segmentForPartyInRows(
+  party: string,
+  rows: RollingWindowRow[],
+): Segment | undefined {
+  for (const { current, changedParties } of rows) {
+    const cp = changedParties.find((c) => c.party === party)
+    if (cp) return cp.segment
+    const p = current.parties.find((pr) => pr.party === party)
+    if (p) return p.segment
+  }
+  return undefined
+}
+
 export function averagePartySeatDeltaAcrossOutlets(rows: RollingWindowRow[]): Map<string, number> {
   const sum = new Map<string, number>()
   const count = new Map<string, number>()
