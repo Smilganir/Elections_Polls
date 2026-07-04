@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polling Dashboard Redesign</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#0f141c] text-slate-100 p-8 flex flex-col items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-5xl bg-[#171e29] rounded-xl shadow-2xl border border-slate-800 overflow-hidden">
+        
+        <!-- Header Row -->
+        <div class="flex items-center justify-between bg-[#1e2736] px-6 py-4 border-b border-slate-800 text-xs font-semibold text-slate-400 tracking-wider">
+            <div class="w-44">סוקר ותאריך</div>
+            <div class="w-64 text-center">מפת הגושים (סף 60)</div>
+            <div class="flex-1 flex justify-around text-center border-r border-slate-700/50 mr-4">
+                <div class="w-14">הליכוד</div>
+                <div class="w-14">יש עתיד</div>
+                <div class="w-14">המחנה הממלכתי</div>
+                <div class="w-14">ישראל ביתנו</div>
+                <div class="w-14">ש"ס</div>
+                <div class="w-14">עוצמה יהודית</div>
+                <div class="w-14">יהדות התורה</div>
+            </div>
+        </div>
+
+        <!-- Sample Data Row (Ma'ariv) -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800/60 hover:bg-[#1a2330] transition-colors">
+            
+            <!-- Publisher & Date Column -->
+            <div class="w-44 flex items-center gap-3">
+                <div class="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center font-bold text-white text-base shadow-inner">
+                    מ
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-sm text-slate-200">מעריב</span>
+                    <span class="text-[11px] text-slate-500 font-medium">03/07/2026</span>
+                </div>
+            </div>
+
+            <!-- Optimized Bloc Progress Bar -->
+            <div class="w-64 flex items-center gap-3">
+                <span class="text-sm font-bold text-slate-300 w-5 text-left">59</span>
+                <div class="flex-1 h-3 bg-slate-800 rounded-full relative overflow-hidden flex">
+                    <!-- Left Bloc Bar -->
+                    <div class="h-full bg-slate-300 w-[49%] rounded-r-full"></div>
+                    <!-- Right Bloc Bar -->
+                    <div class="h-full bg-blue-500 w-[41%] absolute left-0 rounded-l-full"></div>
+                    <!-- Absolute Center 60-Seat Cut Line -->
+                    <div class="absolute right-1/2 top-0 h-full w-[2px] bg-yellow-400 z-10 translate-x-1/2 shadow-[0_0_4px_#facc15]"></div>
+                </div>
+                <span class="text-sm font-bold text-blue-400 w-5 text-right">50</span>
+            </div>
+
+            <!-- Cleaner Horizontal Party Scores -->
+            <div class="flex-1 flex justify-around mr-4 border-r border-slate-800/50">
+                
+                <!-- Likud: High Contrast White + Clean Horizontal Delta -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">21</span>
+                    <span class="text-[11px] text-rose-400 font-semibold">↓1</span>
+                </div>
+
+                <!-- Yesh Atid -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">20</span>
+                    <span class="text-[11px] text-rose-400 font-semibold">↓1</span>
+                </div>
+
+                <!-- National Unity (Green Surge) -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">19</span>
+                    <span class="text-[11px] text-emerald-400 font-semibold">↑1</span>
+                </div>
+
+                <!-- Yisrael Beytenu -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">10</span>
+                    <span class="text-[11px] text-slate-600 font-bold">-</span>
+                </div>
+
+                <!-- Shas -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">10</span>
+                    <span class="text-[11px] text-rose-400 font-semibold">↓1</span>
+                </div>
+
+                <!-- Otzma Yehudit -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">8</span>
+                    <span class="text-[11px] text-slate-600 font-bold">-</span>
+                </div>
+
+                <!-- UTJ -->
+                <div class="w-14 flex items-center justify-center gap-0.5 font-medium">
+                    <span class="text-base text-white font-bold">8</span>
+                    <span class="text-[11px] text-emerald-400 font-semibold">↑1</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <p class="text-xs text-slate-500 mt-4">פרוטוטייפ ממשק משופר - נקי מקוים כפולים ובעל קונטרסט גבוה</p>
+
+</body>
+</html>
