@@ -2972,8 +2972,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   );
   /* Minimum width for unified Δ strip (scroll column); max() below keeps wrap wide enough when chips-w is smaller. */
   --lpo-ps-unified-parties-col-min-w: 480px;
-  /* Bar column widths (30% narrower than prior 100/150/170px caps). */
-  --lpo-ps-bar-col-min: 70px;
+  /* Bar column widths (30% narrower than prior 100/150/170px caps). Mobile min widened for bloc nums + deltas. */
+  --lpo-ps-bar-col-min: 84px;
   --lpo-ps-bar-col-md: 105px;
   --lpo-ps-bar-col-max: 119px;
   /*
