@@ -1,16 +1,17 @@
-# After Maariv's Friday poll lands (~11:00 Asia/Jerusalem), refresh rolling narrative
-# JSON (trend bullets + asOfUtc). Editorial hero background is preserved from JSON;
-# run the israel-poll-rolling-narrative skill (web search) to update background EN/HE
-# when the geopolitical frame shifts — then commit DEFAULT/EDITORIAL mirrors + JSON.
+# After Maariv's Friday poll lands, refresh rolling narrative JSON (trend bullets + asOfUtc).
+# Editorial hero background is preserved from JSON; run the israel-poll-rolling-narrative skill
+# (web search) to update background EN/HE when the geopolitical frame shifts.
 #
-# Schedule: Fridays 07–11 UTC (≈ 10:00–14:00 IDT; Maariv target ~11:00 IL).
+# Schedule (Asia/Jerusalem — gate in scripts/israel-poll-schedule-gate.mjs):
+#   • Fri 09:45, 10:45, 11:45 — 15 min after poll sync (09:30/10:30/11:30) so Sheets are updated first.
 # Requires secret VITE_GOOGLE_SHEETS_API_KEY (same as Deploy GitHub Pages).
 
 name: Poll summary — Friday Maariv sync
 
 on:
   schedule:
-    - cron: '0 7,8,9,10,11 * * 5'
+    # Fri — 09:45, 10:45, 11:45 IL (IDT/IST UTC pairs; 15 min after poll sync)
+    - cron: '45 6,7,8,9 * * 5'
   workflow_dispatch:
     inputs:
       force_sync:
@@ -36,7 +37,18 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify Israel schedule slot
+        id: slot
+        if: github.event_name == 'schedule'
+        run: |
+          if node scripts/israel-poll-schedule-gate.mjs fri-narrative; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configure sheet API env
+        if: github.event_name != 'schedule' || steps.slot.outputs.ok == 'true'
         env:
           KEY: ${{ secrets.VITE_GOOGLE_SHEETS_API_KEY }}
           SID: ${{ secrets.VITE_GOOGLE_SHEETS_SPREADSHEET_ID }}
@@ -51,22 +63,23 @@ jobs:
           fi
 
       - name: Check for new Maariv poll
+        if: github.event_name != 'schedule' || steps.slot.outputs.ok == 'true'
         id: maariv
         env:
           FORCE_FLAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_sync == 'true' && '--force' || '' }}
         run: node scripts/check-maariv-friday-poll.mjs $FORCE_FLAG
 
       - name: Refresh poll summary narrative (data)
-        if: steps.maariv.outputs.sync == 'true'
+        if: (github.event_name != 'schedule' || steps.slot.outputs.ok == 'true') && steps.maariv.outputs.sync == 'true'
         run: node scripts/summarize-latest-blocs.mjs
 
       - name: Update Maariv fingerprint
-        if: steps.maariv.outputs.sync == 'true'
+        if: (github.event_name != 'schedule' || steps.slot.outputs.ok == 'true') && steps.maariv.outputs.sync == 'true'
         run: |
           echo "${{ steps.maariv.outputs.poll_id }}:${{ steps.maariv.outputs.poll_date }}" > .maariv-narrative-sync
 
       - name: Commit narrative refresh
-        if: steps.maariv.outputs.sync == 'true'
+        if: (github.event_name != 'schedule' || steps.slot.outputs.ok == 'true') && steps.maariv.outputs.sync == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -76,7 +89,7 @@ jobs:
           git push
 
       - name: Open background refresh issue
-        if: steps.maariv.outputs.sync == 'true'
+        if: (github.event_name != 'schedule' || steps.slot.outputs.ok == 'true') && steps.maariv.outputs.sync == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
