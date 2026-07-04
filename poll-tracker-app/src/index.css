@@ -320,7 +320,7 @@ body {
 }
 
 .dashboard-heading-bar h2 strong {
-  color: #7cafeb;
+  color: rgba(147, 197, 253, 1);
   font-weight: 700;
   font-size: 20px;
   line-height: 1.35;
@@ -1225,7 +1225,7 @@ html[lang='he'] .lpo-filter--page-count select {
 }
 
 .lpo-bloc-legend-row--coalition .lpo-bloc-legend-swatch {
-  background: #0166df;
+  background: #00B1FF;
 }
 
 .lpo-party-name {
@@ -1384,7 +1384,7 @@ html[lang='he'] .lpo-col-header-text-block {
 }
 
 .lpo-total.coalition {
-  color: #0166DF;
+  color: #00B1FF;
 }
 
 .lpo-total.opposition {
@@ -1446,7 +1446,7 @@ html[lang='he'] .lpo-col-header-text-block {
 
 .lpo-threshold-fill.coalition-fill {
   left: 0;
-  background: #0166DF;
+  background: #00B1FF;
   border-radius: 5px 0 0 5px;
 }
 
@@ -3169,7 +3169,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   height: 14px;
   padding: 0 3px;
   border-radius: 7px;
-  background: #0166df;
+  background: #00B1FF;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -3223,7 +3223,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-outlet-filter-item input[type='checkbox'] {
-  accent-color: #0166df;
+  accent-color: #00B1FF;
   width: 13px;
   height: 13px;
   flex-shrink: 0;
@@ -3690,11 +3690,16 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   --lpo-ps-chip-delta-h: 17px;
 }
 
+.lpo-ps-hero-parties-scroll .lpo-ps-chip {
+  gap: 0;
+}
+
 .lpo-ps-hero-parties-scroll .lpo-ps-chip-votes {
-  font-size: 11.8px;
+  font-size: 12px;
   font-weight: 800;
   min-height: 17px;
   line-height: 17px;
+  margin-top: 4px;
 }
 
 .lpo-ps-hero-parties-scroll .lpo-ps-chip-delta-stack {
@@ -3703,6 +3708,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   justify-content: center;
   gap: 0;
   min-height: auto;
+  margin-top: 0;
 }
 
 .lpo-ps-hero-parties-scroll .lpo-ps-chip-delta-stack .lpo-ps-chip-delta {
@@ -3716,7 +3722,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   justify-content: center;
   text-align: center;
   padding-top: 0;
-  font-size: 11.8px;
+  font-size: 10px;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -3842,7 +3848,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-hero-lbl--coal {
-  color: #0166df;
+  color: #00B1FF;
 }
 
 .lpo-ps-hero-lbl--opp {
@@ -3856,7 +3862,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-hero-num--coal {
-  color: #0166df;
+  color: #00B1FF;
 }
 
 .lpo-ps-hero-num--opp {
@@ -3894,7 +3900,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 }
 
 .lpo-ps-narrative-top .lpo-ps-narrative-bloc--coalition {
-  color: #0166df;
+  color: #00B1FF;
 }
 
 .lpo-ps-narrative-top .lpo-ps-narrative-bloc--opposition {
@@ -3985,7 +3991,7 @@ a.lpo-ps-nav-btn {
 }
 
 .lpo-ps-narrative-trends-list .lpo-ps-narrative-bloc--coalition {
-  color: #0166df;
+  color: #00B1FF;
 }
 
 .lpo-ps-narrative-trends-list .lpo-ps-narrative-bloc--opposition {
@@ -4173,7 +4179,7 @@ a.lpo-ps-nav-btn {
 
 /* Match SEGMENT_COLORS (mappings.ts) / .lpo-threshold-fill */
 .lpo-ps-seg--coal {
-  background: #0166df;
+  background: #00B1FF;
 }
 
 .lpo-ps-seg--arabs {
@@ -4210,7 +4216,7 @@ a.lpo-ps-nav-btn {
 
 .lpo-ps-delta {
   font-weight: 700;
-  font-size: 11.8px;
+  font-size: 10px;
   margin-inline-start: 0.15rem;
 }
 
@@ -4289,6 +4295,7 @@ a.lpo-ps-nav-btn {
   --lpo-ps-values-delta-row: 17px;
   --lpo-ps-values-stdev-dots-row: 6px;
   --lpo-ps-unified-row-pad-block: 0.28rem;
+  --lpo-ps-unified-grid-inset-inline: calc(var(--lpo-ps-wrap-chip-gap, 0.65rem) / 2);
 }
 
 .lpo-ps-unified-outlets-with-guides .lpo-ps-unified-col-guides {
@@ -4299,7 +4306,18 @@ a.lpo-ps-nav-btn {
   inset-inline-end: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 3;
+  z-index: 25;
+}
+
+/* Outlet | party seam — body rows only (below sticky party-name header). */
+.lpo-ps-unified-outlets-with-guides .lpo-ps-unified-col-guides::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  width: 1px;
+  background: var(--lpo-ps-unified-col-divider);
+  z-index: 2;
 }
 
 .lpo-ps-unified-col-guides-track {
@@ -4319,6 +4337,7 @@ a.lpo-ps-nav-btn {
     transparent calc(var(--lpo-ps-unified-col-step) - var(--lpo-ps-wrap-chip-gap, 0.65rem) / 2 + 0.5px),
     transparent var(--lpo-ps-unified-col-step)
   );
+  background-position: var(--lpo-ps-unified-grid-inset-inline, 0px) 0;
   background-repeat: repeat-x;
   will-change: transform;
 }
@@ -4507,6 +4526,8 @@ html[lang='he'] .lpo-ps-unified-party-name {
 .lpo-ps-unified-parties-line .lpo-ps-chips--unified-grid,
 .lpo-ps-unified-parties-track > .lpo-ps-unified-parties-header-row .lpo-ps-chips--unified-grid {
   margin-inline: 0;
+  padding-inline-start: var(--lpo-ps-unified-grid-inset-inline, 0px);
+  box-sizing: border-box;
 }
 
 /* Legacy wrapper — kept for any remaining references */
@@ -4934,6 +4955,7 @@ html[lang='he'] .lpo-ps-unified-party-name {
 }
 
 .lpo-ps-row-bloc-num {
+  font-size: 12px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -5253,7 +5275,7 @@ html[lang='he'] .lpo-ps-unified-party-name {
   min-height: var(--lpo-ps-values-votes-row);
   display: block;
   text-align: center;
-  font-size: 11.8px;
+  font-size: 12px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: var(--lpo-ps-values-votes-row);
@@ -5273,7 +5295,7 @@ html[lang='he'] .lpo-ps-unified-party-name {
   justify-content: center;
   text-align: center;
   padding-top: 0;
-  font-size: 11.8px;
+  font-size: 10px;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -5290,7 +5312,7 @@ html[lang='he'] .lpo-ps-unified-party-name {
   max-height: none;
   width: 100%;
   justify-content: center;
-  font-size: 11.8px;
+  font-size: 10px;
   font-weight: 400;
 }
 

@@ -23,6 +23,7 @@ import {
   ENGLISH_MEDIA_NAMES,
   ENGLISH_PARTY_DISPLAY_OVERRIDES,
   HEBREW_PARTY_DISPLAY_OVERRIDES,
+  SEGMENT_COLORS,
 } from '@shared/config/mappings'
 import { sharedPublicUrl } from '../utils/sharedPublicUrl'
 import type { MediaBiasData } from '../hooks/useMediaBiasData'
@@ -681,7 +682,7 @@ function HeatmapSection({
                           src={PARTY_ICON_MAP[party]}
                           label={party}
                           size={35}
-                          ringColor={hideBlocChrome ? '#e8ecf2' : isCoalition ? '#0166DF' : '#e8ecf2'}
+                          ringColor={hideBlocChrome ? '#e8ecf2' : isCoalition ? SEGMENT_COLORS.Coalition : '#e8ecf2'}
                         />
                         <span className="lpo-mb-td-outlet-name">{partyLabel(party)}</span>
                       </div>

@@ -12,7 +12,7 @@
   --col-muted: #6a7f9a;
   --col-link: #7fa0c4;
 
-  --col-coalition: #0166DF;  /* coalition blue — matches poll-tracker-app */
+  --col-coalition: #00B1FF;  /* coalition blue — matches poll-tracker-app */
   --col-opposition: #e8ecf2; /* opposition white — matches poll-tracker-app */
   --col-sig: rgba(251, 191, 36, 0.85); /* gold for significance border */
   --col-excl: rgba(100, 116, 139, 0.3);
@@ -269,7 +269,7 @@ body { margin: 0; }
   color: var(--col-text);
 }
 .lpo-mb-global-controls .mb-export-svg-btn--open:not(:disabled) {
-  border-color: rgba(1, 102, 223, 0.55);
+  border-color: rgba(0, 177, 255, 0.55);
   background: rgba(58, 123, 213, 0.22);
   color: #fff;
 }
@@ -350,7 +350,7 @@ body { margin: 0; }
   width: 2rem;
   height: 2rem;
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #0166DF;
+  border-top-color: #00B1FF;
   border-radius: 50%;
   animation: mb-spin 0.75s linear infinite;
 }
@@ -469,7 +469,7 @@ body { margin: 0; }
 .lpo-mb-settings-btn--open,
 .lpo-mb-settings-btn[aria-expanded='true'] {
   color: #fff;
-  border-color: rgba(1, 102, 223, 0.55);
+  border-color: rgba(0, 177, 255, 0.55);
   background: rgba(58, 123, 213, 0.22);
 }
 
@@ -693,7 +693,7 @@ label.lpo-mb-settings-form__label {
   padding: 0.25rem 0.5rem;
   cursor: pointer;
 }
-.lpo-mb-select:focus { outline: 2px solid #0166DF; outline-offset: 1px; }
+.lpo-mb-select:focus { outline: 2px solid #00B1FF; outline-offset: 1px; }
 
 .lpo-mb-number {
   width: 3.5rem;
@@ -705,11 +705,11 @@ label.lpo-mb-settings-form__label {
   padding: 0.25rem 0.4rem;
   text-align: center;
 }
-.lpo-mb-number:focus { outline: 2px solid #0166DF; outline-offset: 1px; }
+.lpo-mb-number:focus { outline: 2px solid #00B1FF; outline-offset: 1px; }
 
 .lpo-mb-slider {
   width: 100px;
-  accent-color: #0166DF;
+  accent-color: #00B1FF;
   cursor: pointer;
 }
 
@@ -771,7 +771,7 @@ label.lpo-mb-settings-form__label {
 .lpo-mb-tab:hover { color: var(--col-text); }
 .lpo-mb-tab--active {
   color: var(--col-text);
-  border-bottom-color: #0166DF;
+  border-bottom-color: #00B1FF;
 }
 
 /* ── Section content ──────────────────────────────────────────────────────── */
@@ -983,11 +983,11 @@ label.lpo-mb-settings-form__label {
   min-width: 3.2rem;
   vertical-align: top;
 }
-.lpo-mb-th-party--coalition { color: #5ba8ff; }
+.lpo-mb-th-party--coalition { color: var(--col-coalition); }
 .lpo-mb-th-party--opposition { color: #e8ecf2; }
 
 /* Party row label colours (parties are now rows) */
-.lpo-mb-td-outlet--coalition { color: #5ba8ff; }
+.lpo-mb-td-outlet--coalition { color: var(--col-coalition); }
 .lpo-mb-td-outlet--opposition { color: #e8ecf2; }
 .lpo-mb-td-outlet--neutral { color: #e8ecf2; }
 
@@ -1061,7 +1061,7 @@ label.lpo-mb-settings-form__label {
   padding: 2px 0;     /* matches pill vertical padding */
 }
 
-.lpo-mb-bloc-legend-label--coalition { color: #0166DF; }
+.lpo-mb-bloc-legend-label--coalition { color: #00B1FF; }
 .lpo-mb-bloc-legend-label--opposition { color: #e8ecf2; }
 
 /* Bias / Seats sort toggle (last column header) — stacks like .lpo-mb-th-party-inner */
@@ -1510,7 +1510,7 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-coal-chart-col-legend-lead {
   white-space: nowrap;
-  /* Same hue as .lpo-mb-tilt-bar--coalition (#0166DF via tokens) */
+  /* Same hue as .lpo-mb-tilt-bar--coalition (#00B1FF via tokens) */
   color: var(--col-coalition);
 }
 
@@ -1667,7 +1667,7 @@ label.lpo-mb-settings-form__label {
   min-width: 2px;
 }
 .lpo-mb-tilt-bar--coalition {
-  background: linear-gradient(90deg, rgba(1,102,223,0.45) 0%, rgba(1,102,223,0.85) 100%);
+  background: linear-gradient(90deg, rgba(0, 177, 255, 0.45) 0%, rgba(0, 177, 255, 0.85) 100%);
 }
 .lpo-mb-tilt-bar--opposition {
   background: linear-gradient(270deg, rgba(148,163,184,0.35) 0%, rgba(200,213,225,0.75) 100%);
@@ -1679,7 +1679,7 @@ label.lpo-mb-settings-form__label {
   font-weight: 700;
   color: var(--col-muted);
 }
-.lpo-mb-tilt-value--pos { color: #5ba8ff; }
+.lpo-mb-tilt-value--pos { color: var(--col-coalition); }
 .lpo-mb-tilt-value--neg { color: #c8d7eb; }
 
 /* ── 2022 Track Record badge ──────────────────────────────────────────────── */
@@ -1691,7 +1691,7 @@ label.lpo-mb-settings-form__label {
 }
 
 .lpo-mb-tr-bloc { font-weight: 600; }
-.lpo-mb-tr-bloc--pos { color: #5ba8ff; }
+.lpo-mb-tr-bloc--pos { color: var(--col-coalition); }
 .lpo-mb-tr-bloc--neg { color: #c8d7eb; }
 
 .lpo-mb-tr-na { color: rgba(148,163,184,0.4); font-style: italic; }
@@ -1749,7 +1749,7 @@ label.lpo-mb-settings-form__label {
 
 .lpo-mb-td-z { font-weight: 700; color: #fbbf24; }
 
-.lpo-mb-val--pos { color: #5ba8ff; }
+.lpo-mb-val--pos { color: var(--col-coalition); }
 .lpo-mb-val--neg { color: #c8d7eb; }
 
 /* Raw Δ column in anomaly table — dot + number */
@@ -1817,7 +1817,7 @@ label.lpo-mb-settings-form__label {
   height: 14px;
   padding: 0 3px;
   border-radius: 7px;
-  background: #0166df;
+  background: #00B1FF;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -1867,7 +1867,7 @@ label.lpo-mb-settings-form__label {
 .lpo-ps-outlet-filter-item:hover { background: rgba(255, 255, 255, 0.045); }
 
 .lpo-ps-outlet-filter-item input[type='checkbox'] {
-  accent-color: #0166df;
+  accent-color: #00B1FF;
   width: 13px;
   height: 13px;
   flex-shrink: 0;

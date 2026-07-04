@@ -87,23 +87,23 @@ export const MEDIA_ICON_MAP: Record<string, string> = {
 }
 
 export const SEGMENT_COLORS: Record<Segment, string> = {
-  Coalition: '#0166DF',
+  Coalition: '#00B1FF',
   Opposition: '#F7F7F7',
   Arabs: '#717982',
 }
 
 export const SEGMENT_BG_COLORS: Record<Segment, string> = {
-  Coalition: 'rgba(1, 102, 223, 0.15)',
+  Coalition: 'rgba(0, 177, 255, 0.15)',
   Opposition: 'rgba(247, 247, 247, 0.12)',
   Arabs: 'rgba(113, 121, 130, 0.15)',
 }
 
 export const PARTY_COLOR_MAP: Record<string, string> = {
-  Likud: '#0166DF',
-  UTJ: '#0166DF',
-  Shas: '#0166DF',
-  'Religious Zionism': '#0166DF',
-  'Otzma Yehudit': '#0166DF',
+  Likud: '#00B1FF',
+  UTJ: '#00B1FF',
+  Shas: '#00B1FF',
+  'Religious Zionism': '#00B1FF',
+  'Otzma Yehudit': '#00B1FF',
   "Bennett's Party": '#F7F7F7',
   'Yashar!': '#F7F7F7',
   'The Democrats': '#F7F7F7',
@@ -245,7 +245,7 @@ export function selectEventsForViewportDisplay<T extends { date: string; categor
 }
 
 export const DEFAULT_SERIES_COLORS = [
-  '#0166DF',
+  '#00B1FF',
   '#F7F7F7',
   '#8b3fb2',
   '#10856c',

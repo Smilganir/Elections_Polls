@@ -4,7 +4,7 @@
  */
 
 const KNESSET = 120
-const COAL_COLOR = '#0166DF'
+const COAL_COLOR = '#00B1FF'
 const ANTI_COLOR = '#E8EAED'
 const MAJ_LINE = '#F5C542'
 
@@ -431,11 +431,11 @@ export function buildPollBlocHtml(r) {
     .outlet-block h3 { margin: 0; font-size: 1rem; color: #6eb6ff; }
     .outlet-meta { margin: 0.25rem 0 0; font-size: 0.78rem; color: var(--muted); }
     .segment-pill { font-size: 0.65rem; font-weight: 700; padding: 0.12rem 0.4rem; border-radius: 4px; text-transform: uppercase; }
-    .seg-Coalition { background: rgba(1,102,223,0.25); color: #7eb8ff; }
+    .seg-Coalition { background: rgba(0, 177, 255, 0.25); color: #00B1FF; }
     .seg-Opposition { background: rgba(255,255,255,0.08); color: #e0e4ea; }
     .seg-Arabs { background: rgba(113,121,130,0.35); color: #c5cad3; }
     .mean-hero--rolling {
-      border-color: rgba(1, 102, 223, 0.45);
+      border-color: rgba(0, 177, 255, 0.45);
       box-shadow: 0 10px 40px rgba(0,0,0,0.45);
       background: linear-gradient(165deg, #1a2438 0%, #0f141f 100%);
     }
