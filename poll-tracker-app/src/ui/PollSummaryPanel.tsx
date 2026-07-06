@@ -192,6 +192,8 @@ export function OutletFilterDropdown({
   displayMediaOutlet,
   filterButtonRef,
   portalPanel = false,
+  showMicroLabel = false,
+  microLabel,
 }: {
   allOutlets: string[]
   excludedOutlets: Set<string>
@@ -202,6 +204,9 @@ export function OutletFilterDropdown({
   filterButtonRef?: React.RefObject<HTMLButtonElement | null>
   /** Portals the panel to document.body so it is not clipped by overflow containers. */
   portalPanel?: boolean
+  /** Short caption above the filter button (e.g. unified table header). */
+  showMicroLabel?: boolean
+  microLabel?: string
 }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -284,19 +289,26 @@ export function OutletFilterDropdown({
 
   return (
     <div className="lpo-ps-outlet-filter" ref={wrapRef}>
-      <button
-        ref={btnRef}
-        className={`lpo-ps-outlet-filter-btn${hiddenCount > 0 ? ' lpo-ps-outlet-filter-btn--active' : ''}`}
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="true"
-        title={locale === 'he' ? 'סנן ערוצים' : 'Filter outlets'}
-      >
-        <FilterIcon />
-        {hiddenCount > 0 && (
-          <span className="lpo-ps-outlet-filter-badge">{hiddenCount}</span>
-        )}
-      </button>
+      <div className="lpo-ps-toolbar-micro-label-wrap">
+        {showMicroLabel && microLabel ? (
+          <span className="lpo-ps-toolbar-micro-label" aria-hidden>
+            {microLabel}
+          </span>
+        ) : null}
+        <button
+          ref={btnRef}
+          className={`lpo-ps-outlet-filter-btn${hiddenCount > 0 ? ' lpo-ps-outlet-filter-btn--active' : ''}`}
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-haspopup="true"
+          title={locale === 'he' ? 'סנן ערוצים' : 'Filter outlets'}
+        >
+          <FilterIcon />
+          {hiddenCount > 0 && (
+            <span className="lpo-ps-outlet-filter-badge">{hiddenCount}</span>
+          )}
+        </button>
+      </div>
       {open && !portalPanel ? (
         <div className="lpo-ps-outlet-filter-panel">{panelContent}</div>
       ) : null}
@@ -1128,6 +1140,8 @@ export function PollSummaryPanel({
       displayMediaOutlet={displayMediaOutlet}
       filterButtonRef={outletFilterBtnRef}
       portalPanel={showFilterInTableHeader}
+      showMicroLabel={showFilterInTableHeader}
+      microLabel={t.pollSummaryToolbarFilterLabel}
     />
   )
 
@@ -1210,6 +1224,7 @@ export function PollSummaryPanel({
                   <PollSummaryHeroPartiesChartButton
                     onClick={() => setHeroPartiesChartOpen(true)}
                     ariaLabel={t.pollSummaryHeroPartiesChartOpenAria}
+                    label={t.pollSummaryToolbarChartLabel}
                   />
                 </div>
               </div>
@@ -1272,6 +1287,7 @@ export function PollSummaryPanel({
                 <PollSummaryHeroPartiesChartButton
                   onClick={() => setHeroPartiesChartOpen(true)}
                   ariaLabel={t.pollSummaryHeroPartiesChartOpenAria}
+                  label={t.pollSummaryToolbarChartLabel}
                 />
                 <div className="lpo-ps-hero-parties-scroll">
                   <PollSummaryChipsStrip

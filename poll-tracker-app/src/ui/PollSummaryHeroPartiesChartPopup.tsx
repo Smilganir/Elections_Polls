@@ -84,18 +84,26 @@ export function PollSummaryOutletFilterStrip({
 export function PollSummaryHeroPartiesChartButton({
   onClick,
   ariaLabel,
+  label,
 }: {
   onClick: () => void
   ariaLabel: string
+  label?: string
 }) {
   return (
-    <button
-      type="button"
-      className="lpo-ps-hero-parties-chart-btn lpo-ps-outlet-filter-btn"
-      onClick={onClick}
-      aria-label={ariaLabel}
-      aria-haspopup="dialog"
-    >
+    <div className="lpo-ps-toolbar-micro-label-wrap">
+      {label ? (
+        <span className="lpo-ps-toolbar-micro-label" aria-hidden>
+          {label}
+        </span>
+      ) : null}
+      <button
+        type="button"
+        className="lpo-ps-hero-parties-chart-btn lpo-ps-outlet-filter-btn"
+        onClick={onClick}
+        aria-label={ariaLabel}
+        aria-haspopup="dialog"
+      >
       <svg
         className="lpo-ps-hero-parties-chart-btn-icon"
         width="14"
@@ -108,6 +116,7 @@ export function PollSummaryHeroPartiesChartButton({
         <rect x="1.5" y="11" width="5.5" height="2.5" rx="0.55" fill="currentColor" />
       </svg>
     </button>
+    </div>
   )
 }
 

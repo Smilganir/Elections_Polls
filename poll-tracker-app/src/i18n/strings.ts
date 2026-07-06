@@ -66,6 +66,10 @@ export type UiStrings = {
   pollSummaryHeroChipOutletCountLegend: string
   /** Hero chip legend: green/red delta meaning */
   pollSummaryHeroChipDeltaColorLegend: string
+  /** Short label above hero chart toolbar button */
+  pollSummaryToolbarChartLabel: string
+  /** Short label above outlet filter toolbar button (unified table header) */
+  pollSummaryToolbarFilterLabel: string
   /** Open cross-outlet average party bar chart (hero) */
   pollSummaryHeroPartiesChartOpenAria: string
   pollSummaryHeroPartiesChartTitle: string
@@ -208,6 +212,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryChipDeltaOutletCountTitle: '{n} polls with a seat change vs prior',
     pollSummaryHeroChipOutletCountLegend: '(n) = polls with a seat change vs prior',
     pollSummaryHeroChipDeltaColorLegend: 'Green/red = change vs prior poll',
+    pollSummaryToolbarChartLabel: 'Chart',
+    pollSummaryToolbarFilterLabel: 'Filter',
     pollSummaryHeroPartiesChartOpenAria: 'Show cross-outlet party average breakdown',
     pollSummaryHeroPartiesChartTitle: 'Cross-outlet party averages',
     pollSummaryHeroPartiesChartCloseAria: 'Close party breakdown',
@@ -337,6 +343,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryChipDeltaOutletCountTitle: '{n} סקרים עם שינוי מול הסקר הקודם',
     pollSummaryHeroChipOutletCountLegend: '(מספר) = סקרים עם שינוי מול הסקר הקודם',
     pollSummaryHeroChipDeltaColorLegend: 'ירוק/אדום = שינוי מול סקר קודם',
+    pollSummaryToolbarChartLabel: 'גרף',
+    pollSummaryToolbarFilterLabel: 'סינון',
     pollSummaryHeroPartiesChartOpenAria: 'הצג פירוט ממוצע מנדטים לפי מפלגה בין הערוצים',
     pollSummaryHeroPartiesChartTitle: 'ממוצע מנדטים לפי מפלגה בין הערוצים',
     pollSummaryHeroPartiesChartCloseAria: 'סגור פירוט מפלגות',

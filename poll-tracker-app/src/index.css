@@ -3129,6 +3129,23 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   flex: 0 0 auto;
 }
 
+.lpo-ps-toolbar-micro-label-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+}
+
+.lpo-ps-toolbar-micro-label {
+  font-size: 0.68rem;
+  color: #8da2be;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  user-select: none;
+}
+
 .lpo-ps-outlet-filter-btn {
   display: inline-flex;
   align-items: center;
@@ -3585,7 +3602,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 
 .lpo-ps-hero-parties-chart-cell {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: flex-start;
   box-sizing: border-box;
   min-width: 0;
@@ -4402,8 +4420,9 @@ a.lpo-ps-nav-btn {
 
 .lpo-ps-unified-fixed-header-filter {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
   flex: 0 0 auto;
   box-sizing: border-box;
 }
