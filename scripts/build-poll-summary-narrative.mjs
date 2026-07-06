@@ -42,9 +42,9 @@ const ENGLISH_PARTY_OVERRIDES = {
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
 const DEFAULT_BACKGROUND_EN =
-  "With Haredi leaders' agreement with Netanyahu to target October 20 elections and advance Basic Law: Torah Study and protections against arresting draft evaders before the Knesset is expected to dissolve by July 17—while backing an Oct. 7 political commission and the attorney-general split—the race unfolds amid fragile U.S.-brokered Lebanon ceasefire talks after Hezbollah rejected the latest conditional truce, as Bennett and Lapid's united Yahad ticket competes with Eisenkot's Yashar in a crowded field where the anti-Netanyahu camp still leads at most major pollsters."
+  "With Basic Law: Torah Study cleared for a first Knesset reading and Haredi parties holding off early dissolution for the July 17 timetable, Netanyahu's coalition races to pass draft shields, kosher supervision and an Oct. 7 political commission before October elections—while Bennett and Lapid's Yahad ticket faces Eisenkot's Yashar in a field where most major pollsters still show an anti-Netanyahu bloc lead."
 const DEFAULT_BACKGROUND_HE =
-  'רקע: לאחר הסכמה בין המנהיגים החרדיים לנתניהו על בחירות ב-20 באוקטובר וקידום חוק יסוד: לימוד תורה והגנה מפני מעצרי סרבני גיוס עד פיזור הכנסת הצפוי ב-17 ביולי—תוך תמיכה בוועדת חקירה מדינית ל-7 באוקטובר ובפיצול תפקיד היועמ"ש—מסע הבחירות מתנהל על רקע מגעים שבריריים לפסקת אש בלבנון בתיווך אמריקני לאחר שחיזבאללה דחה את העסקה המותנית האחרונה, כשיחד של בנט ולפיד מתמודדת מול ישר! בראשות אייזנקוט, וברוב הסוקרים נשמרת עדיפות גוש אנטי נתניהו.'
+  'רקע: עם אישור קריאה ראשונה לחוק יסוד: לימוד תורה והסכמת המפלגות החרדיות לדחות פיזור מוקדם ל-17 ביולי, הקואליציה מקדמת הגנה על סרבני גיוס, פיקוח כשרות וועדת חקירה מדינית ל-7 באוקטובר לקראת בחירות באוקטובר—בעוד יחד של בנט ולפיד מתמודדת מול ישר! בראשות אייזנקוט, וברוב הסוקרים נשמרת עדיפות גוש אנטי נתניהו.'
 
 function round1(x) {
   return Math.round(x * 10) / 10
