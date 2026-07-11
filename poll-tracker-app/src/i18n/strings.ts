@@ -194,7 +194,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummarySubtitle: 'Average of polls in the last {n} days.',
     pollSummaryOutletsBreakdownLead: 'Poll breakdown',
     pollSummaryOutletsBreakdownTail:
-      ' (green/red = change vs prior; gray dot under value = unusual vs other outlets; two dots = more unusual)',
+      ' (green/red = change vs prior; gold dot = >1σ vs other outlets; two dots = ≥2σ)',
     pollSummaryOutletsBreakdownTrendHint: 'Click a party in an outlet to view its trend',
     pollSummaryCellTooltipLine1:
       '{party} · {seats} seats · prior poll {prior}',
@@ -230,7 +230,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryRowsAria: 'Latest poll per outlet in window',
     pollSummaryChangedPartiesAria:
       'All parties with seats in the latest poll; mandate changes vs previous poll highlighted',
-    pollSummaryUnifiedPartyNamesAria: 'Party columns ordered by cross-outlet average rank',
+    pollSummaryUnifiedPartyNamesAria:
+      'Party columns: opposition then Arabs then coalition, seats descending within each bloc',
     pollSummaryOpenAria: 'Show poll summary for the last {n} days',
     pollSummaryCloseAria: 'Back to all polls',
     pollSummaryNarrativeBackgroundAria: 'General political context for this poll window',
@@ -325,7 +326,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummarySubtitle: 'ממוצע סקרים ב-{n} הימים האחרונים',
     pollSummaryOutletsBreakdownLead: 'פירוט הסקרים',
     pollSummaryOutletsBreakdownTail:
-      ' (ירוק/אדום = שינוי מול סקר קודם; נקודה אפורה = חריג מול שאר הערוצים; שתי נקודות = חריג יותר)',
+      ' (ירוק/אדום = שינוי מול סקר קודם; נקודה זהובה = >1σ מול שאר הערוצים; שתי נקודות = ≥2σ)',
     pollSummaryOutletsBreakdownTrendHint: 'לחצו על מפלגה בערוץ כדי לראות טרנד',
     pollSummaryCellTooltipLine1:
       '{party} · {seats} מנדטים · סקר קודם {prior}',
@@ -361,7 +362,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryRowsAria: 'הסקר האחרון לכל כלי תקשורת בחלון',
     pollSummaryChangedPartiesAria:
       'כל המפלגות עם מנדטים בסקר האחרון; שינוי מול סקר קודם מסומן ב-Δ',
-    pollSummaryUnifiedPartyNamesAria: 'עמודות מפלגות לפי דירוג ממוצע בין הערוצים',
+    pollSummaryUnifiedPartyNamesAria:
+      'עמודות מפלגות: אופוזיציה ואז ערבים ואז קואליציה, מנדטים יורדים בכל גוש',
     pollSummaryOpenAria: 'הצג סיכום סקרים ל-{n} הימים האחרונים',
     pollSummaryCloseAria: 'חזרה לכל הסקרים',
     pollSummaryNarrativeBackgroundAria: 'רקע כללי לחלון הסקרים',

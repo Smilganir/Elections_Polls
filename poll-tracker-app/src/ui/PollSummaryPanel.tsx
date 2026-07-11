@@ -791,7 +791,7 @@ export function PollSummaryPanel({
     () => buildCrossOutletAverageChipRow(filteredRows),
     [filteredRows],
   )
-  /** Cross-outlet column order: hero average rank + parties with a prior-poll Δ on any row. */
+  /** Cross-outlet column order: Opposition → Arabs → Coalition; seats desc within bloc. */
   const unifiedPartyOrder = useMemo(() => {
     if (!heroAvgChips) return []
     const base = heroAvgChips.current.parties.map((p) => p.party)
@@ -1320,7 +1320,6 @@ export function PollSummaryPanel({
               onClose={() => setHeroPartiesChartOpen(false)}
               current={heroAvgChips.current}
               changedParties={heroAvgChips.changedParties}
-              partyOrder={unifiedPartyOrder}
               combineArabsWithOpposition={combineArabsWithOpposition}
               displayParty={displayParty}
               displayMediaOutlet={displayMediaOutlet}

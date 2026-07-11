@@ -150,6 +150,7 @@ function changedPartiesBetween(current: RollingPoll, previous: RollingPoll | nul
 /**
  * Cross-outlet mean seats per party for the hero chip strip (latest poll per outlet in window).
  * Deltas use the same mean-vs-prior rule as narrative trend bullets.
+ * Column order: Opposition (left) → Arabs → Coalition (right); seats desc within each bloc.
  */
 export function buildCrossOutletAverageChipRow(
   rows: RollingWindowRow[],
@@ -184,7 +185,7 @@ export function buildCrossOutletAverageChipRow(
       }
     })
     .filter((p) => p.votes > 0)
-    .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party))
+    .sort(comparePartiesByBlocThenSeats)
 
   if (parties.length === 0) return null
 
@@ -233,9 +234,27 @@ export function buildCrossOutletAverageChipRow(
   }
 }
 
+/** Left→right column groups: opposition, then Arabs, then coalition. */
+function partySegmentColumnRank(segment: Segment): number {
+  if (segment === 'Opposition') return 0
+  if (segment === 'Arabs') return 1
+  return 2
+}
+
+function comparePartiesByBlocThenSeats(
+  a: { party: string; votes: number; segment: Segment },
+  b: { party: string; votes: number; segment: Segment },
+): number {
+  const sa = partySegmentColumnRank(a.segment)
+  const sb = partySegmentColumnRank(b.segment)
+  if (sa !== sb) return sa - sb
+  return b.votes - a.votes || a.party.localeCompare(b.party)
+}
+
 /**
- * Hero average rank order plus parties that show a seat Δ vs prior on any outlet row
+ * Hero bloc/seat order plus parties that show a seat Δ vs prior on any outlet row
  * (e.g. dropped to 0 seats) so column deltas can sum to bloc totals.
+ * Final order: Opposition → Arabs → Coalition; seats desc within each bloc.
  */
 export function buildUnifiedPartyOrder(
   heroParties: readonly string[],
@@ -259,7 +278,29 @@ export function buildUnifiedPartyOrder(
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([party]) => party)
 
-  return [...heroParties, ...extras]
+  const combined = [...heroParties, ...extras]
+  const voteSum = new Map<string, number>()
+  const voteCount = new Map<string, number>()
+  for (const { current } of rows) {
+    for (const p of current.parties) {
+      if (p.votes <= 0) continue
+      voteSum.set(p.party, (voteSum.get(p.party) ?? 0) + p.votes)
+      voteCount.set(p.party, (voteCount.get(p.party) ?? 0) + 1)
+    }
+  }
+
+  return combined
+    .map((party) => {
+      const n = voteCount.get(party) ?? 0
+      const votes = n > 0 ? round1((voteSum.get(party) ?? 0) / n) : 0
+      return {
+        party,
+        votes,
+        segment: segmentForPartyInRows(party, rows) ?? 'Opposition',
+      }
+    })
+    .sort(comparePartiesByBlocThenSeats)
+    .map((p) => p.party)
 }
 
 /** Segment for a party from rolling rows (changed-party row first, then current poll). */
@@ -384,11 +425,11 @@ export function evaluatePartySeatColumnOutlier(
     return { tier: 0, direction: null, sigmaMultiple, mean: col.mean }
   }
   const direction = seatValue > col.mean ? ('high' as const) : ('low' as const)
-  const tier = absDiff > 2 * col.stdev ? (2 as const) : (1 as const)
+  const tier = absDiff >= 2 * col.stdev ? (2 as const) : (1 as const)
   return { tier, direction, sigmaMultiple, mean: col.mean }
 }
 
-/** 0 = normal; 1 = >1σ; 2 = >2σ from column mean (population stdev across outlets). */
+/** 0 = normal; 1 = >1σ and <2σ; 2 = ≥2σ from column mean (population stdev across outlets). */
 export function partySeatColumnOutlierTier(
   party: string,
   seatValue: number,

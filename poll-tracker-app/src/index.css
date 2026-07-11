@@ -5353,7 +5353,7 @@ html[lang='he'] .lpo-ps-unified-party-name {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #475569;
+  background: #db8f14;
   flex-shrink: 0;
 }
 
@@ -5724,6 +5724,11 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   color: #9fb3cc;
 }
 
+.lpo-ps-hero-chart-delta-legend {
+  margin: -0.15rem 0 0;
+  text-align: center;
+}
+
 .lpo-ps-hero-chart-outlets {
   display: flex;
   flex-wrap: wrap;
@@ -5899,7 +5904,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-bar-meta {
   display: grid;
-  grid-template-columns: 3rem 2.25rem;
+  grid-template-columns: 3rem minmax(2.25rem, auto);
   align-items: baseline;
   gap: 0.35rem;
   direction: ltr;
@@ -5914,12 +5919,25 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   font-variant-numeric: tabular-nums;
 }
 
-.lpo-ps-hero-chart-bar-meta .lpo-change-badge {
+.lpo-ps-hero-chart-bar-meta .lpo-ps-hero-chart-bar-delta {
   grid-column: 2;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.lpo-ps-hero-chart-bar-meta .lpo-change-badge {
   font-size: 0.68rem;
   line-height: 1;
   text-align: left;
   font-variant-numeric: tabular-nums;
+}
+
+.lpo-ps-hero-chart-bar-meta .lpo-ps-chip-delta-outlets {
+  margin-top: 0;
+  font-size: 0.62rem;
+  color: #6a7a8e;
 }
 
 /* ── Poll summary: narrow portrait rotate-to-landscape hint ─────────────── */

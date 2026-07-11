@@ -125,7 +125,6 @@ export function PollSummaryHeroPartiesChartPopup({
   onClose,
   current,
   changedParties,
-  partyOrder,
   combineArabsWithOpposition,
   displayParty,
   displayMediaOutlet,
@@ -148,7 +147,6 @@ export function PollSummaryHeroPartiesChartPopup({
   onClose: () => void
   current: RollingPoll
   changedParties: ChangedParty[]
-  partyOrder: readonly string[]
   combineArabsWithOpposition: boolean
   displayParty: (partyKey: string) => string
   displayMediaOutlet: (outlet: string) => string
@@ -213,24 +211,14 @@ export function PollSummaryHeroPartiesChartPopup({
     [changedParties],
   )
 
-  const rows = useMemo(() => {
-    const byParty = new Map(current.parties.map((p) => [p.party, p]))
-    const order =
-      partyOrder.length > 0
-        ? partyOrder.map((party) => {
-            const row = byParty.get(party)
-            return {
-              party,
-              votes: row?.votes ?? 0,
-              segment: row?.segment ?? ('Opposition' as Segment),
-            }
-          })
-        : [...current.parties]
-            .filter((p) => p.votes > 0)
-            .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party))
-            .map((p) => ({ party: p.party, votes: p.votes, segment: p.segment }))
-    return order.filter((p) => p.votes > 0)
-  }, [current.parties, partyOrder])
+  const rows = useMemo(
+    () =>
+      [...current.parties]
+        .filter((p) => p.votes > 0)
+        .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party))
+        .map((p) => ({ party: p.party, votes: p.votes, segment: p.segment })),
+    [current.parties],
+  )
 
   const maxVotes = useMemo(
     () => rows.reduce((max, row) => Math.max(max, row.votes), 0),
@@ -266,6 +254,16 @@ export function PollSummaryHeroPartiesChartPopup({
               </span>
               <span className="lpo-ps-hero-chart-dialog-title-window">{windowSuffix}</span>
             </h2>
+            {hasPrior && changedParties.length > 0 ? (
+              <p
+                className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets lpo-ps-hero-chart-delta-legend"
+                dir={locale === 'he' ? 'rtl' : 'ltr'}
+              >
+                {t.pollSummaryHeroChipOutletCountLegend}
+                {' · '}
+                {t.pollSummaryHeroChipDeltaColorLegend}
+              </p>
+            ) : null}
             <p
               className="lpo-ps-subtitle lpo-ps-subtitle--outlets-trend-hint lpo-ps-hero-chart-outlet-hint"
               dir={locale === 'he' ? 'rtl' : 'ltr'}
@@ -353,9 +351,23 @@ export function PollSummaryHeroPartiesChartPopup({
                           {formatChipNum(row.votes)}
                         </strong>
                         {delta !== null ? (
-                          <span className={`lpo-change-badge ${deltaDir}`}>
-                            {deltaDir === 'up' ? '+' : '-'}
-                            {delta}
+                          <span className="lpo-ps-hero-chart-bar-delta">
+                            <span className={`lpo-change-badge ${deltaDir}`}>
+                              {deltaDir === 'up' ? '+' : '-'}
+                              {delta}
+                            </span>
+                            {cp?.deltaOutletCount && cp.deltaOutletCount > 0 ? (
+                              <span
+                                className="lpo-ps-chip-delta-outlets"
+                                dir="ltr"
+                                title={t.pollSummaryChipDeltaOutletCountTitle.replace(
+                                  /\{n\}/g,
+                                  String(cp.deltaOutletCount),
+                                )}
+                              >
+                                ({cp.deltaOutletCount})
+                              </span>
+                            ) : null}
                           </span>
                         ) : null}
                       </div>
