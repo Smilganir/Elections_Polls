@@ -208,7 +208,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryNoOutlets: 'No polls from the last {n} days.',
     pollSummaryHeroAria: 'Average coalition and opposition across recent polls',
     pollSummaryHeroAvgPartiesAria:
-      'Average seats per party across outlets in the window; mandate changes vs previous poll highlighted; number in parentheses is how many polls showed that change',
+      'Average seats per party across outlets with seats or a change vs prior (including drops to 0); mandate changes highlighted; number in parentheses is how many polls showed that change',
     pollSummaryChipDeltaOutletCountTitle: '{n} polls with a seat change vs prior',
     pollSummaryHeroChipOutletCountLegend: '(n) = polls with a seat change vs prior',
     pollSummaryHeroChipDeltaColorLegend: 'Green/red = change vs prior poll',
@@ -340,7 +340,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryNoOutlets: 'אין סקרים מתוך {n} הימים האחרונים.',
     pollSummaryHeroAria: 'ממוצע קואליציה ואופוזיציה מסקרים אחרונים',
     pollSummaryHeroAvgPartiesAria:
-      'ממוצע מנדטים לפי מפלגה בין הערוצים בחלון; שינוי מול הסקר הקודם מודגש; המספר בסוגריים = כמה סקרים הציגו את השינוי',
+      'ממוצע מנדטים לפי מפלגה בין ערוצים עם מנדטים או שינוי מול הסקר הקודם (כולל ירידה ל־0); שינוי מודגש; המספר בסוגריים = כמה סקרים הציגו את השינוי',
     pollSummaryChipDeltaOutletCountTitle: '{n} סקרים עם שינוי מול הסקר הקודם',
     pollSummaryHeroChipOutletCountLegend: '(מספר) = סקרים עם שינוי מול הסקר הקודם',
     pollSummaryHeroChipDeltaColorLegend: 'ירוק/אדום = שינוי מול סקר קודם',

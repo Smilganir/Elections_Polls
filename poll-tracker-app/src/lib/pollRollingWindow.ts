@@ -148,7 +148,45 @@ function changedPartiesBetween(current: RollingPoll, previous: RollingPoll | nul
 }
 
 /**
+ * Outlets that count toward a party's cross-outlet mean seats:
+ * current seats > 0, or a seat Δ vs that outlet's prior poll (incl. drop to 0).
+ * Empty / never-measured outlets stay out of the denominator.
+ */
+function accumulateCrossOutletPartySeatVotes(
+  rows: RollingWindowRow[],
+  voteSum: Map<string, number>,
+  voteCount: Map<string, number>,
+  onFirstMeta?: (party: string, segment: Segment, partyId: number) => void,
+): void {
+  for (const { current, changedParties } of rows) {
+    const curM = votesByParty(current)
+    const changedByParty = new Map(changedParties.map((cp) => [cp.party, cp]))
+    const parties = new Set<string>()
+    for (const p of current.parties) {
+      if (p.votes > 0) parties.add(p.party)
+    }
+    for (const cp of changedParties) parties.add(cp.party)
+
+    for (const party of parties) {
+      const fromCur = current.parties.find((p) => p.party === party)
+      const fromCp = changedByParty.get(party)
+      const votes = fromCur?.votes ?? fromCp?.currentVotes ?? curM.get(party) ?? 0
+      voteSum.set(party, (voteSum.get(party) ?? 0) + votes)
+      voteCount.set(party, (voteCount.get(party) ?? 0) + 1)
+      if (onFirstMeta) {
+        onFirstMeta(
+          party,
+          fromCur?.segment ?? fromCp?.segment ?? 'Opposition',
+          fromCur?.partyId ?? 0,
+        )
+      }
+    }
+  }
+}
+
+/**
  * Cross-outlet mean seats per party for the hero chip strip (latest poll per outlet in window).
+ * Includes outlets where the party dropped to 0 vs prior (same set that drives Δ chips).
  * Deltas use the same mean-vs-prior rule as narrative trend bullets.
  * Column order: Opposition (left) → Arabs → Coalition (right); seats desc within each bloc.
  */
@@ -162,17 +200,12 @@ export function buildCrossOutletAverageChipRow(
   const segmentByParty = new Map<string, Segment>()
   const partyIdByParty = new Map<string, number>()
 
-  for (const { current } of rows) {
-    for (const p of current.parties) {
-      if (p.votes <= 0) continue
-      voteSum.set(p.party, (voteSum.get(p.party) ?? 0) + p.votes)
-      voteCount.set(p.party, (voteCount.get(p.party) ?? 0) + 1)
-      if (!segmentByParty.has(p.party)) {
-        segmentByParty.set(p.party, p.segment)
-        partyIdByParty.set(p.party, p.partyId)
-      }
+  accumulateCrossOutletPartySeatVotes(rows, voteSum, voteCount, (party, segment, partyId) => {
+    if (!segmentByParty.has(party)) {
+      segmentByParty.set(party, segment)
+      partyIdByParty.set(party, partyId)
     }
-  }
+  })
 
   const parties: RollingPollParty[] = [...voteSum.entries()]
     .map(([party, sum]) => {
@@ -281,13 +314,7 @@ export function buildUnifiedPartyOrder(
   const combined = [...heroParties, ...extras]
   const voteSum = new Map<string, number>()
   const voteCount = new Map<string, number>()
-  for (const { current } of rows) {
-    for (const p of current.parties) {
-      if (p.votes <= 0) continue
-      voteSum.set(p.party, (voteSum.get(p.party) ?? 0) + p.votes)
-      voteCount.set(p.party, (voteCount.get(p.party) ?? 0) + 1)
-    }
-  }
+  accumulateCrossOutletPartySeatVotes(rows, voteSum, voteCount)
 
   return combined
     .map((party) => {
@@ -370,11 +397,13 @@ export function partyColumnSeatStats(
   for (const party of partyOrder) {
     valuesByParty.set(party, [])
   }
-  for (const { current } of rows) {
+  for (const { current, changedParties } of rows) {
     const byParty = votesByParty(current)
+    const changed = new Set(changedParties.map((cp) => cp.party))
     for (const party of partyOrder) {
       const v = byParty.get(party) ?? 0
-      if (v > 0) valuesByParty.get(party)!.push(v)
+      // Same denominator as hero chips: seats > 0 or Δ vs prior (incl. drop to 0).
+      if (v > 0 || changed.has(party)) valuesByParty.get(party)!.push(v)
     }
   }
   const out = new Map<string, PartyColumnSeatStats>()
