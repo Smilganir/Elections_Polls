@@ -21,6 +21,7 @@ const MEDIA_ICON_FILE = {
   מעריב: '_0011_Layer-1.png',
   'ערוץ 7': '_0000_Layer-14.png',
   'ערוץ 14': '_0008_Layer-4.png',
+  'ערוץ 16': 'channel-16.png',
 }
 
 function escapeHtml(s) {

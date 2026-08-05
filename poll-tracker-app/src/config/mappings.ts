@@ -84,6 +84,7 @@ export const MEDIA_ICON_MAP: Record<string, string> = {
   מעריב: '/media/_0011_Layer-1.png',
   'ערוץ 7': '/media/_0000_Layer-14.png',
   'ערוץ 14': '/media/_0008_Layer-4.png',
+  'ערוץ 16': '/media/channel-16.png',
 }
 
 export const SEGMENT_COLORS: Record<Segment, string> = {
@@ -260,6 +261,7 @@ export const DEFAULT_SERIES_COLORS = [
 export const ENGLISH_MEDIA_NAMES: Record<string, string> = {
   מעריב: 'Maariv',
   'ערוץ 14': 'Channel 14',
+  'ערוץ 16': 'Channel 16',
   'חדשות 12': 'Channel 12',
   'זמן ישראל': 'Zman Yisrael',
   'חדשות 13': 'Channel 13',
