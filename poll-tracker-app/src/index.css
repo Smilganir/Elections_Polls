@@ -5769,8 +5769,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   width: 28px;
   height: 28px;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
 }
 
 .lpo-ps-hero-chart-outlet-btn .icon-fallback {
