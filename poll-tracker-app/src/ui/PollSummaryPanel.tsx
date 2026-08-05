@@ -776,7 +776,7 @@ export function PollSummaryPanel({
   const bgText = narrativeBackground.trim()
 
   const [trendFocus, setTrendFocus] = useState<TrendFocus | null>(null)
-  const [heroPartiesChartOpen, setHeroPartiesChartOpen] = useState(false)
+  const [heroPartiesChartOpen, setHeroPartiesChartOpen] = useState(true)
 
   const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
   const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
