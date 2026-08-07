@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
+import { useHeroPartiesChartOverlay } from './HeroPartiesChartOverlayContext'
 
 /** Bump when hint eligibility / persistence rules change so users aren't stuck on old dismiss flags. */
 const STORAGE_KEY = 'lpo-ps-landscape-hint-dismissed-v2'
@@ -75,6 +76,7 @@ type Props = { locale: AppLocale }
 
 export function RotateLandscapeHint({ locale }: Props) {
   const t = UI[locale]
+  const { deferRotateHint } = useHeroPartiesChartOverlay()
   const [open, setOpen] = useState(false)
   const dismissedRef = useRef(typeof window !== 'undefined' ? wasDismissed() : false)
   const openRef = useRef(false)
@@ -94,6 +96,11 @@ export function RotateLandscapeHint({ locale }: Props) {
     if (typeof window === 'undefined') return
     if (dismissedRef.current || wasDismissed()) return
 
+    if (deferRotateHint) {
+      if (openRef.current) closeOverlay()
+      return
+    }
+
     const narrowPortrait = isNarrowPortrait()
 
     if (narrowPortrait && !openRef.current) {
@@ -102,7 +109,7 @@ export function RotateLandscapeHint({ locale }: Props) {
     } else if (!narrowPortrait && openRef.current) {
       closeOverlay()
     }
-  }, [closeOverlay])
+  }, [closeOverlay, deferRotateHint])
 
   useEffect(() => {
     dismissedRef.current = wasDismissed()
@@ -131,6 +138,10 @@ export function RotateLandscapeHint({ locale }: Props) {
       if (orientTimeout !== undefined) clearTimeout(orientTimeout)
     }
   }, [syncViewport])
+
+  useEffect(() => {
+    syncViewport()
+  }, [deferRotateHint, syncViewport])
 
   useEffect(() => {
     if (!open) return

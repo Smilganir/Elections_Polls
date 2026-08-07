@@ -34,6 +34,7 @@ import {
   PollSummaryHeroPartiesChartButton,
   PollSummaryHeroPartiesChartPopup,
 } from './PollSummaryHeroPartiesChartPopup'
+import { useHeroPartiesChartOverlay } from './HeroPartiesChartOverlayContext'
 import { mediaBiasAppUrl } from '../utils/publicUrl'
 import { DeltaBadge, PollSummaryHeroBlocBar, PsSegmentBar } from './PollSummaryBlocBar'
 
@@ -776,7 +777,11 @@ export function PollSummaryPanel({
   const bgText = narrativeBackground.trim()
 
   const [trendFocus, setTrendFocus] = useState<TrendFocus | null>(null)
-  const [heroPartiesChartOpen, setHeroPartiesChartOpen] = useState(true)
+  const {
+    open: heroPartiesChartOpen,
+    setOpen: setHeroPartiesChartOpen,
+    setDeferRotateHint,
+  } = useHeroPartiesChartOverlay()
 
   const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
   const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
@@ -791,6 +796,10 @@ export function PollSummaryPanel({
     () => buildCrossOutletAverageChipRow(filteredRows),
     [filteredRows],
   )
+
+  useEffect(() => {
+    setDeferRotateHint(!!heroAvgChips && heroPartiesChartOpen)
+  }, [heroAvgChips, heroPartiesChartOpen, setDeferRotateHint])
   /** Cross-outlet column order: Opposition → Arabs → Coalition; seats desc within bloc. */
   const unifiedPartyOrder = useMemo(() => {
     if (!heroAvgChips) return []

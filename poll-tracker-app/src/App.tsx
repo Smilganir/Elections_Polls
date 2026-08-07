@@ -1,6 +1,7 @@
 import { UI } from './i18n/strings'
 import { useLocale } from './i18n/useLocale'
 import { LatestPollsOverviewPage } from './pages/LatestPollsOverviewPage'
+import { HeroPartiesChartOverlayProvider } from './ui/HeroPartiesChartOverlayContext'
 import { RotateLandscapeHint } from './ui/RotateLandscapeHint'
 
 function AppFooter() {
@@ -37,7 +38,7 @@ function App() {
   const { locale } = useLocale()
 
   return (
-    <>
+    <HeroPartiesChartOverlayProvider>
       <RotateLandscapeHint locale={locale} />
       <div className="app-shell">
         <main className="page-content">
@@ -48,7 +49,7 @@ function App() {
           <AppFooter />
         </footer>
       </div>
-    </>
+    </HeroPartiesChartOverlayProvider>
   )
 }
 
