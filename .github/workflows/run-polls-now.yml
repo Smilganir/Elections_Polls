@@ -1,0 +1,55 @@
+# Independent play button: always scrape themadad and upload to Sheets.
+# Does not wait for a new poll, does not check the fingerprint, does not commit.
+#
+# Actions → "Run polls now" → Run workflow
+#   gh workflow run run-polls-now.yml
+#
+# Uses the same self-hosted runner (themadad 403 from GitHub IPs).
+# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
+
+name: Run polls now
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: themadad-poll-run-now
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-polls.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-polls.txt
+
+      - name: Require GOOGLE_SERVICE_ACCOUNT_JSON
+        env:
+          CREDS: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$CREDS" ]; then
+            echo "::error::Add repository secret GOOGLE_SERVICE_ACCOUNT_JSON (service account JSON with Sheets edit access)."
+            exit 1
+          fi
+
+      - name: Fetch, transform, upload to Sheets
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
+          HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
+        run: python run_polls.py
