@@ -42,9 +42,9 @@ const ENGLISH_PARTY_OVERRIDES = {
 
 /** One sentence: institutional + political frame only (no poll figures). Align EN/HE; refresh when context changes. */
 const DEFAULT_BACKGROUND_EN =
-  "With Basic Law: Torah Study cleared for a first Knesset reading and Haredi parties holding off early dissolution for the July 17 timetable, Netanyahu's coalition races to pass draft shields, kosher supervision and an Oct. 7 political commission before October elections—while Bennett and Lapid's Yahad ticket faces Eisenkot's Yashar in a field where most major pollsters still show an anti-Netanyahu bloc lead."
+  "After the July 17 dissolution set October 27 elections, Netanyahu frames the race on security and stalled Haredi draft legislation while Eisenkot's surging Yashar and Bennett–Lapid's Yahad battle for the opposition lead—yet most pollsters still show an anti-Netanyahu bloc ahead without a 61-seat majority unless Arab parties join."
 const DEFAULT_BACKGROUND_HE =
-  'רקע: עם אישור קריאה ראשונה לחוק יסוד: לימוד תורה והסכמת המפלגות החרדיות לדחות פיזור מוקדם ל-17 ביולי, הקואליציה מקדמת הגנה על סרבני גיוס, פיקוח כשרות וועדת חקירה מדינית ל-7 באוקטובר לקראת בחירות באוקטובר—בעוד יחד של בנט ולפיד מתמודדת מול ישר! בראשות אייזנקוט, וברוב הסוקרים נשמרת עדיפות גוש אנטי נתניהו.'
+  'רקע: עם פיזור הכנסת ב-17 ביולי וספירה לאחור לבחירות ב-27 באוקטובר, נתניהו מציב ביטחון וחקיקת פטור חרדים מגיוס במרכז המערכה, בעוד ישר! בראשות אייזנקוט ויחד של בנט ולפיד מתחרות על ראשות האופוזיציה—וברוב הסוקרים נשמרת עדיפות גוש אנטי נתניהו ללא רוב של 61 מנדטים ללא מפלגות ערביות.'
 
 function round1(x) {
   return Math.round(x * 10) / 10
