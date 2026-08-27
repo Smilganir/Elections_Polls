@@ -15,6 +15,7 @@ import {
 const PARTY_TOKEN_ALIASES: Record<string, string> = {
   Bennett: "Bennett's Party",
   Lieberman: 'Yisrael Beiteinu',
+  Winter: "Ofer Winter's Party",
 }
 
 function resolvePartyKey(raw: string): string {

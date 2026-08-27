@@ -35,6 +35,7 @@ function escapeHtml(s) {
 /** Match poll-tracker ENGLISH_PARTY_DISPLAY_OVERRIDES — sheet key → English UI label */
 function partyDisplayEn(partyKey) {
   if (partyKey === "Bennett's Party") return 'Yahad'
+  if (partyKey === "Ofer Winter's Party") return 'Am Yisrael'
   return partyKey
 }
 

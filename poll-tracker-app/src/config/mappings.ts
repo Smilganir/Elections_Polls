@@ -2,12 +2,14 @@ import type { Segment } from '../types/data'
 
 export const PARTY_ICON_MAP: Record<string, string> = {
   Balad: '/parties/Parties-Heads-Cropped_00013_Layer-6.png',
+  "Bayit Yehudi–The Reservists": '/parties/Parties-Heads-Hilik-Bar-Bayit-Yehudi.png',
   "Bennett's Party": '/parties/Parties-Heads-Cropped_0000_Layer-14.png',
   'Blue & White': '/parties/Parties-Heads-Cropped_0010_Layer-2.png',
   "Hadash Ta'al": '/parties/Parties-Heads-Cropped_0008_Layer-4.png',
   'Joint Arab List': '/parties/Parties-Heads-Joint-Arab-List-vadaam.png',
   Likud: '/parties/Parties-Heads-Cropped_0012_Layer-1.png',
   'Otzma Yehudit': '/parties/Parties-Heads-Cropped_0011_Layer-9.png',
+  "Ofer Winter's Party": '/parties/Parties-Heads-Ofer-Winter-Am-Yisrael.png',
   "Ra'am": '/parties/Parties-Heads-Cropped_0009_Layer-3.png',
   'Religious Zionism': '/parties/Parties-Heads-Cropped_0007_Layer-5.png',
   Shas: '/parties/Parties-Heads-Cropped_0006_Layer-6.png',

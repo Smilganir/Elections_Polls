@@ -19,7 +19,6 @@ import time
 from io import StringIO
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import requests
 from google.oauth2 import service_account
@@ -80,12 +79,13 @@ HEADERS = [
     "Poll ID", "Date", "Respondents", "Media Outlet", "Pollster",
     "Likud", "UTJ", "Shas", "Blue & White", "Yesh Atid", "Hadash Ta'al",
     "Yisrael Beiteinu", "The Democrats", "Religious Zionism", "Ra'am",
-    "Balad", "Otzma Yehudit", "Bennett's Party", "Yashar!", "The Reservists",
-    "Joint Arab List"
+    "Balad", "Otzma Yehudit", "Bennett's Party", "Yashar!",
+    "Bayit Yehudi–The Reservists", "Joint Arab List", "Arden–Edelstein Party",
+    "Ofer Winter's Party",
 ]
 
 ID_VARS = ["Poll ID", "Date", "Respondents", "Media Outlet", "Pollster"]
-VALUE_VARS = HEADERS[5:]  # 16 party columns
+VALUE_VARS = HEADERS[5:]  # 18 party columns
 
 # Manual row for Poll ID 1 (included for structure, then excluded by filter)
 POLL_ID_1_DATA = {
@@ -95,8 +95,8 @@ POLL_ID_1_DATA = {
     "Blue & White": [10], "Yesh Atid": [26], "Hadash Ta'al": [0],
     "Yisrael Beiteinu": [4], "The Democrats": [4], "Religious Zionism": [12],
     "Ra'am": [4], "Balad": [4], "Otzma Yehudit": [12],
-    "Bennett's Party": [4], "Yashar!": [0], "The Reservists": [4],
-    "Joint Arab List": [0]
+    "Bennett's Party": [4], "Yashar!": [0], "Bayit Yehudi–The Reservists": [0],
+    "Joint Arab List": [0], "Arden–Edelstein Party": [0], "Ofer Winter's Party": [0],
 }
 
 
