@@ -1,11 +1,8 @@
-# Self-hosted runner: fetch themadad from YOUR network (avoids GitHub datacenter 403).
+# GitHub-hosted runner; themadad 403s datacenter IPs, so the fetch goes through
+# the ZenRows API (residential exit) via ZENROWS_API_KEY. A self-hosted runner on a
+# home network also works (revert runs-on) if the key is ever unset.
 #
-# Setup (once):
-#   1. Repo → Settings → Actions → Runners → New self-hosted runner → Linux (or macOS) x64.
-#   2. On the machine (must stay online near run times): follow the download + config.sh commands.
-#   3. Start the runner: ./run.sh (or install as a service — see GitHub docs).
-#
-# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
+# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required), ZENROWS_API_KEY (required). HTTPS_PROXY (optional fallback).
 #
 # Schedule (Asia/Jerusalem — gate in scripts/israel-poll-schedule-gate.mjs):
 #   • Daily: every 2 hours, 08:00–22:00
@@ -46,7 +43,7 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
       run:
@@ -79,6 +76,7 @@ jobs:
         if: github.event_name != 'schedule' || steps.slot.outputs.ok == 'true'
         id: check
         env:
+          ZENROWS_API_KEY: ${{ secrets.ZENROWS_API_KEY }}
           HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
           HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
         run: |
@@ -103,6 +101,7 @@ jobs:
         if: (github.event_name != 'schedule' || steps.slot.outputs.ok == 'true') && steps.check.outputs.changed == 'true'
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          ZENROWS_API_KEY: ${{ secrets.ZENROWS_API_KEY }}
           HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
           HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
         run: python run_polls.py
