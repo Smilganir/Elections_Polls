@@ -229,10 +229,12 @@ def fetch_html(url: str) -> str:
     """
     zenrows_key = os.environ.get('ZENROWS_API_KEY', '').strip()
     if zenrows_key:
+        # js_render is required for themadad (plain and premium_proxy both 422/403);
+        # costs 5 ZenRows credits per successful fetch.
         r = requests.get(
             'https://api.zenrows.com/v1/',
-            params={'apikey': zenrows_key, 'url': url, 'premium_proxy': 'true'},
-            timeout=60,
+            params={'apikey': zenrows_key, 'url': url, 'js_render': 'true'},
+            timeout=120,
         )
         r.raise_for_status()
         return r.text
