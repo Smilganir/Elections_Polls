@@ -4,12 +4,14 @@
  * GitHub cron is UTC-only; we fire IDT/IST UTC pairs and accept only matching IL times (±2 min).
  *
  * Usage: node scripts/israel-poll-schedule-gate.mjs <mode>
+ *   daily         — every day, every 2 hours 08:00–22:00 (themadad → Sheets)
  *   wed-thu       — Wed & Thu 09:00, 14:00, 21:00
  *   fri-poll      — Fri 09:30, 10:30, 11:30 (themadad → Sheets)
  *   fri-narrative — Fri 09:45, 10:45, 11:45 (Maariv narrative; 15 min after poll sync)
  */
 
 const MODES = {
+  daily: { days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], times: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'] },
   'wed-thu': { days: ['Wed', 'Thu'], times: ['09:00', '14:00', '21:00'] },
   'fri-poll': { days: ['Fri'], times: ['09:30', '10:30', '11:30'] },
   'fri-narrative': { days: ['Fri'], times: ['09:45', '10:45', '11:45'] },
