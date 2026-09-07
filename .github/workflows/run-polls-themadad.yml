@@ -5,7 +5,7 @@
 # Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required), ZENROWS_API_KEY (required). HTTPS_PROXY (optional fallback).
 #
 # Schedule (Asia/Jerusalem — gate in scripts/israel-poll-schedule-gate.mjs):
-#   • Daily: every 2 hours, 08:00–22:00
+#   • Daily: 09:30, 14:00, 19:00
 #   • Wed & Thu: 09:00, 14:00, 21:00
 #   • Fri: 09:30, 10:30, 11:30
 #   Cron lists IDT/IST UTC pairs; the gate keeps only the matching IL wall-clock slot.
@@ -20,8 +20,10 @@ name: Run polls when themadad updates
 
 on:
   schedule:
-    # Daily — every 2 hours 08:00–22:00 IL (IDT/IST UTC pairs collapse to UTC hours 5-20)
-    - cron: '0 5-20 * * *'
+    # Daily — 09:30, 14:00, 19:00 IL (IDT/IST UTC pairs)
+    - cron: '30 6,7 * * *'
+    - cron: '0 11,12 * * *'
+    - cron: '0 16,17 * * *'
     # Wed & Thu — 09:00, 14:00, 21:00 IL (IDT/IST UTC pairs)
     - cron: '0 6,7,11,12,18,19 * * 3,4'
     # Fri — 09:30, 10:30, 11:30 IL (IDT/IST UTC pairs)
