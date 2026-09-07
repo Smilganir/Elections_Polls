@@ -8,6 +8,7 @@
 # Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
 #
 # Schedule (Asia/Jerusalem — gate in scripts/israel-poll-schedule-gate.mjs):
+#   • Daily: every 2 hours, 08:00–22:00
 #   • Wed & Thu: 09:00, 14:00, 21:00
 #   • Fri: 09:30, 10:30, 11:30
 #   Cron lists IDT/IST UTC pairs; the gate keeps only the matching IL wall-clock slot.
@@ -22,6 +23,8 @@ name: Run polls when themadad updates
 
 on:
   schedule:
+    # Daily — every 2 hours 08:00–22:00 IL (IDT/IST UTC pairs collapse to UTC hours 5-20)
+    - cron: '0 5-20 * * *'
     # Wed & Thu — 09:00, 14:00, 21:00 IL (IDT/IST UTC pairs)
     - cron: '0 6,7,11,12,18,19 * * 3,4'
     # Fri — 09:30, 10:30, 11:30 IL (IDT/IST UTC pairs)
@@ -55,7 +58,7 @@ jobs:
         id: slot
         if: github.event_name == 'schedule'
         run: |
-          if node scripts/israel-poll-schedule-gate.mjs wed-thu || node scripts/israel-poll-schedule-gate.mjs fri-poll; then
+          if node scripts/israel-poll-schedule-gate.mjs wed-thu || node scripts/israel-poll-schedule-gate.mjs fri-poll || node scripts/israel-poll-schedule-gate.mjs daily; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
           else
             echo "ok=false" >> "$GITHUB_OUTPUT"
