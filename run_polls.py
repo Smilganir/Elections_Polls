@@ -224,7 +224,19 @@ def fetch_html(url: str) -> str:
 
     Uses curl_cffi Chrome impersonation when available; otherwise requests.
     Optional HTTPS_PROXY / HTTP_PROXY for a residential proxy if datacenter IPs get 403.
+    If ZENROWS_API_KEY is set, fetches through the ZenRows API with residential
+    (premium) proxies instead - for CI on GitHub-hosted runners (datacenter IPs).
     """
+    zenrows_key = os.environ.get('ZENROWS_API_KEY', '').strip()
+    if zenrows_key:
+        r = requests.get(
+            'https://api.zenrows.com/v1/',
+            params={'apikey': zenrows_key, 'url': url, 'premium_proxy': 'true'},
+            timeout=60,
+        )
+        r.raise_for_status()
+        return r.text
+
     extra_headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
