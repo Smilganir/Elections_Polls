@@ -4,8 +4,9 @@
 # Actions → "Run polls now" → Run workflow
 #   gh workflow run run-polls-now.yml
 #
-# Uses the same self-hosted runner (themadad 403 from GitHub IPs).
-# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required). HTTPS_PROXY (optional).
+# Runs GitHub-hosted; themadad 403s datacenter IPs, so the fetch goes through
+# the ZenRows API (residential exit) via ZENROWS_API_KEY.
+# Secrets: GOOGLE_SERVICE_ACCOUNT_JSON (required), ZENROWS_API_KEY (required). HTTPS_PROXY (optional fallback).
 
 name: Run polls now
 
@@ -21,7 +22,7 @@ concurrency:
 
 jobs:
   upload:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
       run:
@@ -50,6 +51,7 @@ jobs:
       - name: Fetch, transform, upload to Sheets
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          ZENROWS_API_KEY: ${{ secrets.ZENROWS_API_KEY }}
           HTTPS_PROXY: ${{ secrets.HTTPS_PROXY }}
           HTTP_PROXY: ${{ secrets.HTTPS_PROXY }}
         run: python run_polls.py
