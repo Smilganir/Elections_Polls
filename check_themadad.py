@@ -14,11 +14,10 @@ import os
 import sys
 
 from run_polls import (
-    DATA_URL,
     FINGERPRINT_FILE,
-    fetch_html,
+    get_wide_polls_dataframe,
     max_poll_id_from_fingerprint,
-    sync_fingerprint_from_html,
+    sync_fingerprint_from_wide,
     sync_fingerprints_differ,
 )
 
@@ -46,9 +45,13 @@ def _read_previous_fingerprint() -> str | None:
 def main() -> int:
     previous = _read_previous_fingerprint()
 
-    print(f'Fetching {DATA_URL} ...')
-    html = fetch_html(DATA_URL)
-    current = sync_fingerprint_from_html(html)
+    try:
+        data_df = get_wide_polls_dataframe(verbose=True)
+    except ValueError as e:
+        print(f'Could not parse poll table: {e}', file=sys.stderr)
+        _write_output(changed=False, fingerprint=None)
+        return 1
+    current = sync_fingerprint_from_wide(data_df) if data_df is not None else None
     if current is None:
         print('Could not parse poll table or no rows.', file=sys.stderr)
         _write_output(changed=False, fingerprint=None)
@@ -74,3 +77,4 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
+
