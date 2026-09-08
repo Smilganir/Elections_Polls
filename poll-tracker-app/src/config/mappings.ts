@@ -30,6 +30,7 @@ export const PARTY_SEGMENT_BY_KEY: Record<string, Segment> = {
   Shas: 'Coalition',
   UTJ: 'Coalition',
   'Otzma Yehudit': 'Coalition',
+  "Ofer Winter's Party": 'Coalition',
   'Religious Zionism': 'Coalition',
   "Bennett's Party": 'Opposition',
   'Blue & White': 'Opposition',

@@ -2,11 +2,8 @@
  * Fixed 120-seat hemicycle layout digitized from the horseshoe template.
  * Coordinates are percentages of the map viewBox (0–100).
  *
- * Fill order for poll seats:
- *   opposition-wing + opposition-arch → opposition parties
- *   arabs-center → Arab parties / joint list
- *   haredi-center → Shas + UTJ
- *   coalition-arch + coalition-wing → remaining coalition parties
+ * Party wedges (see knessetSeatAllocation): opposition+Arabs on the left,
+ * coalition on the right; rank 1 at each party's front-inner corner.
  */
 
 import { KNESSET_SEAT_COORDS } from './knessetSeatCoords.data'

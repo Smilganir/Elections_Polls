@@ -4,7 +4,8 @@ import type { Segment } from '../types/data'
 export const KNESSET26_CANDIDATES_SPREADSHEET_ID =
   '1oHaO9UKuLn1MR6iAQ2URu8XC62AkfoTN7zYAXxcV9SQ'
 
-const CANDIDATES_CSV_URL = `https://docs.google.com/spreadsheets/d/${KNESSET26_CANDIDATES_SPREADSHEET_ID}/gviz/tq?tqx=out:csv`
+const CANDIDATES_SHEET_GID = '921987901'
+const CANDIDATES_CSV_URL = `https://docs.google.com/spreadsheets/d/${KNESSET26_CANDIDATES_SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${CANDIDATES_SHEET_GID}`
 
 export type KnessetMemberSeniority = 'veteran' | 'new' | 'unknown'
 
@@ -30,6 +31,12 @@ export const HEBREW_LIST_TO_PARTY_KEY: Record<string, string> = {
   'יהדות התורה': 'UTJ',
   'ש"ס': 'Shas',
   'רע"ם': "Ra'am",
+  'עמך ישראל': "Ofer Winter's Party",
+  'המילואימניקים - הכלכלית': 'The Reservists',
+  'המילואימניקים': 'The Reservists',
+  'הרשימה המשותפת': 'Joint Arab List',
+  'הציונות הדתית + זהות': 'Religious Zionism',
+  'כחול לבן': 'Blue & White',
 }
 
 export function partyKeyFromHebrewList(partyHeb: string): string | null {
