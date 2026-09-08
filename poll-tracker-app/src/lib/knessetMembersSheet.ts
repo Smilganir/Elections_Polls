@@ -21,6 +21,7 @@ export type KnessetMemberRow = {
 /** Hebrew sheet list name → canonical unpivot party key. */
 export const HEBREW_LIST_TO_PARTY_KEY: Record<string, string> = {
   'ביחד': "Bennett's Party",
+  'יחד': "Bennett's Party",
   'הליכוד': 'Likud',
   'ישר! עם איזנקוט': 'Yashar!',
   'ישראל ביתנו': 'Yisrael Beiteinu',
@@ -101,11 +102,20 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
 
 let cachedMembers: KnessetMemberRow[] | null = null
 let cachePromise: Promise<KnessetMemberRow[]> | null = null
+let cacheStamp = 0
+
+/** Bust in-memory roster cache (e.g. after sheet column renames). */
+export function clearKnessetMembersCache(): void {
+  cachedMembers = null
+  cachePromise = null
+  cacheStamp = Date.now()
+}
 
 export async function fetchKnessetMembers(): Promise<KnessetMemberRow[]> {
   if (cachedMembers) return cachedMembers
   if (!cachePromise) {
-    cachePromise = fetch(CANDIDATES_CSV_URL, { cache: 'no-store' })
+    const url = `${CANDIDATES_CSV_URL}&_=${cacheStamp || Date.now()}`
+    cachePromise = fetch(url, { cache: 'no-store' })
       .then((r) => {
         if (!r.ok) throw new Error(`Knesset candidates sheet: ${r.status}`)
         return r.text()

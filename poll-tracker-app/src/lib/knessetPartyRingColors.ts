@@ -13,7 +13,7 @@ export const KNESSET_PARTY_RING_COLORS: Record<string, string> = {
   "Ofer Winter's Party": '#002966',
   'Yashar!': '#f7787c',
   "Bennett's Party": '#F06EAA',
-  'Yesh Atid': '#F06EAA',
+  'Yesh Atid': '#D4DCE8',
   'Blue & White': '#E88B7A',
   'The Democrats': '#E30613',
   'Yisrael Beiteinu': '#8B3FB2',
