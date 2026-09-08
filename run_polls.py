@@ -411,13 +411,29 @@ def get_wide_polls_dataframe(verbose: bool = True) -> pd.DataFrame | None:
     """
     Fetch themadad wide table: one row per (Date, Media Outlet) after Poll ID dedupe.
     ``Date`` is timezone-naive datetime. Returns None if fetch/parse fails or no rows.
+
+    A flaky fetch can return HTTP 200 with no poll table (e.g. a Cloudflare challenge
+    page, where ``read_html`` finds no tables); retry that case once after a short
+    delay instead of failing the run.
     """
     if verbose:
         print("Fetching data from themadad.com ...")
-    html = fetch_html(DATA_URL)
-    if verbose:
-        print(f"  HTML fetched: {len(html):,} chars")
-    return _wide_polls_from_html(html, verbose=verbose)
+    for attempt in range(2):
+        html = fetch_html(DATA_URL)
+        if verbose:
+            print(f"  HTML fetched: {len(html):,} chars")
+        try:
+            return _wide_polls_from_html(html, verbose=verbose)
+        except ValueError as e:
+            last = attempt == 1
+            if 'No tables found' not in str(e) or last:
+                raise
+            if verbose:
+                print(
+                    "  No poll table in response (likely a Cloudflare challenge page). "
+                    "Retrying once in 10s ..."
+                )
+            time.sleep(10)
 
 
 def process_data():
@@ -537,3 +553,4 @@ def upload():
 
 if __name__ == '__main__':
     upload()
+
