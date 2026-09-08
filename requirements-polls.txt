@@ -7,3 +7,8 @@ google-auth>=2.0,<3
 google-api-python-client>=2.100,<3
 numpy>=1.24,<3
 lxml>=4.9,<7
+# pandas read_html fallback parser when lxml finds no table (e.g. a Cloudflare
+# challenge page) - without these the fallback ImportError crashes the run.
+html5lib>=1.1,<2
+beautifulsoup4>=4.11,<5
+
