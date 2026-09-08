@@ -131,10 +131,27 @@ export function membersByPartyKey(
     if (!m.has(row.partyKey)) m.set(row.partyKey, [])
     m.get(row.partyKey)!.push(row)
   }
-  for (const list of m.values()) {
-    list.sort((a, b) => a.listRank - b.listRank)
+  for (const [key, list] of m) {
+    m.set(key, dedupePartyRoster(list))
   }
   return m
+}
+
+/** One row per list rank / name — source sheet may contain duplicate candidates. */
+function dedupePartyRoster(rows: readonly KnessetMemberRow[]): KnessetMemberRow[] {
+  const byRank = new Map<number, KnessetMemberRow>()
+  const byName = new Map<string, KnessetMemberRow>()
+  const sorted = [...rows].sort((a, b) => a.listRank - b.listRank || a.name.localeCompare(b.name))
+
+  for (const row of sorted) {
+    const nameKey = row.name.trim()
+    if (nameKey && byName.has(nameKey)) continue
+    if (row.listRank > 0 && byRank.has(row.listRank)) continue
+    if (row.listRank > 0) byRank.set(row.listRank, row)
+    if (nameKey) byName.set(nameKey, row)
+  }
+
+  return [...byRank.values()].sort((a, b) => a.listRank - b.listRank)
 }
 
 export function segmentLabel(

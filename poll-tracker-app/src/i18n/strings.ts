@@ -90,6 +90,8 @@ export type UiStrings = {
   knessetMapArabs: string
   knessetMapSeniorityVeteran: string
   knessetMapSeniorityNew: string
+  /** Tooltip: list rank of {rank} out of {total} party mandates */
+  knessetMapListRank: string
   /** Hero trend panel header; {n} = rolling window days */
   pollSummaryHeroTrendPanelTitle: string
   /** Hero chip → cross-outlet average trend */
@@ -241,6 +243,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapArabs: 'Arab lists',
     knessetMapSeniorityVeteran: 'Experienced MK',
     knessetMapSeniorityNew: 'New candidate',
+    knessetMapListRank: 'List rank {rank} of {total}',
     pollSummaryHeroTrendPanelTitle: 'Cross-outlet average · {n}-day window',
     pollSummaryHeroPartyTrendOpenAria: 'Show cross-outlet average seat trend for {party}',
     pollSummaryHeroPartyTrendNoData: 'No poll history for this party in the window.',
@@ -381,6 +384,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapArabs: 'רשימות ערביות',
     knessetMapSeniorityVeteran: 'חבר כנסת ותיק',
     knessetMapSeniorityNew: 'מועמד חדש',
+    knessetMapListRank: 'מקום {rank} מתוך {total}',
     pollSummaryHeroTrendPanelTitle: 'ממוצע ערוצים · חלון {n} ימים',
     pollSummaryHeroPartyTrendOpenAria: 'הצג מגמת מנדטים ממוצעת בין ערוצים עבור {party}',
     pollSummaryHeroPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בחלון.',

@@ -9,9 +9,22 @@ from PIL import Image
 
 TEMPLATE = Path(
     r"C:\Users\smilg\.cursor\projects\c-Users-smilg-Documents-Data-Viz-Cursor-isr-socio-elections"
-    r"\assets\c__Users_smilg_AppData_Roaming_Cursor_User_workspaceStorage_4adc575dd2dc1052ee2f034821dda8cb_images_image-5cb7d0ba-488b-4945-854d-5e4553ed4f52.png"
+    r"\assets\c__Users_smilg_AppData_Roaming_Cursor_User_workspaceStorage_4adc575dd2dc1052ee2f034821dda8cb_images_image-1c14ec58-3ad6-4c7d-9e74-92c115f4b6dd.png"
 )
 OUT = Path(__file__).resolve().parent.parent / "src/lib/knessetSeatCoords.data.ts"
+
+
+def is_wing(x: float) -> bool:
+    return x < 28 or x > 72
+
+
+def is_valid_position(x: float, y: float) -> bool:
+    """Keep seats on the wings and top arch only — exclude the open center."""
+    if y > 74 and 28 < x < 72:
+        return False
+    if y > 26 and 38 < x < 62:
+        return False
+    return True
 
 
 def zone_for(x: float, y: float) -> str:
@@ -38,15 +51,14 @@ def extract_centers() -> list[tuple[float, float]]:
     img = Image.open(TEMPLATE).convert("RGB")
     arr = np.array(img)
     h, w = arr.shape[:2]
-    mask = np.ones((h, w), dtype=bool)
+
+    mask = arr.max(axis=2) > 20
     for y in range(h):
         for x in range(w):
             xp, yp = x / w * 100, y / h * 100
-            # Mask only the "120" label — keep wing tips at the bottom corners.
             if yp > 90 and 38 < xp < 62:
                 mask[y, x] = False
-    gray = arr.mean(axis=2)
-    mask &= gray < 175
+
     visited = np.zeros(mask.shape, dtype=bool)
     centers: list[tuple[float, float]] = []
     for y in range(h):
@@ -70,39 +82,85 @@ def extract_centers() -> list[tuple[float, float]]:
                         ):
                             visited[ny, nx] = True
                             q.append((ny, nx))
-            if 80 < len(pts) < 6000:
+            if 20 < len(pts) < 6000:
                 xs = [p[0] for p in pts]
                 ys = [p[1] for p in pts]
-                centers.append((sum(xs) / len(xs) / w * 100, sum(ys) / len(ys) / h * 100))
+                cx = sum(xs) / len(xs) / w * 100
+                cy = sum(ys) / len(ys) / h * 100
+                if is_valid_position(cx, cy):
+                    centers.append((cx, cy))
+
     centers.sort(key=lambda c: (c[1], c[0]))
     return centers
 
 
+def _round_y(y: float) -> int:
+    return round(y)
+
+
+def _wing_column_positions(centers: list[tuple[float, float]], side: str) -> list[float]:
+    xs: list[float] = []
+    for x, y in centers:
+        if side == "left" and x < 28:
+            xs.append(x)
+        elif side == "right" and x > 72:
+            xs.append(x)
+    return sorted(set(round(v, 2) for v in xs))
+
+
+def _existing_at(centers: list[tuple[float, float]], x: float, y: float, tol=2.2) -> bool:
+    return any(abs(px - x) < tol and abs(py - y) < tol for px, py in centers)
+
+
+# Right-wing rows present on the left wing but absent in the PNG (109→120).
+WING_EXTENSION_SEATS: list[tuple[float, float]] = [
+    (79.22, 63.0),
+    (85.15, 63.0),
+    (91.06, 63.0),
+    (96.99, 63.0),
+    (79.22, 70.0),
+    (85.15, 70.0),
+    (91.06, 70.0),
+    (96.99, 70.0),
+    (83.65, 77.0),
+    (89.59, 77.0),
+    (95.5, 77.0),
+]
+
+
 def pad_to_120(centers: list[tuple[float, float]]) -> list[tuple[float, float]]:
-    """Insert one midpoint when digitization misses a single merged dot."""
+    """Add wing-only seats when the PNG has fewer than 120 dots."""
     if len(centers) >= 120:
         return centers[:120]
+
     out = list(centers)
-    while len(out) < 120:
-        best_i = 0
-        best_d = -1.0
-        for i in range(len(out) - 1):
-            x0, y0 = out[i]
-            x1, y1 = out[i + 1]
-            d = (x1 - x0) ** 2 + (y1 - y0) ** 2
-            if d > best_d:
-                best_d = d
-                best_i = i
-        x0, y0 = out[best_i]
-        x1, y1 = out[best_i + 1]
-        out.insert(best_i + 1, ((x0 + x1) / 2, (y0 + y1) / 2))
-    return out
+    for x, y in WING_EXTENSION_SEATS:
+        if len(out) >= 120:
+            break
+        if is_valid_position(x, y) and not _existing_at(out, x, y):
+            out.append((x, y))
+
+    out.sort(key=lambda c: (c[1], c[0]))
+
+    if len(out) < 120:
+        raise RuntimeError(f"Could not pad to 120 seats — stuck at {len(out)}")
+
+    return out[:120]
 
 
 def main() -> None:
-    centers = pad_to_120(extract_centers())
-    print(f"extracted {len(centers)} seats")
+    raw = extract_centers()
+    centers = pad_to_120(raw)
+    print(f"extracted {len(raw)} seats, padded to {len(centers)}")
     print("zones:", dict(Counter(zone_for(x, y) for x, y in centers)))
+
+    invalid = [(i, x, y) for i, (x, y) in enumerate(centers) if not is_valid_position(x, y)]
+    if invalid:
+        print("WARNING invalid positions:", invalid)
+
+    center_hollow = [(i, x, y) for i, (x, y) in enumerate(centers) if y > 26 and 38 < x < 62]
+    if center_hollow:
+        print("WARNING center hollow seats:", center_hollow)
 
     lines = [
         "/** Digitized hemicycle seat coordinates (% of stage box). Do not hand-edit — run scripts/digitize_knesset_layout.py */",

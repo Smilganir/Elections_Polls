@@ -5,8 +5,8 @@
 export const KNESSET_HOLLOW_INSETS = {
   left: 32,
   right: 32,
-  top: 33,
-  bottom: 22,
+  top: 31,
+  bottom: 18,
 } as const
 
 export function knessetHollowInsetStyle(): Record<string, string> {

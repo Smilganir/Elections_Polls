@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type CSSProperties, type RefObject } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
@@ -8,6 +8,7 @@ import {
   SEGMENT_COLORS,
 } from '../config/mappings'
 import { ringColorForParty } from '../lib/knessetPartyRingColors'
+import { seatCountsByParty } from '../lib/knessetSeatAllocation'
 import type { ChangedParty, RollingPoll } from '../lib/pollRollingWindow'
 import type { Segment } from '../types/data'
 import { PollSummaryHeroBlocBar } from './PollSummaryBlocBar'
@@ -212,6 +213,12 @@ export function PollSummaryHeroPartiesChartPopup({
     [changedParties],
   )
 
+  const [focusedPartyKey, setFocusedPartyKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) setFocusedPartyKey(null)
+  }, [open])
+
   const rows = useMemo(
     () =>
       [...current.parties]
@@ -225,6 +232,8 @@ export function PollSummaryHeroPartiesChartPopup({
     () => rows.reduce((max, row) => Math.max(max, row.votes), 0),
     [rows],
   )
+
+  const seatCounts = useMemo(() => seatCountsByParty(current), [current])
 
   const windowSuffix = t.pollSummaryHeroPartiesChartWindowSuffix.replace(
     /\{n\}/g,
@@ -295,6 +304,7 @@ export function PollSummaryHeroPartiesChartPopup({
               displayParty={displayParty}
               locale={locale}
               t={t}
+              focusedPartyKey={focusedPartyKey}
               stageOverlay={
                 <div className="lpo-ps-hero-chart-center-stack">
                   <div className="lpo-ps-hero-chart-bloc-summary">
@@ -325,7 +335,25 @@ export function PollSummaryHeroPartiesChartPopup({
               return (
                 <div
                   key={row.party}
-                  className={`lpo-ps-hero-chart-row lpo-party-row${rowIdx % 2 === 1 ? ' lpo-party-row--alt' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  className={`lpo-ps-hero-chart-row lpo-party-row lpo-ps-hero-chart-row--selectable${
+                    rowIdx % 2 === 1 ? ' lpo-party-row--alt' : ''
+                  }${focusedPartyKey === row.party ? ' lpo-ps-hero-chart-row--focused' : ''}${
+                    focusedPartyKey && focusedPartyKey !== row.party
+                      ? ' lpo-ps-hero-chart-row--dimmed'
+                      : ''
+                  }`}
+                  aria-pressed={focusedPartyKey === row.party}
+                  onClick={() =>
+                    setFocusedPartyKey((prev) => (prev === row.party ? null : row.party))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setFocusedPartyKey((prev) => (prev === row.party ? null : row.party))
+                    }
+                  }}
                 >
                   <div className="lpo-party-label-col">
                     <div
@@ -356,6 +384,9 @@ export function PollSummaryHeroPartiesChartPopup({
                         <strong className="lpo-votes" style={{ color: barColor }}>
                           {formatChipNum(row.votes)}
                         </strong>
+                        <span className="lpo-ps-hero-chart-seats" title={t.knessetMapListRank.replace(/\{rank\}/g, '1').replace(/\{total\}/g, String(seatCounts.get(row.party) ?? 0))}>
+                          ({seatCounts.get(row.party) ?? 0})
+                        </span>
                         {delta !== null ? (
                           <span className="lpo-ps-hero-chart-bar-delta">
                             <span className={`lpo-change-badge ${deltaDir}`}>
