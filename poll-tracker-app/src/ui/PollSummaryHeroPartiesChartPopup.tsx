@@ -6,12 +6,13 @@ import {
   MEDIA_ICON_MAP,
   PARTY_ICON_MAP,
   SEGMENT_COLORS,
-  segmentRingColorForSummary,
 } from '../config/mappings'
+import { ringColorForParty } from '../lib/knessetPartyRingColors'
 import type { ChangedParty, RollingPoll } from '../lib/pollRollingWindow'
 import type { Segment } from '../types/data'
 import { PollSummaryHeroBlocBar } from './PollSummaryBlocBar'
 import { IconWithFallback } from './IconWithFallback'
+import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
 
 function formatChipNum(n: number): string {
   const r = Math.round(n * 10) / 10
@@ -288,29 +289,34 @@ export function PollSummaryHeroPartiesChartPopup({
           </button>
         </header>
         <div className="lpo-ps-hero-chart-body">
-          <div className="lpo-ps-hero-chart-bloc-summary">
-            <PollSummaryHeroBlocBar
+          <div className="lpo-ps-hero-chart-hemicycle-wrap">
+            <PollSummaryKnessetSeatMap
+              poll={current}
+              displayParty={displayParty}
+              locale={locale}
               t={t}
-              combineArabsWithOpposition={combineArabsWithOpposition}
-              hasPrior={hasPrior}
-              avgCoalition={avgCoalition}
-              avgOpposition={avgOpposition}
-              avgArabs={avgArabs}
-              avgOppositionPlusArabs={avgOppositionPlusArabs}
-              deltaCoalition={deltaCoalition}
-              deltaOpposition={deltaOpposition}
-              deltaOppositionPlusArabs={deltaOppositionPlusArabs}
-              className="lpo-ps-hero-chart-bloc-bar"
-            />
-          </div>
-          <div className="lpo-ps-hero-chart-table" dir="ltr">
-            {rows.map((row, rowIdx) => {
+              stageOverlay={
+                <div className="lpo-ps-hero-chart-center-stack">
+                  <div className="lpo-ps-hero-chart-bloc-summary">
+                    <PollSummaryHeroBlocBar
+                      t={t}
+                      combineArabsWithOpposition={combineArabsWithOpposition}
+                      hasPrior={hasPrior}
+                      avgCoalition={avgCoalition}
+                      avgOpposition={avgOpposition}
+                      avgArabs={avgArabs}
+                      avgOppositionPlusArabs={avgOppositionPlusArabs}
+                      deltaCoalition={deltaCoalition}
+                      deltaOpposition={deltaOpposition}
+                      deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+                      className="lpo-ps-hero-chart-bloc-bar"
+                    />
+                  </div>
+                  <div className="lpo-ps-hero-chart-table lpo-ps-hero-chart-table--inset" dir="ltr">
+                    {rows.map((row, rowIdx) => {
               const barPct = maxVotes > 0 ? (row.votes / maxVotes) * 100 : 0
               const barColor = segmentDisplayColor(row.segment, combineArabsWithOpposition)
-              const ringColor = segmentRingColorForSummary(
-                row.segment,
-                combineArabsWithOpposition,
-              )
+              const ringColor = ringColorForParty(row.party)
               const cp = changedByParty.get(row.party)
               const delta =
                 hasPrior && cp && cp.delta !== 0 ? formatChipNum(Math.abs(cp.delta)) : null
@@ -376,6 +382,10 @@ export function PollSummaryHeroPartiesChartPopup({
                 </div>
               )
             })}
+                  </div>
+                </div>
+              }
+            />
           </div>
         </div>
       </div>

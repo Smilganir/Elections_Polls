@@ -81,6 +81,15 @@ export type UiStrings = {
   pollSummaryHeroPartiesChartOutletIncludeAria: string
   /** Hint under chart popup title (outlet icon toggle) */
   pollSummaryHeroPartiesChartOutletHint: string
+  /** Knesset hemicycle seat map in hero chart popup */
+  knessetMapAria: string
+  knessetMapLoading: string
+  knessetMapLoadError: string
+  knessetMapCoalition: string
+  knessetMapOpposition: string
+  knessetMapArabs: string
+  knessetMapSeniorityVeteran: string
+  knessetMapSeniorityNew: string
   /** Hero trend panel header; {n} = rolling window days */
   pollSummaryHeroTrendPanelTitle: string
   /** Hero chip → cross-outlet average trend */
@@ -224,6 +233,14 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartOutletIncludeAria: 'Include {outlet} in average',
     pollSummaryHeroPartiesChartOutletHint:
       'Click an outlet icon to include or exclude it from the average',
+    knessetMapAria: 'Knesset seat map from latest poll averages',
+    knessetMapLoading: 'Loading candidate lists…',
+    knessetMapLoadError: 'Could not load candidate lists.',
+    knessetMapCoalition: 'Coalition',
+    knessetMapOpposition: 'Opposition',
+    knessetMapArabs: 'Arab lists',
+    knessetMapSeniorityVeteran: 'Experienced MK',
+    knessetMapSeniorityNew: 'New candidate',
     pollSummaryHeroTrendPanelTitle: 'Cross-outlet average · {n}-day window',
     pollSummaryHeroPartyTrendOpenAria: 'Show cross-outlet average seat trend for {party}',
     pollSummaryHeroPartyTrendNoData: 'No poll history for this party in the window.',
@@ -356,6 +373,14 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartOutletIncludeAria: 'כלול את {outlet} בממוצע',
     pollSummaryHeroPartiesChartOutletHint:
       'לחצו על ערוץ כדי לכלול או להוציא אותו מהממוצע',
+    knessetMapAria: 'מפת מושבים בכנסת לפי ממוצע הסקרים',
+    knessetMapLoading: 'טוען רשימות מועמדים…',
+    knessetMapLoadError: 'לא ניתן לטעון רשימות מועמדים.',
+    knessetMapCoalition: 'קואליציה',
+    knessetMapOpposition: 'אופוזיציה',
+    knessetMapArabs: 'רשימות ערביות',
+    knessetMapSeniorityVeteran: 'חבר כנסת ותיק',
+    knessetMapSeniorityNew: 'מועמד חדש',
     pollSummaryHeroTrendPanelTitle: 'ממוצע ערוצים · חלון {n} ימים',
     pollSummaryHeroPartyTrendOpenAria: 'הצג מגמת מנדטים ממוצעת בין ערוצים עבור {party}',
     pollSummaryHeroPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בחלון.',

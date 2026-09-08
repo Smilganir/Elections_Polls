@@ -108,7 +108,7 @@ export const PARTY_COLOR_MAP: Record<string, string> = {
   'Religious Zionism': '#00B1FF',
   'Otzma Yehudit': '#00B1FF',
   "Bennett's Party": '#F7F7F7',
-  'Yashar!': '#F7F7F7',
+  'Yashar!': '#f7787c',
   'The Democrats': '#F7F7F7',
   'Yesh Atid': '#F7F7F7',
   'Yisrael Beiteinu': '#F7F7F7',
