@@ -13,9 +13,12 @@ export function IconWithFallback({ src, label }: IconWithFallbackProps) {
     return <span className="icon-fallback">{label.slice(0, 2)}</span>
   }
 
+  const resolved =
+    src.startsWith('http://') || src.startsWith('https://') ? src : publicUrl(src)
+
   return (
     <img
-      src={publicUrl(src)}
+      src={resolved}
       alt={label}
       className="mapped-icon"
       onError={() => setBroken(true)}

@@ -206,7 +206,6 @@ export function PollSummaryKnessetSeatMap({
               />
             ))}
             {stageOverlay}
-            <span className="lpo-ps-knesset-map-total">120</span>
           </div>
           {tooltip ? (
             <div
@@ -247,4 +246,4 @@ export function PollSummaryKnessetSeatMap({
     </div>
   )
 }
-
+

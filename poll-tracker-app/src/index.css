@@ -5741,6 +5741,23 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   padding-bottom: 0.15rem;
 }
 
+.lpo-ps-hero-chart-bloc-summary--header {
+  width: 100%;
+  max-width: 24rem;
+  margin: 0.1rem auto 0;
+  padding: 0.2rem 0.35rem 0.15rem;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-bar-stack {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-nums-between {
+  margin-bottom: 0.35rem;
+}
+
 .lpo-ps-hero-chart-dialog .lpo-ps-subtitle.lpo-ps-subtitle--outlets-trend-hint.lpo-ps-hero-chart-outlet-hint {
   margin: 0.1rem auto 0;
   max-width: 100%;
@@ -5848,13 +5865,13 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   align-items: stretch;
 }
 
-/* Bloc bar + party table stacked in the hemicycle hollow (between wings). */
+/* Party table in the hemicycle hollow (between wings). */
 .lpo-ps-hero-chart-center-stack {
   position: absolute;
   left: var(--lpo-ps-knesset-hollow-left, 32%);
   right: var(--lpo-ps-knesset-hollow-right, 32%);
-  top: var(--lpo-ps-knesset-hollow-top, 31%);
-  bottom: var(--lpo-ps-knesset-hollow-bottom, 18%);
+  top: var(--lpo-ps-knesset-hollow-top, 29%);
+  bottom: var(--lpo-ps-knesset-hollow-bottom, 2%);
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -5862,37 +5879,6 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   min-height: 0;
   min-width: 0;
   pointer-events: auto;
-}
-
-.lpo-ps-hero-chart-center-stack .lpo-ps-hero-chart-bloc-summary {
-  flex-shrink: 0;
-  padding: 0.28rem 0.5rem 0.22rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(8, 12, 20, 0.88);
-  backdrop-filter: blur(4px);
-}
-
-.lpo-ps-hero-chart-center-stack .lpo-ps-hero-chart-bloc-summary .lpo-ps-hero-bar-stack {
-  width: 100%;
-  max-width: 100%;
-  margin-inline: 0;
-}
-
-.lpo-ps-hero-chart-bloc-summary {
-  flex-shrink: 0;
-  padding: 0.65rem 1.2rem 0.55rem 1.55rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.lpo-ps-hero-chart-bloc-summary .lpo-ps-hero-bar-stack {
-  width: 66%;
-  max-width: 66%;
-  margin-inline: auto;
-}
-
-.lpo-ps-hero-chart-bloc-summary .lpo-ps-hero-nums-between {
-  margin-bottom: 0.45rem;
 }
 
 .lpo-ps-hero-chart-table {
@@ -5908,18 +5894,46 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   flex: 1 1 auto;
   min-height: 0;
   z-index: 1;
-  padding: 0.25rem 0.4rem 0.2rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(8, 12, 20, 0.82);
-  backdrop-filter: blur(4px);
+  padding: 0.15rem 0.35rem 0.1rem;
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.48);
   overflow-x: hidden;
-  overflow-y: visible;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .lpo-ps-hero-chart-table .lpo-party-row {
-  grid-template-columns: minmax(0, 112px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 128px) minmax(0, 1fr);
   padding-block: 0.22rem;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-party-row {
+  grid-template-columns: minmax(0, 68px) minmax(0, 1fr);
+  flex: 1 1 0;
+  min-height: 0;
+  padding-block: 0;
+  align-items: center;
+  overflow: hidden;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-party-row--enlarged-mark {
+  grid-template-columns: minmax(0, 88px) minmax(0, 1fr);
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-party-cell {
+  overflow: hidden;
+  overflow-y: hidden;
+  display: flex;
+  align-items: center;
+  padding-block: 0.1rem;
+  height: 100%;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-bar-row {
+  align-items: center;
+  min-height: 0;
 }
 
 .lpo-ps-hero-chart-table .lpo-party-label-col {
@@ -5928,10 +5942,102 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   gap: 0.28rem;
 }
 
-.lpo-ps-hero-chart-table .lpo-ps-hero-chart-party-ring {
-  width: 28px;
-  height: 28px;
+.lpo-ps-hero-chart-table--inset .lpo-party-label-col {
+  padding: 0.1rem 0.18rem;
+  gap: 0;
+  height: 100%;
+  justify-content: center;
+}
+
+.lpo-ps-hero-chart-table .lpo-ps-hero-chart-party-mark {
+  width: 46px;
+  height: 24px;
   flex-shrink: 0;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark {
+  width: 64px;
+  height: calc(100% - 6px);
+  max-height: 36px;
+  min-height: 26px;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged {
+  width: 82px;
+  height: calc(100% - 2px);
+  max-height: 44px;
+  min-height: 30px;
+}
+
+.lpo-ps-hero-chart-party-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.lpo-ps-hero-chart-party-mark .mapped-icon {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 20px;
+  object-fit: contain;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  opacity: 0.96;
+}
+
+.lpo-ps-hero-chart-party-mark .icon-fallback {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: #e8ecf2;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon {
+  width: auto;
+  max-width: 64px;
+  height: 100%;
+  max-height: 34px;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
+  width: auto;
+  max-width: 64px;
+  height: 100%;
+  max-height: 34px;
+  font-size: 0.62rem;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon,
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
+  max-width: 82px;
+  max-height: 42px;
+  font-size: 0.68rem;
+}
+
+.lpo-ps-hero-chart-party-dash {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--lpo-ps-party-mark-color, #8da2be);
+  z-index: 2;
+  opacity: 0.95;
 }
 
 .lpo-ps-hero-chart-table .lpo-party-name {
@@ -5964,22 +6070,33 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-bar-meta {
   display: grid;
-  grid-template-columns: 3rem 2rem minmax(2.25rem, auto);
+  grid-template-columns: 3rem minmax(3rem, auto);
+  grid-template-rows: auto auto;
   align-items: baseline;
-  gap: 0.2rem 0.3rem;
+  gap: 0.04rem 0.3rem;
   direction: ltr;
   white-space: nowrap;
 }
 
+.lpo-ps-hero-chart-seats-line {
+  grid-column: 1;
+  grid-row: 2;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1rem;
+}
+
 .lpo-ps-hero-chart-seats {
-  grid-column: 2;
   font-size: 0.62rem;
   color: #8fa3bc;
   font-variant-numeric: tabular-nums;
+  text-align: left;
+  line-height: 1.1;
 }
 
 .lpo-ps-hero-chart-bar-meta .lpo-votes {
   grid-column: 1;
+  grid-row: 1;
   font-size: calc(0.68rem * 1.33);
   line-height: 1;
   text-align: left;
@@ -5987,11 +6104,27 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-hero-chart-bar-meta .lpo-ps-hero-chart-bar-delta {
-  grid-column: 3;
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.04rem;
+  min-width: 0;
+}
+
+.lpo-ps-hero-chart-delta-line {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.2rem;
-  min-width: 0;
+  gap: 0.1rem;
+}
+
+.lpo-ps-hero-chart-delta-unit {
+  font-size: 0.48rem;
+  line-height: 1;
+  color: #6a7a8e;
+  font-weight: 400;
 }
 
 .lpo-ps-hero-chart-bar-meta .lpo-change-badge {
@@ -6005,6 +6138,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   margin-top: 0;
   font-size: 0.62rem;
   color: #6a7a8e;
+  line-height: 1.1;
 }
 
 /* ── Poll summary: Knesset seat map (hero chart popup) ───────────────────── */
@@ -6024,11 +6158,6 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-stage {
   max-height: none;
-}
-
-.lpo-ps-hero-chart-table--inset .lpo-party-row {
-  grid-template-columns: minmax(0, 92px) minmax(0, 1fr);
-  padding-block: 0.1rem;
 }
 
 .lpo-ps-hero-chart-row--selectable {
@@ -6054,17 +6183,9 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   outline-offset: -1px;
 }
 
-.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-ring {
-  width: 24px;
-  height: 24px;
-}
-
-.lpo-ps-hero-chart-table--inset .lpo-party-name {
-  font-size: 0.64rem;
-}
-
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-bar-track {
-  height: 13px;
+  height: min(18px, 42%);
+  min-height: 14px;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-votes {
@@ -6090,7 +6211,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-knesset-seat {
   position: absolute;
-  width: 2.85%;
+  width: 3.2%;
   aspect-ratio: 1;
   z-index: 2;
   padding: 0;
@@ -6100,7 +6221,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   transform: translate(-50%, -50%);
   background: transparent;
   cursor: default;
-  box-shadow: 0 0 0 1.5px var(--lpo-ps-knesset-ring, #9ca3af);
+  box-shadow: 0 0 0 2.75px var(--lpo-ps-knesset-ring, #9ca3af);
   overflow: hidden;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
@@ -6110,19 +6231,19 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   transform: translate(-50%, -50%) scale(1.18);
   z-index: 2;
   box-shadow:
-    0 0 0 2px var(--lpo-ps-knesset-ring, #9ca3af),
+    0 0 0 3.25px var(--lpo-ps-knesset-ring, #9ca3af),
     0 2px 8px rgba(0, 0, 0, 0.45);
   outline: none;
 }
 
 .lpo-ps-knesset-seat--vacant {
   background: rgba(90, 100, 112, 0.35);
-  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--lpo-ps-knesset-ring, #5a6470) 70%, transparent);
+  box-shadow: 0 0 0 2.75px color-mix(in srgb, var(--lpo-ps-knesset-ring, #5a6470) 70%, transparent);
 }
 
 .lpo-ps-knesset-seat--placeholder {
   background: rgba(18, 24, 34, 0.72);
-  box-shadow: 0 0 0 1.5px var(--lpo-ps-knesset-ring, #9ca3af);
+  box-shadow: 0 0 0 2.75px var(--lpo-ps-knesset-ring, #9ca3af);
 }
 
 .lpo-ps-knesset-seat--dimmed {
@@ -6191,18 +6312,6 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   background: #f0d878;
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
-}
-
-.lpo-ps-knesset-map-total {
-  position: absolute;
-  left: 50%;
-  bottom: 2%;
-  transform: translateX(-50%);
-  font-size: clamp(1.1rem, 2.8vw, 1.65rem);
-  font-weight: 800;
-  color: rgba(232, 236, 242, 0.92);
-  letter-spacing: 0.02em;
   pointer-events: none;
 }
 
@@ -6296,7 +6405,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 @media (max-width: 480px) {
   .lpo-ps-knesset-seat {
-    width: 3.8%;
+    width: 4.1%;
   }
 }
 

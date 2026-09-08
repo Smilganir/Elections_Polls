@@ -22,6 +22,36 @@ export const PARTY_ICON_MAP: Record<string, string> = {
 }
 
 /**
+ * Party list logos (wordmarks) from N12 elections 2026
+ * (https://special.n12.co.il/elections2026 → mako_elections.devdinocdn.com/uploads/parties).
+ * Used in the hero-chart party table as white marks with a party-color dash.
+ */
+export const PARTY_LIST_LOGO_MAP: Record<string, string> = {
+  'Yashar!': '/parties/n12/yashar.png',
+  Likud: '/parties/n12/likud.png',
+  "Bennett's Party": '/parties/n12/yahad.png',
+  'The Democrats': '/parties/n12/democrats.png',
+  'Yisrael Beiteinu': '/parties/n12/yisrael-beiteinu.png',
+  UTJ: '/parties/n12/utj.png',
+  Shas: '/parties/n12/shas.png',
+  'Otzma Yehudit': '/parties/n12/otzma-yehudit.png',
+  'Joint Arab List': '/parties/n12/joint-arab-list.png',
+  'Religious Zionism': '/parties/n12/religious-zionism.png',
+  "Ra'am": '/parties/n12/raam.png',
+  "Ofer Winter's Party": '/parties/n12/ofer-winter.png',
+  'Yesh Atid': '/parties/n12/yesh-atid.png',
+  'Blue & White': '/parties/n12/blue-white.png',
+  'The Reservists': '/parties/n12/reservists-economic.png',
+  'Bayit Yehudi–The Reservists': '/parties/n12/bayit-yehudi-reservists.png',
+  "Hadash Ta'al": '/parties/n12/hadash-taal.png',
+  Balad: '/parties/n12/balad.png',
+}
+
+export function listLogoForParty(partyKey: string): string | undefined {
+  return PARTY_LIST_LOGO_MAP[partyKey]
+}
+
+/**
  * Segment per canonical party key — for narrative icon rings when sheet rows aren’t loaded.
  * Keep aligned with Parties Dim “Segment”.
  */
@@ -102,23 +132,26 @@ export const SEGMENT_BG_COLORS: Record<Segment, string> = {
   Arabs: 'rgba(113, 121, 130, 0.15)',
 }
 
+/** Hero-chart list-logo dash — per-party (not bloc) so the underline reads on the dark chart. */
 export const PARTY_COLOR_MAP: Record<string, string> = {
   Likud: '#00B1FF',
-  UTJ: '#00B1FF',
-  Shas: '#00B1FF',
-  'Religious Zionism': '#00B1FF',
-  'Otzma Yehudit': '#00B1FF',
-  "Bennett's Party": '#F7F7F7',
+  'Religious Zionism': '#1B6FD1',
+  Shas: '#9BA8C4',
+  UTJ: '#8B9CB3',
+  'Otzma Yehudit': '#1E4FA3',
+  "Ofer Winter's Party": '#1A3F8A',
   'Yashar!': '#f7787c',
-  'The Democrats': '#F7F7F7',
-  'Yesh Atid': '#F7F7F7',
-  'Yisrael Beiteinu': '#F7F7F7',
-  'Blue & White': '#F7F7F7',
-  'The Reservists': '#F7F7F7',
-  "Hadash Ta'al": '#717982',
-  "Ra'am": '#717982',
-  Balad: '#717982',
-  'Joint Arab List': '#717982',
+  "Bennett's Party": '#F06EAA',
+  'Yesh Atid': '#D4DCE8',
+  'Blue & White': '#E88B7A',
+  'The Democrats': '#E30613',
+  'Yisrael Beiteinu': '#8B3FB2',
+  'The Reservists': '#6B8FAD',
+  'Bayit Yehudi–The Reservists': '#6B8FAD',
+  'Joint Arab List': '#E8933A',
+  "Hadash Ta'al": '#E8933A',
+  "Ra'am": '#C4B845',
+  Balad: '#B8956A',
 }
 
 /** Matches Major Events Dim “category” labels; colors aligned to dashboard legend. */

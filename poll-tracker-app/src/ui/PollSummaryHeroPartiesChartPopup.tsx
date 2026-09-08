@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState, type CSSProperties, type RefObject } from 'react'
+import { useEffect, useMemo, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
   MEDIA_ICON_MAP,
-  PARTY_ICON_MAP,
+  PARTY_COLOR_MAP,
   SEGMENT_COLORS,
 } from '../config/mappings'
-import { ringColorForParty } from '../lib/knessetPartyRingColors'
 import { seatCountsByParty } from '../lib/knessetSeatAllocation'
 import type { ChangedParty, RollingPoll } from '../lib/pollRollingWindow'
 import type { Segment } from '../types/data'
 import { PollSummaryHeroBlocBar } from './PollSummaryBlocBar'
+import { HeroChartPartyMark } from './HeroChartPartyMark'
 import { IconWithFallback } from './IconWithFallback'
 import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
 
@@ -287,6 +287,21 @@ export function PollSummaryHeroPartiesChartPopup({
               displayMediaOutlet={displayMediaOutlet}
               t={t}
             />
+            <div className="lpo-ps-hero-chart-bloc-summary--header">
+              <PollSummaryHeroBlocBar
+                t={t}
+                combineArabsWithOpposition={combineArabsWithOpposition}
+                hasPrior={hasPrior}
+                avgCoalition={avgCoalition}
+                avgOpposition={avgOpposition}
+                avgArabs={avgArabs}
+                avgOppositionPlusArabs={avgOppositionPlusArabs}
+                deltaCoalition={deltaCoalition}
+                deltaOpposition={deltaOpposition}
+                deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+                className="lpo-ps-hero-chart-bloc-bar"
+              />
+            </div>
           </div>
           <button
             type="button"
@@ -307,26 +322,11 @@ export function PollSummaryHeroPartiesChartPopup({
               focusedPartyKey={focusedPartyKey}
               stageOverlay={
                 <div className="lpo-ps-hero-chart-center-stack">
-                  <div className="lpo-ps-hero-chart-bloc-summary">
-                    <PollSummaryHeroBlocBar
-                      t={t}
-                      combineArabsWithOpposition={combineArabsWithOpposition}
-                      hasPrior={hasPrior}
-                      avgCoalition={avgCoalition}
-                      avgOpposition={avgOpposition}
-                      avgArabs={avgArabs}
-                      avgOppositionPlusArabs={avgOppositionPlusArabs}
-                      deltaCoalition={deltaCoalition}
-                      deltaOpposition={deltaOpposition}
-                      deltaOppositionPlusArabs={deltaOppositionPlusArabs}
-                      className="lpo-ps-hero-chart-bloc-bar"
-                    />
-                  </div>
                   <div className="lpo-ps-hero-chart-table lpo-ps-hero-chart-table--inset" dir="ltr">
                     {rows.map((row, rowIdx) => {
               const barPct = maxVotes > 0 ? (row.votes / maxVotes) * 100 : 0
               const barColor = segmentDisplayColor(row.segment, combineArabsWithOpposition)
-              const ringColor = ringColorForParty(row.party)
+              const markColor = PARTY_COLOR_MAP[row.party] ?? barColor
               const cp = changedByParty.get(row.party)
               const delta =
                 hasPrior && cp && cp.delta !== 0 ? formatChipNum(Math.abs(cp.delta)) : null
@@ -339,7 +339,7 @@ export function PollSummaryHeroPartiesChartPopup({
                   tabIndex={0}
                   className={`lpo-ps-hero-chart-row lpo-party-row lpo-ps-hero-chart-row--selectable${
                     rowIdx % 2 === 1 ? ' lpo-party-row--alt' : ''
-                  }${focusedPartyKey === row.party ? ' lpo-ps-hero-chart-row--focused' : ''}${
+                  }${row.party === 'The Democrats' ? ' lpo-ps-hero-chart-row--enlarged-mark' : ''}${focusedPartyKey === row.party ? ' lpo-ps-hero-chart-row--focused' : ''}${
                     focusedPartyKey && focusedPartyKey !== row.party
                       ? ' lpo-ps-hero-chart-row--dimmed'
                       : ''
@@ -356,18 +356,11 @@ export function PollSummaryHeroPartiesChartPopup({
                   }}
                 >
                   <div className="lpo-party-label-col">
-                    <div
-                      className="lpo-ps-chip-ring lpo-ps-hero-chart-party-ring"
-                      style={
-                        { '--lpo-ps-chip-segment': ringColor } as CSSProperties
-                      }
-                    >
-                      <IconWithFallback
-                        src={PARTY_ICON_MAP[row.party]}
-                        label={displayParty(row.party)}
-                      />
-                    </div>
-                    <span className="lpo-party-name">{displayParty(row.party)}</span>
+                    <HeroChartPartyMark
+                      partyKey={row.party}
+                      label={displayParty(row.party)}
+                      color={markColor}
+                    />
                   </div>
                   <div className="lpo-party-cell">
                     <div className="lpo-bar-row lpo-ps-hero-chart-bar-row">
@@ -384,8 +377,13 @@ export function PollSummaryHeroPartiesChartPopup({
                         <strong className="lpo-votes" style={{ color: barColor }}>
                           {formatChipNum(row.votes)}
                         </strong>
-                        <span className="lpo-ps-hero-chart-seats" title={t.knessetMapListRank.replace(/\{rank\}/g, '1').replace(/\{total\}/g, String(seatCounts.get(row.party) ?? 0))}>
-                          ({seatCounts.get(row.party) ?? 0})
+                        <span className="lpo-ps-hero-chart-seats-line">
+                          <span className="lpo-ps-hero-chart-seats" title={t.knessetMapListRank.replace(/\{rank\}/g, '1').replace(/\{total\}/g, String(seatCounts.get(row.party) ?? 0))}>
+                            ({seatCounts.get(row.party) ?? 0})
+                          </span>
+                          <span className="lpo-ps-hero-chart-delta-unit" aria-hidden>
+                            {t.seats}
+                          </span>
                         </span>
                         {delta !== null ? (
                           <span className="lpo-ps-hero-chart-bar-delta">
@@ -394,15 +392,20 @@ export function PollSummaryHeroPartiesChartPopup({
                               {delta}
                             </span>
                             {cp?.deltaOutletCount && cp.deltaOutletCount > 0 ? (
-                              <span
-                                className="lpo-ps-chip-delta-outlets"
-                                dir="ltr"
-                                title={t.pollSummaryChipDeltaOutletCountTitle.replace(
-                                  /\{n\}/g,
-                                  String(cp.deltaOutletCount),
-                                )}
-                              >
-                                ({cp.deltaOutletCount})
+                              <span className="lpo-ps-hero-chart-delta-line">
+                                <span
+                                  className="lpo-ps-chip-delta-outlets"
+                                  dir="ltr"
+                                  title={t.pollSummaryChipDeltaOutletCountTitle.replace(
+                                    /\{n\}/g,
+                                    String(cp.deltaOutletCount),
+                                  )}
+                                >
+                                  ({cp.deltaOutletCount})
+                                </span>
+                                <span className="lpo-ps-hero-chart-delta-unit" aria-hidden>
+                                  {t.pollsWord}
+                                </span>
                               </span>
                             ) : null}
                           </span>

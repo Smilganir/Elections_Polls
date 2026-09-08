@@ -5,8 +5,10 @@
 export const KNESSET_HOLLOW_INSETS = {
   left: 32,
   right: 32,
-  top: 31,
-  bottom: 18,
+  /** Just below the arch seats (~26% + seat radius). */
+  top: 29,
+  /** Center floor is empty — keep a slim inset so the table can use the full U. */
+  bottom: 2,
 } as const
 
 export function knessetHollowInsetStyle(): Record<string, string> {
