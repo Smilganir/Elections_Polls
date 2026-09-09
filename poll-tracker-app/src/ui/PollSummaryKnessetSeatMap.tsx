@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
@@ -12,7 +19,22 @@ import {
 } from '../lib/knessetMembersSheet'
 import type { RollingPoll } from '../lib/pollRollingWindow'
 import { knessetHollowInsetStyle } from '../lib/knessetHollowInsets'
+import {
+  memberHebrewName,
+  memberTooltipFieldValue,
+  memberTooltipName,
+  resolveMemberEnTooltip,
+  type MemberEnTooltipProfile,
+} from '../lib/knessetMemberTooltipLocale'
+import {
+  partyKeysMatchingFilters,
+  seatMatchesFilters,
+  toggleMapFilter,
+  type KnessetMapFilters,
+  type KnessetMapFocusItem,
+} from '../lib/knessetSeatDemographics'
 import type { Segment } from '../types/data'
+import { KnessetStatsLeftStack, KnessetStatsRightStack } from './PollSummaryKnessetDemographics'
 
 type TooltipPlacement = 'above' | 'below'
 
@@ -46,6 +68,7 @@ function memberTooltipDetailRows(
   member: KnessetMemberRow,
   locale: AppLocale,
   t: UiStrings,
+  enProfile: MemberEnTooltipProfile | null,
 ): { label: string; value: string }[] {
   const rows: { label: string; value: string }[] = []
   if (member.age.trim()) rows.push({ label: t.knessetMapTooltipAge, value: member.age.trim() })
@@ -58,14 +81,33 @@ function memberTooltipDetailRows(
   if (member.professionalExperience.trim()) {
     rows.push({
       label: t.knessetMapTooltipProfessional,
-      value: member.professionalExperience.trim(),
+      value:
+        locale === 'en'
+          ? enProfile?.professional || '…'
+          : memberTooltipFieldValue(
+              member.professionalExperience,
+              locale,
+              t.knessetMapTooltipNoInfo,
+            ),
     })
   }
   if (member.militaryService.trim()) {
-    rows.push({ label: t.knessetMapTooltipMilitary, value: member.militaryService.trim() })
+    rows.push({
+      label: t.knessetMapTooltipMilitary,
+      value:
+        locale === 'en'
+          ? enProfile?.military || '…'
+          : memberTooltipFieldValue(member.militaryService, locale, t.knessetMapTooltipNoInfo),
+    })
   }
   if (member.education.trim()) {
-    rows.push({ label: t.knessetMapTooltipEducation, value: member.education.trim() })
+    rows.push({
+      label: t.knessetMapTooltipEducation,
+      value:
+        locale === 'en'
+          ? enProfile?.education || '…'
+          : memberTooltipFieldValue(member.education, locale, t.knessetMapTooltipNoInfo),
+    })
   }
   return rows
 }
@@ -74,12 +116,14 @@ function MemberTooltipDetails({
   member,
   locale,
   t,
+  enProfile,
 }: {
   member: KnessetMemberRow
   locale: AppLocale
   t: UiStrings
+  enProfile: MemberEnTooltipProfile | null
 }) {
-  const detailRows = memberTooltipDetailRows(member, locale, t)
+  const detailRows = memberTooltipDetailRows(member, locale, t, enProfile)
   if (!detailRows.length) return null
   return (
     <dl className="lpo-ps-knesset-tooltip-details">
@@ -90,6 +134,107 @@ function MemberTooltipDetails({
         </div>
       ))}
     </dl>
+  )
+}
+
+function KnessetSeatTooltip({
+  tooltip,
+  locale,
+  t,
+  displayParty,
+  rankLabel,
+  segLabel,
+}: {
+  tooltip: TooltipState
+  locale: AppLocale
+  t: UiStrings
+  displayParty: (partyKey: string) => string
+  rankLabel: (seat: KnessetFilledSeat) => string
+  segLabel: (segment: Segment) => string
+}) {
+  const member = tooltip.seat.kind === 'member' ? tooltip.seat.member : null
+  const [enProfile, setEnProfile] = useState<MemberEnTooltipProfile | null>(null)
+
+  useEffect(() => {
+    if (!member || locale !== 'en') {
+      setEnProfile(null)
+      return
+    }
+    let cancelled = false
+    setEnProfile(null)
+    resolveMemberEnTooltip(
+      member,
+      t.knessetMapTooltipNoInfo,
+      t.knessetMapTooltipUnknownName,
+    ).then((profile) => {
+      if (!cancelled) setEnProfile(profile)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [member, locale, t.knessetMapTooltipNoInfo, t.knessetMapTooltipUnknownName])
+
+  const memberName =
+    tooltip.seat.kind === 'member'
+      ? locale === 'en'
+        ? enProfile?.name || memberTooltipName(tooltip.seat.member, locale)
+        : memberHebrewName(tooltip.seat.member)
+      : ''
+
+  return (
+    <div
+      className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${tooltip.placement}${
+        locale === 'he' ? ' lpo-ps-knesset-tooltip--rtl' : ' lpo-ps-knesset-tooltip--ltr'
+      }`}
+      style={{ left: tooltip.x, top: tooltip.y }}
+      dir={locale === 'he' ? 'rtl' : 'ltr'}
+      role="tooltip"
+    >
+      <div className="lpo-ps-knesset-tooltip-header">
+        <div className="lpo-ps-knesset-tooltip-header-text">
+          {tooltip.seat.kind === 'member' ? (
+            <p className="lpo-ps-knesset-tooltip-name">{memberName}</p>
+          ) : (
+            <p className="lpo-ps-knesset-tooltip-name">{displayParty(tooltip.seat.partyKey)}</p>
+          )}
+          <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
+          <p className="lpo-ps-knesset-tooltip-meta">
+            <span
+              className="lpo-ps-knesset-tooltip-segment"
+              style={{ color: SEGMENT_COLORS[tooltip.seat.segment] }}
+            >
+              {segLabel(tooltip.seat.segment)}
+            </span>
+            <span
+              className="lpo-ps-knesset-tooltip-party"
+              style={{
+                color: PARTY_COLOR_MAP[tooltip.seat.partyKey] ?? tooltip.seat.ringColor,
+              }}
+            >
+              {displayParty(tooltip.seat.partyKey)}
+            </span>
+          </p>
+        </div>
+        {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
+          <img
+            className="lpo-ps-knesset-tooltip-portrait"
+            src={tooltip.seat.member.portraitImageUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+        ) : null}
+      </div>
+      {member ? (
+        <MemberTooltipDetails
+          member={member}
+          locale={locale}
+          t={t}
+          enProfile={enProfile}
+        />
+      ) : null}
+    </div>
   )
 }
 
@@ -104,12 +249,16 @@ function tooltipPlacement(clientY: number): TooltipPlacement {
 function SeatPortrait({
   seat,
   dimmed,
+  locale,
+  displayParty,
   onPointerEnter,
   onLeave,
   onMove,
 }: {
   seat: KnessetFilledSeat
   dimmed: boolean
+  locale: AppLocale
+  displayParty: (partyKey: string) => string
   onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>) => void
   onLeave: () => void
   onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
@@ -137,7 +286,9 @@ function SeatPortrait({
       onFocus={(e) => onPointerEnter(e as unknown as React.MouseEvent<HTMLButtonElement>)}
       onBlur={onLeave}
       onMouseMove={onMove}
-      aria-label={isMember ? seat.member.name : seat.partyKey}
+      aria-label={
+        isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
+      }
     >
       {isMember && seat.member.imageUrl ? (
         <img
@@ -171,14 +322,20 @@ export function PollSummaryKnessetSeatMap({
   displayParty,
   locale,
   t,
-  focusedPartyKey,
+  mapFilters,
+  onMapFiltersChange,
+  onMatchingPartyKeysChange,
+  mergeArabsWithOpposition = false,
   stageOverlay,
 }: {
   poll: RollingPoll
   displayParty: (partyKey: string) => string
   locale: AppLocale
   t: UiStrings
-  focusedPartyKey?: string | null
+  mapFilters?: KnessetMapFilters
+  onMapFiltersChange?: (filters: KnessetMapFilters) => void
+  onMatchingPartyKeysChange?: (keys: ReadonlySet<string> | null) => void
+  mergeArabsWithOpposition?: boolean
   /** Rendered inside the map stage (same % coords as seats) — e.g. bloc + party table. */
   stageOverlay?: ReactNode
 }) {
@@ -207,6 +364,19 @@ export function PollSummaryKnessetSeatMap({
     return buildKnessetFilledSeats(poll, byParty)
   }, [members, poll])
 
+  const activeFilters = mapFilters ?? []
+
+  useEffect(() => {
+    if (!onMatchingPartyKeysChange) return
+    if (!activeFilters.length) {
+      onMatchingPartyKeysChange(null)
+      return
+    }
+    onMatchingPartyKeysChange(
+      partyKeysMatchingFilters(seats, activeFilters, mergeArabsWithOpposition),
+    )
+  }, [seats, activeFilters, mergeArabsWithOpposition, onMatchingPartyKeysChange])
+
   const updateTooltipPos = (e: React.MouseEvent, seat: KnessetFilledSeat) => {
     setTooltip({
       seat,
@@ -228,10 +398,17 @@ export function PollSummaryKnessetSeatMap({
       .replace(/\{rank\}/g, String(seat.listRank))
       .replace(/\{total\}/g, String(seat.partySeatTotal))
 
+  const handleToggleFilter = (next: KnessetMapFocusItem) => {
+    if (!onMapFiltersChange) return
+    onMapFiltersChange(toggleMapFilter(activeFilters, next))
+  }
+
+  const showStats = seats.length > 0 && Boolean(onMapFiltersChange)
+
   return (
     <div
       ref={wrapRef}
-      className={`lpo-ps-knesset-map${focusedPartyKey ? ' lpo-ps-knesset-map--party-focus' : ''}`}
+      className={`lpo-ps-knesset-map${activeFilters.length ? ' lpo-ps-knesset-map--party-focus' : ''}`}
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       aria-label={t.knessetMapAria}
     >
@@ -242,77 +419,61 @@ export function PollSummaryKnessetSeatMap({
       ) : (
         <>
           <div
-            className="lpo-ps-knesset-map-stage"
-            style={knessetHollowInsetStyle() as CSSProperties}
-            aria-hidden
+            className={`lpo-ps-knesset-map-row${showStats ? ' lpo-ps-knesset-map-row--with-stats' : ''}`}
+            dir="ltr"
           >
-            {seats.map((seat) => (
+            {showStats ? (
+              <div className="lpo-ps-knesset-stats-gutter lpo-ps-knesset-stats-gutter--left">
+                <KnessetStatsLeftStack
+                  seats={seats}
+                  mergeArabsWithOpposition={mergeArabsWithOpposition}
+                  t={t}
+                  mapFilters={activeFilters}
+                  onToggleFocus={handleToggleFilter}
+                />
+              </div>
+            ) : null}
+            <div
+              className="lpo-ps-knesset-map-stage"
+              style={knessetHollowInsetStyle() as CSSProperties}
+              aria-hidden
+            >
+              {seats.map((seat) => (
               <SeatPortrait
                 key={seat.slot.id}
                 seat={seat}
-                dimmed={Boolean(focusedPartyKey && seat.partyKey !== focusedPartyKey)}
+                dimmed={!seatMatchesFilters(seat, activeFilters, mergeArabsWithOpposition)}
+                locale={locale}
+                displayParty={displayParty}
                 onPointerEnter={(e) => updateTooltipPos(e, seat)}
-                onLeave={() => setTooltip(null)}
-                onMove={(e) => updateTooltipPos(e, seat)}
-              />
-            ))}
-            {stageOverlay}
+                  onLeave={() => setTooltip(null)}
+                  onMove={(e) => updateTooltipPos(e, seat)}
+                />
+              ))}
+              {stageOverlay}
+            </div>
+            {showStats ? (
+              <div className="lpo-ps-knesset-stats-gutter lpo-ps-knesset-stats-gutter--right">
+                <KnessetStatsRightStack
+                  seats={seats}
+                  mergeArabsWithOpposition={mergeArabsWithOpposition}
+                  t={t}
+                  mapFilters={activeFilters}
+                  onToggleFocus={handleToggleFilter}
+                />
+              </div>
+            ) : null}
           </div>
           {tooltip
             ? createPortal(
-                <div
-                  className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${tooltip.placement}`}
-                  style={{ left: tooltip.x, top: tooltip.y }}
-                  dir="rtl"
-                  role="tooltip"
-                >
-                  <div className="lpo-ps-knesset-tooltip-header">
-                    <div className="lpo-ps-knesset-tooltip-header-text">
-                      {tooltip.seat.kind === 'member' ? (
-                        <p className="lpo-ps-knesset-tooltip-name">{tooltip.seat.member.name}</p>
-                      ) : (
-                        <p className="lpo-ps-knesset-tooltip-name">
-                          {displayParty(tooltip.seat.partyKey)}
-                        </p>
-                      )}
-                      <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
-                      <p className="lpo-ps-knesset-tooltip-meta">
-                        <span
-                          className="lpo-ps-knesset-tooltip-segment"
-                          style={{ color: SEGMENT_COLORS[tooltip.seat.segment] }}
-                        >
-                          {segLabel(tooltip.seat.segment)}
-                        </span>
-                        <span
-                          className="lpo-ps-knesset-tooltip-party"
-                          style={{
-                            color:
-                              PARTY_COLOR_MAP[tooltip.seat.partyKey] ?? tooltip.seat.ringColor,
-                          }}
-                        >
-                          {displayParty(tooltip.seat.partyKey)}
-                        </span>
-                      </p>
-                    </div>
-                    {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
-                      <img
-                        className="lpo-ps-knesset-tooltip-portrait"
-                        src={tooltip.seat.member.portraitImageUrl}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : null}
-                  </div>
-                  {tooltip.seat.kind === 'member' ? (
-                    <MemberTooltipDetails
-                      member={tooltip.seat.member}
-                      locale={locale}
-                      t={t}
-                    />
-                  ) : null}
-                </div>,
+                <KnessetSeatTooltip
+                  tooltip={tooltip}
+                  locale={locale}
+                  t={t}
+                  displayParty={displayParty}
+                  rankLabel={rankLabel}
+                  segLabel={segLabel}
+                />,
                 document.body,
               )
             : null}

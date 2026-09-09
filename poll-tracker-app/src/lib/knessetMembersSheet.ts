@@ -120,6 +120,33 @@ function headerIndex(headers: readonly string[], name: string): number {
   return headers.findIndex((h) => h.trim() === name)
 }
 
+const URL_LIKE = /^https?:\/\//i
+const HEBREW_NAME = /^[\u0590-\u05FF][\u0590-\u05FF\s"'-]{2,48}$/
+
+function isUrlLike(value: string): boolean {
+  return URL_LIKE.test(value.trim())
+}
+
+/** When the name column holds an image URL, recover a Hebrew name from the row. */
+function recoverHebrewName(cols: readonly string[]): string {
+  for (const c of cols) {
+    const t = c.trim()
+    if (!t || isUrlLike(t)) continue
+    if (!HEBREW_NAME.test(t)) continue
+    if (
+      t.includes('מפלגה') ||
+      t.includes('תואר') ||
+      t.includes('שירות') ||
+      t.includes('ותיק') ||
+      t.includes('חדש')
+    ) {
+      continue
+    }
+    return t
+  }
+  return ''
+}
+
 function cell(
   cols: readonly string[],
   headers: readonly string[],
@@ -156,7 +183,8 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
     const cols = parseCsvLine(line)
     const partyHeb = cell(cols, headers, HEADER_PARTY, 0)
     const listRank = Number.parseInt(cell(cols, headers, HEADER_RANK, 1), 10) || 0
-    const name = cell(cols, headers, HEADER_NAME, 2)
+    let name = cell(cols, headers, HEADER_NAME, 2).trim()
+    if (isUrlLike(name)) name = recoverHebrewName(cols)
     const imageUrl = pickMemberImageUrl(cols, headers)
     const portraitImageUrl = pickMemberPortraitUrl(cols, headers)
     const seniority = parseSeniority(cell(cols, headers, HEADER_SENIORITY, 6))

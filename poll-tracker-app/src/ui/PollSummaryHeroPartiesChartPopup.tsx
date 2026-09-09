@@ -8,9 +8,16 @@ import {
   SEGMENT_COLORS,
 } from '../config/mappings'
 import { seatCountsByParty } from '../lib/knessetSeatAllocation'
+import {
+  filtersInclude,
+  toggleMapFilter,
+  type KnessetMapFilters,
+  type KnessetMapFocusItem,
+} from '../lib/knessetSeatDemographics'
 import type { ChangedParty, RollingPoll } from '../lib/pollRollingWindow'
 import type { Segment } from '../types/data'
 import { PollSummaryHeroBlocBar } from './PollSummaryBlocBar'
+import { PollSummaryKnessetFiltersPane } from './PollSummaryKnessetFiltersPane'
 import { HeroChartPartyMark } from './HeroChartPartyMark'
 import { IconWithFallback } from './IconWithFallback'
 import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
@@ -213,11 +220,30 @@ export function PollSummaryHeroPartiesChartPopup({
     [changedParties],
   )
 
-  const [focusedPartyKey, setFocusedPartyKey] = useState<string | null>(null)
+  const [mapFilters, setMapFilters] = useState<KnessetMapFilters>([])
+  const [matchingPartyKeys, setMatchingPartyKeys] = useState<ReadonlySet<string> | null>(null)
 
   useEffect(() => {
-    if (!open) setFocusedPartyKey(null)
+    if (!open) {
+      setMapFilters([])
+      setMatchingPartyKeys(null)
+    }
   }, [open])
+
+  const focusedSegment =
+    mapFilters.find((f) => f.kind === 'segment')?.segment ?? null
+
+  const handleToggleFilter = (next: KnessetMapFocusItem) => {
+    setMapFilters((prev) => toggleMapFilter(prev, next))
+  }
+
+  const togglePartyFocus = (partyKey: string) => {
+    handleToggleFilter({ kind: 'party', partyKey })
+  }
+
+  const toggleSegmentFocus = (segment: 'Coalition' | 'Opposition') => {
+    handleToggleFilter({ kind: 'segment', segment })
+  }
 
   const rows = useMemo(
     () =>
@@ -299,6 +325,8 @@ export function PollSummaryHeroPartiesChartPopup({
                 deltaCoalition={deltaCoalition}
                 deltaOpposition={deltaOpposition}
                 deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+                focusedSegment={focusedSegment}
+                onToggleSegmentFocus={toggleSegmentFocus}
                 className="lpo-ps-hero-chart-bloc-bar"
               />
             </div>
@@ -314,12 +342,25 @@ export function PollSummaryHeroPartiesChartPopup({
         </header>
         <div className="lpo-ps-hero-chart-body">
           <div className="lpo-ps-hero-chart-hemicycle-wrap">
+            <div className="lpo-ps-knesset-filters-slot">
+              <PollSummaryKnessetFiltersPane
+                filters={mapFilters}
+                onToggleFilter={handleToggleFilter}
+                onReset={() => setMapFilters([])}
+                displayParty={displayParty}
+                locale={locale}
+                t={t}
+              />
+            </div>
             <PollSummaryKnessetSeatMap
               poll={current}
               displayParty={displayParty}
               locale={locale}
               t={t}
-              focusedPartyKey={focusedPartyKey}
+              mapFilters={mapFilters}
+              onMapFiltersChange={setMapFilters}
+              onMatchingPartyKeysChange={setMatchingPartyKeys}
+              mergeArabsWithOpposition={combineArabsWithOpposition}
               stageOverlay={
                 <div className="lpo-ps-hero-chart-center-stack">
                   <div className="lpo-ps-hero-chart-table lpo-ps-hero-chart-table--inset" dir="ltr">
@@ -331,6 +372,12 @@ export function PollSummaryHeroPartiesChartPopup({
               const delta =
                 hasPrior && cp && cp.delta !== 0 ? formatChipNum(Math.abs(cp.delta)) : null
               const deltaDir = cp && cp.delta > 0 ? 'up' : 'down'
+              const rowFocused = filtersInclude(mapFilters, {
+                kind: 'party',
+                partyKey: row.party,
+              })
+              const rowDimmed =
+                mapFilters.length > 0 && !matchingPartyKeys?.has(row.party)
 
               return (
                 <div
@@ -339,19 +386,15 @@ export function PollSummaryHeroPartiesChartPopup({
                   tabIndex={0}
                   className={`lpo-ps-hero-chart-row lpo-party-row lpo-ps-hero-chart-row--selectable${
                     rowIdx % 2 === 1 ? ' lpo-party-row--alt' : ''
-                  }${row.party === 'The Democrats' ? ' lpo-ps-hero-chart-row--enlarged-mark' : ''}${focusedPartyKey === row.party ? ' lpo-ps-hero-chart-row--focused' : ''}${
-                    focusedPartyKey && focusedPartyKey !== row.party
-                      ? ' lpo-ps-hero-chart-row--dimmed'
-                      : ''
+                  }${row.party === 'The Democrats' ? ' lpo-ps-hero-chart-row--enlarged-mark' : ''}${rowFocused ? ' lpo-ps-hero-chart-row--focused' : ''}${
+                    rowDimmed ? ' lpo-ps-hero-chart-row--dimmed' : ''
                   }`}
-                  aria-pressed={focusedPartyKey === row.party}
-                  onClick={() =>
-                    setFocusedPartyKey((prev) => (prev === row.party ? null : row.party))
-                  }
+                  aria-pressed={rowFocused}
+                  onClick={() => togglePartyFocus(row.party)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      setFocusedPartyKey((prev) => (prev === row.party ? null : row.party))
+                      togglePartyFocus(row.party)
                     }
                   }}
                 >

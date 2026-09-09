@@ -100,8 +100,29 @@ export type UiStrings = {
   knessetMapTooltipProfessional: string
   knessetMapTooltipEducation: string
   knessetMapTooltipMilitary: string
+  knessetMapTooltipNoInfo: string
+  knessetMapTooltipUnknownName: string
   knessetMapGenderMale: string
   knessetMapGenderFemale: string
+  knessetStatsNewLabel: string
+  knessetStatsGenderLabel: string
+  knessetStatsAgeLabel: string
+  knessetStatsMilitaryLabel: string
+  knessetStatsEducationLabel: string
+  knessetStatsEduTorah: string
+  knessetStatsEduHighSchool: string
+  knessetStatsEduBa: string
+  knessetStatsEduMa: string
+  knessetStatsEduPhd: string
+  /** {label} {pct} */
+  knessetStatsDonutAria: string
+  knessetMapResetFilters: string
+  knessetMapResetFiltersAria: string
+  knessetMapFilterHint: string
+  knessetFilterMilitaryNotServed: string
+  knessetMapActiveFiltersAria: string
+  /** {label} */
+  knessetMapFilterRemoveAria: string
   /** Hero trend panel header; {n} = rolling window days */
   pollSummaryHeroTrendPanelTitle: string
   /** Hero chip → cross-outlet average trend */
@@ -261,8 +282,28 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipProfessional: 'Professional experience',
     knessetMapTooltipEducation: 'Education',
     knessetMapTooltipMilitary: 'Military / national service',
+    knessetMapTooltipNoInfo: 'No information',
+    knessetMapTooltipUnknownName: 'Unknown candidate',
     knessetMapGenderMale: 'Male',
     knessetMapGenderFemale: 'Female',
+    knessetStatsNewLabel: 'New MKs',
+    knessetStatsGenderLabel: 'Women',
+    knessetStatsAgeLabel: 'Age',
+    knessetStatsMilitaryLabel: 'Served',
+    knessetStatsEducationLabel: 'Education',
+    knessetStatsEduTorah: 'Torah',
+    knessetStatsEduHighSchool: 'High school',
+    knessetStatsEduBa: "Bachelor's",
+    knessetStatsEduMa: "Master's",
+    knessetStatsEduPhd: 'Doctorate',
+    knessetStatsDonutAria: '{label}: {pct} percent',
+    knessetMapResetFilters: 'Reset filters',
+    knessetMapResetFiltersAria: 'Clear all Knesset map filters',
+    knessetMapFilterHint:
+      'Click a party, bloc, or chart to filter the seat map',
+    knessetFilterMilitaryNotServed: 'Did not serve',
+    knessetMapActiveFiltersAria: 'Active Knesset filters',
+    knessetMapFilterRemoveAria: 'Remove {label} filter',
     pollSummaryHeroTrendPanelTitle: 'Cross-outlet average · {n}-day window',
     pollSummaryHeroPartyTrendOpenAria: 'Show cross-outlet average seat trend for {party}',
     pollSummaryHeroPartyTrendNoData: 'No poll history for this party in the window.',
@@ -411,8 +452,27 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipProfessional: 'ניסיון מקצועי',
     knessetMapTooltipEducation: 'השכלה',
     knessetMapTooltipMilitary: 'שירות צבאי/לאומי',
+    knessetMapTooltipNoInfo: 'אין מידע',
+    knessetMapTooltipUnknownName: 'מועמד/ת לא ידוע/ה',
     knessetMapGenderMale: 'זכר',
     knessetMapGenderFemale: 'נקבה',
+    knessetStatsNewLabel: 'חדשים בכנסת',
+    knessetStatsGenderLabel: 'נשים',
+    knessetStatsMilitaryLabel: 'שירות צבאי',
+    knessetStatsAgeLabel: 'גיל',
+    knessetStatsEducationLabel: 'השכלה',
+    knessetStatsEduTorah: 'תורנית',
+    knessetStatsEduHighSchool: 'תיכונית',
+    knessetStatsEduBa: 'תואר ראשון',
+    knessetStatsEduMa: 'תואר שני',
+    knessetStatsEduPhd: 'דוקטורט',
+    knessetStatsDonutAria: '{label}: {pct} אחוז',
+    knessetMapResetFilters: 'איפוס מסננים',
+    knessetMapResetFiltersAria: 'ניקוי כל מסנני מפת הכנסת',
+    knessetMapFilterHint: 'לחצו על מפלגה, גוש או תרשים כדי לסנן מפת המושבים',
+    knessetFilterMilitaryNotServed: 'לא שירתו',
+    knessetMapActiveFiltersAria: 'מסנני כנסת פעילים',
+    knessetMapFilterRemoveAria: 'הסר מסנן {label}',
     pollSummaryHeroTrendPanelTitle: 'ממוצע ערוצים · חלון {n} ימים',
     pollSummaryHeroPartyTrendOpenAria: 'הצג מגמת מנדטים ממוצעת בין ערוצים עבור {party}',
     pollSummaryHeroPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בחלון.',

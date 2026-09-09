@@ -70,6 +70,56 @@ export function DeltaBadge({ delta }: { delta: number }) {
   )
 }
 
+function BlocSide({
+  segment,
+  label,
+  value,
+  delta,
+  hasPrior,
+  focused,
+  onToggle,
+}: {
+  segment: 'Coalition' | 'Opposition'
+  label: string
+  value: number
+  delta: number
+  hasPrior: boolean
+  focused: boolean
+  onToggle?: (segment: 'Coalition' | 'Opposition') => void
+}) {
+  const sideClass =
+    segment === 'Coalition' ? 'lpo-ps-hero-side--coal' : 'lpo-ps-hero-side--opp'
+  const lblClass =
+    segment === 'Coalition' ? 'lpo-ps-hero-lbl--coal' : 'lpo-ps-hero-lbl--opp'
+  const numClass =
+    segment === 'Coalition' ? 'lpo-ps-hero-num--coal' : 'lpo-ps-hero-num--opp'
+
+  if (!onToggle) {
+    return (
+      <div className={`lpo-ps-hero-side ${sideClass}`}>
+        <span className={`lpo-ps-hero-lbl ${lblClass}`}>{label}</span>
+        <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+        {hasPrior ? <DeltaBadge delta={delta} /> : null}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className={`lpo-ps-hero-side lpo-ps-hero-side--selectable ${sideClass}${
+        focused ? ' lpo-ps-hero-side--focused' : ''
+      }`}
+      aria-pressed={focused}
+      onClick={() => onToggle(segment)}
+    >
+      <span className={`lpo-ps-hero-lbl ${lblClass}`}>{label}</span>
+      <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+      {hasPrior ? <DeltaBadge delta={delta} /> : null}
+    </button>
+  )
+}
+
 export function PollSummaryHeroBlocBar({
   t,
   combineArabsWithOpposition,
@@ -81,6 +131,8 @@ export function PollSummaryHeroBlocBar({
   deltaCoalition,
   deltaOpposition,
   deltaOppositionPlusArabs,
+  focusedSegment,
+  onToggleSegmentFocus,
   className = '',
 }: {
   t: UiStrings
@@ -93,30 +145,32 @@ export function PollSummaryHeroBlocBar({
   deltaCoalition: number
   deltaOpposition: number
   deltaOppositionPlusArabs: number
+  focusedSegment?: 'Coalition' | 'Opposition' | null
+  onToggleSegmentFocus?: (segment: 'Coalition' | 'Opposition') => void
   className?: string
 }) {
   return (
     <div className={`lpo-ps-hero-bar-stack lpo-ps-bar-ltr ${className}`.trim()}>
       <div className="lpo-ps-blocs-nums-band">
         <div className="lpo-ps-hero-nums-between" dir="ltr">
-          <div className="lpo-ps-hero-side lpo-ps-hero-side--opp">
-            <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--opp">{t.opposition}</span>
-            <span className="lpo-ps-hero-num lpo-ps-hero-num--opp">
-              {combineArabsWithOpposition ? avgOppositionPlusArabs : avgOpposition}
-            </span>
-            {hasPrior ? (
-              <DeltaBadge
-                delta={
-                  combineArabsWithOpposition ? deltaOppositionPlusArabs : deltaOpposition
-                }
-              />
-            ) : null}
-          </div>
-          <div className="lpo-ps-hero-side lpo-ps-hero-side--coal">
-            <span className="lpo-ps-hero-lbl lpo-ps-hero-lbl--coal">{t.coalition}</span>
-            <span className="lpo-ps-hero-num lpo-ps-hero-num--coal">{avgCoalition}</span>
-            {hasPrior ? <DeltaBadge delta={deltaCoalition} /> : null}
-          </div>
+          <BlocSide
+            segment="Opposition"
+            label={t.opposition}
+            value={combineArabsWithOpposition ? avgOppositionPlusArabs : avgOpposition}
+            delta={combineArabsWithOpposition ? deltaOppositionPlusArabs : deltaOpposition}
+            hasPrior={hasPrior}
+            focused={focusedSegment === 'Opposition'}
+            onToggle={onToggleSegmentFocus}
+          />
+          <BlocSide
+            segment="Coalition"
+            label={t.coalition}
+            value={avgCoalition}
+            delta={deltaCoalition}
+            hasPrior={hasPrior}
+            focused={focusedSegment === 'Coalition'}
+            onToggle={onToggleSegmentFocus}
+          />
         </div>
         <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--12" aria-hidden>
           60
