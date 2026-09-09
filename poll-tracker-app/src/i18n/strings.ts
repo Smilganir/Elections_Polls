@@ -111,12 +111,6 @@ export type UiStrings = {
   knessetStatsAgeLabel: string
   knessetStatsKnessetYearsLabel: string
   knessetStatsMilitaryLabel: string
-  knessetStatsMilitaryBreakdownLabel: string
-  knessetStatsMilRegular: string
-  knessetStatsMilOfficer: string
-  knessetStatsMilNationalService: string
-  knessetStatsMilNotServed: string
-  knessetStatsMilUnknown: string
   knessetStatsEducationLabel: string
   knessetStatsEduTorah: string
   knessetStatsEduHighSchool: string
@@ -302,12 +296,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsAgeLabel: 'Age',
     knessetStatsKnessetYearsLabel: 'Knesset tenure',
     knessetStatsMilitaryLabel: 'Served',
-    knessetStatsMilitaryBreakdownLabel: 'Military / national service',
-    knessetStatsMilRegular: 'Regular service',
-    knessetStatsMilOfficer: 'Officer',
-    knessetStatsMilNationalService: 'National service',
-    knessetStatsMilNotServed: 'Did not serve',
-    knessetStatsMilUnknown: 'No information',
     knessetStatsEducationLabel: 'Education',
     knessetStatsEduTorah: 'Torah',
     knessetStatsEduHighSchool: 'High school',
@@ -479,12 +467,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsNewLabel: 'חדשים בכנסת',
     knessetStatsGenderLabel: 'נשים',
     knessetStatsMilitaryLabel: 'שירות צבאי',
-    knessetStatsMilitaryBreakdownLabel: 'שירות צבאי/לאומי',
-    knessetStatsMilRegular: 'סדיר',
-    knessetStatsMilOfficer: 'קצין',
-    knessetStatsMilNationalService: 'שירות לאומי',
-    knessetStatsMilNotServed: 'לא שירתו',
-    knessetStatsMilUnknown: 'אין מידע',
     knessetStatsAgeLabel: 'גיל',
     knessetStatsKnessetYearsLabel: 'ותק בכנסת',
     knessetStatsEducationLabel: 'השכלה',
