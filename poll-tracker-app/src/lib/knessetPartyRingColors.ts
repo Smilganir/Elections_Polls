@@ -18,18 +18,13 @@ export const KNESSET_PARTY_RING_COLORS: Record<string, string> = {
   'The Democrats': '#E30613',
   'Yisrael Beiteinu': '#8B3FB2',
   'The Reservists': '#6B8FAD',
+  'Bayit Yehudi–The Reservists': '#6B8FAD',
   'Joint Arab List': '#E8933A',
   "Hadash Ta'al": '#E8933A',
   "Ra'am": '#C4B845',
   Balad: '#B8956A',
 }
 
-const JOINT_ARAB_CYCLE = ["Hadash Ta'al", "Ra'am", 'Balad'] as const
-
-export function ringColorForParty(partyKey: string, seatIndexInParty = 0): string {
-  if (partyKey === 'Joint Arab List') {
-    const cycleKey = JOINT_ARAB_CYCLE[seatIndexInParty % JOINT_ARAB_CYCLE.length]!
-    return KNESSET_PARTY_RING_COLORS[cycleKey] ?? '#E8933A'
-  }
+export function ringColorForParty(partyKey: string, _seatIndexInParty = 0): string {
   return KNESSET_PARTY_RING_COLORS[partyKey] ?? '#9CA3AF'
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import { buildKnessetFilledSeats, type KnessetFilledSeat } from '../lib/knessetSeatAllocation'
@@ -13,10 +14,21 @@ import type { RollingPoll } from '../lib/pollRollingWindow'
 import { knessetHollowInsetStyle } from '../lib/knessetHollowInsets'
 import type { Segment } from '../types/data'
 
+type TooltipPlacement = 'above' | 'below'
+
 type TooltipState = {
   seat: KnessetFilledSeat
   x: number
   y: number
+  placement: TooltipPlacement
+}
+
+function tooltipPlacement(clientY: number): TooltipPlacement {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(
+    '--lpo-ps-hero-chart-overlay-top',
+  )
+  const overlayTop = Number.parseFloat(raw) || 88
+  return clientY < overlayTop + 100 ? 'below' : 'above'
 }
 
 function SeniorityBadge({
@@ -150,12 +162,11 @@ export function PollSummaryKnessetSeatMap({
   }, [members, poll])
 
   const updateTooltipPos = (e: React.MouseEvent, seat: KnessetFilledSeat) => {
-    const rect = wrapRef.current?.getBoundingClientRect()
-    if (!rect) return
     setTooltip({
       seat,
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: e.clientX,
+      y: e.clientY,
+      placement: tooltipPlacement(e.clientY),
     })
   }
 
@@ -207,40 +218,45 @@ export function PollSummaryKnessetSeatMap({
             ))}
             {stageOverlay}
           </div>
-          {tooltip ? (
-            <div
-              className="lpo-ps-knesset-tooltip"
-              style={{ left: tooltip.x, top: tooltip.y }}
-              role="tooltip"
-            >
-              {tooltip.seat.kind === 'member' ? (
-                <p className="lpo-ps-knesset-tooltip-name">{tooltip.seat.member.name}</p>
-              ) : (
-                <p className="lpo-ps-knesset-tooltip-name">{displayParty(tooltip.seat.partyKey)}</p>
-              )}
-              <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
-              <p className="lpo-ps-knesset-tooltip-meta">
-                <span className="lpo-ps-knesset-tooltip-segment">
-                  {segLabel(tooltip.seat.segment)}
-                </span>
-                <span className="lpo-ps-knesset-tooltip-party">
-                  {displayParty(tooltip.seat.partyKey)}
-                </span>
-              </p>
-              {tooltip.seat.kind === 'member' && tooltip.seat.member.seniority !== 'unknown' ? (
-                <p className="lpo-ps-knesset-tooltip-seniority">
-                  <SeniorityBadge
-                    seniority={tooltip.seat.member.seniority}
-                    title={seniorityLabel(tooltip.seat.member.seniority)}
-                  />
-                  {seniorityLabel(tooltip.seat.member.seniority)}
-                </p>
-              ) : null}
-              {tooltip.seat.kind === 'member' && tooltip.seat.member.background ? (
-                <p className="lpo-ps-knesset-tooltip-bg">{tooltip.seat.member.background}</p>
-              ) : null}
-            </div>
-          ) : null}
+          {tooltip
+            ? createPortal(
+                <div
+                  className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${tooltip.placement}`}
+                  style={{ left: tooltip.x, top: tooltip.y }}
+                  role="tooltip"
+                >
+                  {tooltip.seat.kind === 'member' ? (
+                    <p className="lpo-ps-knesset-tooltip-name">{tooltip.seat.member.name}</p>
+                  ) : (
+                    <p className="lpo-ps-knesset-tooltip-name">
+                      {displayParty(tooltip.seat.partyKey)}
+                    </p>
+                  )}
+                  <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
+                  <p className="lpo-ps-knesset-tooltip-meta">
+                    <span className="lpo-ps-knesset-tooltip-segment">
+                      {segLabel(tooltip.seat.segment)}
+                    </span>
+                    <span className="lpo-ps-knesset-tooltip-party">
+                      {displayParty(tooltip.seat.partyKey)}
+                    </span>
+                  </p>
+                  {tooltip.seat.kind === 'member' && tooltip.seat.member.seniority !== 'unknown' ? (
+                    <p className="lpo-ps-knesset-tooltip-seniority">
+                      <SeniorityBadge
+                        seniority={tooltip.seat.member.seniority}
+                        title={seniorityLabel(tooltip.seat.member.seniority)}
+                      />
+                      {seniorityLabel(tooltip.seat.member.seniority)}
+                    </p>
+                  ) : null}
+                  {tooltip.seat.kind === 'member' && tooltip.seat.member.background ? (
+                    <p className="lpo-ps-knesset-tooltip-bg">{tooltip.seat.member.background}</p>
+                  ) : null}
+                </div>,
+                document.body,
+              )
+            : null}
         </>
       )}
     </div>

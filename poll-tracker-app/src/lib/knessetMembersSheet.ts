@@ -32,8 +32,11 @@ export const HEBREW_LIST_TO_PARTY_KEY: Record<string, string> = {
   'ש"ס': 'Shas',
   'רע"ם': "Ra'am",
   'עמך ישראל': "Ofer Winter's Party",
-  'המילואימניקים - הכלכלית': 'The Reservists',
-  'המילואימניקים': 'The Reservists',
+  /** Knesset 26 merged list (sheet rows ~246–265). */
+  'המילואימניקים - הכלכלית': 'Bayit Yehudi–The Reservists',
+  'המילואימניקים': 'Bayit Yehudi–The Reservists',
+  'הבית הציוני': 'Bayit Yehudi–The Reservists',
+  'בית ציוני-המילואימניקים': 'Bayit Yehudi–The Reservists',
   'הרשימה המשותפת': 'Joint Arab List',
   'הציונות הדתית + זהות': 'Religious Zionism',
   'כחול לבן': 'Blue & White',
@@ -183,6 +186,10 @@ export function membersByPartyKey(
   }
   for (const [key, list] of m) {
     m.set(key, dedupePartyRoster(list))
+  }
+  const bayitReservists = m.get('Bayit Yehudi–The Reservists')
+  if (bayitReservists?.length && !m.has('The Reservists')) {
+    m.set('The Reservists', bayitReservists)
   }
   return m
 }

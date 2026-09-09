@@ -5661,7 +5661,7 @@ html[lang='he'] .lpo-ps-trend-panel-outlet {
   z-index: 10060;
   display: grid;
   place-items: start center;
-  padding: 0.5rem 1rem 0.65rem;
+  padding: 0.25rem 1rem 0.35rem;
   background: rgba(6, 10, 18, 0.78);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -5675,10 +5675,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 .lpo-ps-hero-chart-dialog {
   width: min(100%, 87.5rem);
   min-height: min(
-    780px,
-    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.2rem)
+    920px,
+    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem)
   );
-  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.2rem);
+  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -5878,6 +5878,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   gap: 0.3rem;
   min-height: 0;
   min-width: 0;
+  padding-top: 0.45rem;
   pointer-events: auto;
 }
 
@@ -5894,7 +5895,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   flex: 1 1 auto;
   min-height: 0;
   z-index: 1;
-  padding: 0.15rem 0.35rem 0.1rem;
+  padding: 0.85rem 0.4rem 0.15rem;
   border-radius: 8px;
   background: rgba(8, 12, 20, 0.48);
   overflow-x: hidden;
@@ -5957,16 +5958,16 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark {
   width: 64px;
-  height: calc(100% - 6px);
-  max-height: 36px;
-  min-height: 26px;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  justify-content: center;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged {
   width: 82px;
-  height: calc(100% - 2px);
-  max-height: 44px;
-  min-height: 30px;
+  flex-shrink: 0;
+  gap: 2px;
 }
 
 .lpo-ps-hero-chart-party-mark {
@@ -6015,29 +6016,49 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   box-shadow: none;
 }
 
-.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon {
-  max-width: 64px;
-}
-
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon,
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
   max-width: 64px;
+  max-height: 28px;
   font-size: 0.62rem;
 }
 
-.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon,
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon {
+  width: 82px;
+  max-width: 82px;
+  height: 30px;
+  max-height: 30px;
+  object-fit: contain;
+  object-position: top center;
+  clip-path: inset(0 0 26% 0);
+  transform: scale(1.14);
+  transform-origin: top center;
+  margin-bottom: -7px;
+}
+
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
   max-width: 82px;
+  max-height: 28px;
   font-size: 0.68rem;
 }
 
 .lpo-ps-hero-chart-party-dash {
   position: relative;
   flex: 0 0 3px;
-  width: 72%;
+  flex-shrink: 0;
+  width: 44px;
   height: 3px;
   border-radius: 2px;
   background: var(--lpo-ps-party-mark-color, #8da2be);
   opacity: 0.95;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .lpo-ps-hero-chart-party-dash {
+  display: block;
+  visibility: visible;
 }
 
 .lpo-ps-hero-chart-table .lpo-party-name {
@@ -6157,8 +6178,13 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-stage {
+  width: min(100%, 64rem);
   max-height: none;
-  min-height: 15.5rem;
+  min-height: 22rem;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-seat {
+  width: 3.55%;
 }
 
 .lpo-ps-hero-chart-row--selectable {
@@ -6171,8 +6197,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-hero-chart-row--focused {
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .lpo-ps-hero-chart-row--dimmed {
@@ -6320,8 +6345,8 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-knesset-tooltip {
-  position: absolute;
-  z-index: 5;
+  position: fixed;
+  z-index: 10120;
   max-width: min(16rem, 88vw);
   padding: 0.55rem 0.7rem 0.65rem;
   border-radius: 10px;
@@ -6329,7 +6354,14 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   background: rgba(12, 18, 28, 0.96);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   pointer-events: none;
+}
+
+.lpo-ps-knesset-tooltip--above {
   transform: translate(-50%, calc(-100% - 10px));
+}
+
+.lpo-ps-knesset-tooltip--below {
+  transform: translate(-50%, 10px);
 }
 
 .lpo-ps-knesset-tooltip-name {
