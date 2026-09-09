@@ -5661,7 +5661,7 @@ html[lang='he'] .lpo-ps-trend-panel-outlet {
   z-index: 10060;
   display: grid;
   place-items: start center;
-  padding: 0.65rem 1rem 1rem;
+  padding: 0.5rem 1rem 0.65rem;
   background: rgba(6, 10, 18, 0.78);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -5675,10 +5675,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 .lpo-ps-hero-chart-dialog {
   width: min(100%, 87.5rem);
   min-height: min(
-    720px,
-    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.65rem)
+    780px,
+    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.2rem)
   );
-  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.65rem);
+  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 1.2rem);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -5695,7 +5695,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.9rem 1.2rem 1rem 1.55rem;
+  padding: 0.75rem 1.2rem 0.85rem 1.55rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
@@ -5853,7 +5853,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   min-height: 0;
   flex: 1 1 auto;
   overflow: hidden;
-  padding: 0 0.35rem 0.5rem;
+  padding: 0 0.35rem 0.35rem;
 }
 
 .lpo-ps-hero-chart-hemicycle-wrap {
@@ -5868,8 +5868,8 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 /* Party table in the hemicycle hollow (between wings). */
 .lpo-ps-hero-chart-center-stack {
   position: absolute;
-  left: var(--lpo-ps-knesset-hollow-left, 32%);
-  right: var(--lpo-ps-knesset-hollow-right, 32%);
+  left: var(--lpo-ps-knesset-hollow-left, 29%);
+  right: var(--lpo-ps-knesset-hollow-right, 29%);
   top: var(--lpo-ps-knesset-hollow-top, 29%);
   bottom: var(--lpo-ps-knesset-hollow-bottom, 2%);
   z-index: 1;
@@ -5972,29 +5972,38 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 .lpo-ps-hero-chart-party-mark {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   overflow: visible;
+  box-sizing: border-box;
 }
 
 .lpo-ps-hero-chart-party-mark .mapped-icon {
   position: relative;
   z-index: 1;
-  width: 44px;
-  height: 20px;
+  flex: 1 1 0;
+  min-height: 0;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
   object-fit: contain;
   border: none;
   background: transparent;
   box-shadow: none;
-  filter: none;
+  filter: brightness(0) invert(1);
   opacity: 0.96;
 }
 
 .lpo-ps-hero-chart-party-mark .icon-fallback {
   position: relative;
   z-index: 1;
-  width: 44px;
-  height: 20px;
+  flex: 1 1 0;
+  min-height: 0;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6007,36 +6016,27 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon {
-  width: auto;
   max-width: 64px;
-  height: 100%;
-  max-height: 34px;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
-  width: auto;
   max-width: 64px;
-  height: 100%;
-  max-height: 34px;
   font-size: 0.62rem;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon,
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
   max-width: 82px;
-  max-height: 42px;
   font-size: 0.68rem;
 }
 
 .lpo-ps-hero-chart-party-dash {
-  position: absolute;
-  left: 14%;
-  right: 14%;
-  bottom: 0;
+  position: relative;
+  flex: 0 0 3px;
+  width: 72%;
   height: 3px;
   border-radius: 2px;
   background: var(--lpo-ps-party-mark-color, #8da2be);
-  z-index: 2;
   opacity: 0.95;
 }
 
@@ -6054,7 +6054,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-bar-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 5.75rem;
+  grid-template-columns: minmax(0, 1fr) 6.75rem;
   gap: 0.35rem;
   align-items: center;
   width: 100%;
@@ -6070,7 +6070,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-bar-meta {
   display: grid;
-  grid-template-columns: 3rem minmax(3rem, auto);
+  grid-template-columns: 3.25rem minmax(3.25rem, auto);
   grid-template-rows: auto auto;
   align-items: baseline;
   gap: 0.04rem 0.3rem;
@@ -6158,6 +6158,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-stage {
   max-height: none;
+  min-height: 15.5rem;
 }
 
 .lpo-ps-hero-chart-row--selectable {
@@ -6383,8 +6384,8 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   }
 
   .lpo-ps-hero-chart-center-stack {
-    left: var(--lpo-ps-knesset-hollow-left, 34%);
-    right: var(--lpo-ps-knesset-hollow-right, 34%);
+    left: var(--lpo-ps-knesset-hollow-left, 29%);
+    right: var(--lpo-ps-knesset-hollow-right, 29%);
     bottom: var(--lpo-ps-knesset-hollow-bottom, 24%);
   }
 
