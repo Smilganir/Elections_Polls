@@ -6212,7 +6212,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-knesset-seat {
   position: absolute;
-  width: 3.2%;
+  width: 3.05%;
   aspect-ratio: 1;
   z-index: 2;
   padding: 0;
@@ -6220,9 +6220,9 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   border: none;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  background: transparent;
+  background: #1a2433;
   cursor: default;
-  box-shadow: 0 0 0 2.75px var(--lpo-ps-knesset-ring, #9ca3af);
+  box-shadow: 0 0 0 1.35px var(--lpo-ps-knesset-ring, #9ca3af);
   overflow: hidden;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
@@ -6232,19 +6232,19 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   transform: translate(-50%, -50%) scale(1.18);
   z-index: 2;
   box-shadow:
-    0 0 0 3.25px var(--lpo-ps-knesset-ring, #9ca3af),
+    0 0 0 1.85px var(--lpo-ps-knesset-ring, #9ca3af),
     0 2px 8px rgba(0, 0, 0, 0.45);
   outline: none;
 }
 
 .lpo-ps-knesset-seat--vacant {
   background: rgba(90, 100, 112, 0.35);
-  box-shadow: 0 0 0 2.75px color-mix(in srgb, var(--lpo-ps-knesset-ring, #5a6470) 70%, transparent);
+  box-shadow: 0 0 0 1.35px color-mix(in srgb, var(--lpo-ps-knesset-ring, #5a6470) 70%, transparent);
 }
 
 .lpo-ps-knesset-seat--placeholder {
   background: rgba(18, 24, 34, 0.72);
-  box-shadow: 0 0 0 2.75px var(--lpo-ps-knesset-ring, #9ca3af);
+  box-shadow: 0 0 0 1.35px var(--lpo-ps-knesset-ring, #9ca3af);
 }
 
 .lpo-ps-knesset-seat--dimmed {
@@ -6282,11 +6282,14 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-knesset-seat-img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;
+  /* Hair at top, eyes near center, neck at bottom — no extra zoom crop. */
+  object-position: center 16%;
   border-radius: 50%;
   background: transparent;
 }
@@ -6406,7 +6409,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 @media (max-width: 480px) {
   .lpo-ps-knesset-seat {
-    width: 4.1%;
+    width: 3.9%;
   }
 }
 

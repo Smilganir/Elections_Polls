@@ -82,18 +82,51 @@ function parseCsvLine(line: string): string[] {
   return out
 }
 
+const HEADER_PARTY = 'מפלגה'
+const HEADER_RANK = 'מקום ברשימה'
+const HEADER_NAME = 'שם המועמד/ת'
+/** Column Q — Cloudinary/Drive cutouts used on the hemicycle. */
+const HEADER_TRANSPARENT_IMAGE = 'תמונה שקופה (URL)'
+/** Column D — Wikipedia stills; used only when Q is empty. */
+const HEADER_WIKI_IMAGE = 'קישור לתמונה (וויקיפדיה)'
+const HEADER_BACKGROUND = 'רקע קצר'
+const HEADER_SENIORITY = 'ותק'
+
+function headerIndex(headers: readonly string[], name: string): number {
+  return headers.findIndex((h) => h.trim() === name)
+}
+
+function cell(
+  cols: readonly string[],
+  headers: readonly string[],
+  name: string,
+  fallbackIndex: number,
+): string {
+  const i = headerIndex(headers, name)
+  return (cols[i >= 0 ? i : fallbackIndex] ?? '').trim()
+}
+
+/** Prefer sheet column Q (transparent PNG); fall back to Wikipedia column D. */
+export function pickMemberImageUrl(cols: readonly string[], headers: readonly string[]): string {
+  const transparent = cell(cols, headers, HEADER_TRANSPARENT_IMAGE, 16)
+  if (transparent) return transparent
+  return cell(cols, headers, HEADER_WIKI_IMAGE, 3)
+}
+
 export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
   const lines = csv.split(/\r?\n/).filter((l) => l.trim())
   if (lines.length < 2) return []
 
+  const headers = parseCsvLine(lines[0]!)
+
   return lines.slice(1).map((line) => {
     const cols = parseCsvLine(line)
-    const partyHeb = cols[0]?.trim() ?? ''
-    const listRank = Number.parseInt(cols[1]?.trim() ?? '', 10) || 0
-    const name = cols[2]?.trim() ?? ''
-    const imageUrl = cols[3]?.trim() ?? ''
-    const background = cols[5]?.trim() ?? ''
-    const seniority = parseSeniority(cols[6]?.trim() ?? '')
+    const partyHeb = cell(cols, headers, HEADER_PARTY, 0)
+    const listRank = Number.parseInt(cell(cols, headers, HEADER_RANK, 1), 10) || 0
+    const name = cell(cols, headers, HEADER_NAME, 2)
+    const imageUrl = pickMemberImageUrl(cols, headers)
+    const background = cell(cols, headers, HEADER_BACKGROUND, 5)
+    const seniority = parseSeniority(cell(cols, headers, HEADER_SENIORITY, 6))
 
     return {
       partyHeb,
