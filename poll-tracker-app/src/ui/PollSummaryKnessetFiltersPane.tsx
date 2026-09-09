@@ -1,9 +1,10 @@
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
-import type {
-  EducationBucket,
-  KnessetMapFilters,
-  KnessetMapFocusItem,
+import {
+  knessetYearsBinLabel,
+  type EducationBucket,
+  type KnessetMapFilters,
+  type KnessetMapFocusItem,
 } from '../lib/knessetSeatDemographics'
 
 function ageBinLabel(id: string): string {
@@ -39,6 +40,7 @@ export function mapFilterLabel(
     return filter.value === 'served' ? t.knessetStatsMilitaryLabel : t.knessetFilterMilitaryNotServed
   }
   if (filter.kind === 'age') return ageBinLabel(filter.value)
+  if (filter.kind === 'knessetYears') return knessetYearsBinLabel(filter.value)
   return educationLabel(filter.value, t)
 }
 
@@ -107,5 +109,6 @@ function filterKey(filter: KnessetMapFocusItem): string {
   if (filter.kind === 'gender') return `gender:${filter.value}`
   if (filter.kind === 'military') return `military:${filter.value}`
   if (filter.kind === 'age') return `age:${filter.value}`
+  if (filter.kind === 'knessetYears') return `knessetYears:${filter.value}`
   return `education:${filter.value}`
 }

@@ -31,6 +31,22 @@ function a1RangeForApi(tab: string, cellRange: string): string {
   return `'${escaped}'!${cellRange}`
 }
 
+/** GCP website keys often allow localhost but not 127.0.0.1 — normalize for dev proxy. */
+function refererForGoogleSheets(browserReferer: string | undefined, host: string): string {
+  const fallback = `http://${host.replace(/^127\.0\.0\.1/, 'localhost')}/`
+  const raw = (typeof browserReferer === 'string' && browserReferer.trim()) || fallback
+  try {
+    const u = new URL(raw)
+    if (u.hostname === '127.0.0.1') {
+      u.hostname = 'localhost'
+      return u.toString()
+    }
+  } catch {
+    /* use raw */
+  }
+  return raw
+}
+
 /**
  * Dev/preview: browser calls same-origin /api/sheets-key; Node forwards to Google with the
  * browser's Referer header so HTTP-referrer–restricted API keys accept the request (some
@@ -64,9 +80,10 @@ function createSheetsKeyProxyMiddleware() {
       }
 
       const host = req.headers.host || 'localhost:5173'
-      const referer =
-        (typeof req.headers.referer === 'string' && req.headers.referer.trim()) ||
-        `http://${host}/`
+      const referer = refererForGoogleSheets(
+        typeof req.headers.referer === 'string' ? req.headers.referer : undefined,
+        host,
+      )
 
       const rangePath = encodeURIComponent(a1RangeForApi(tab, range))
       const googleUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${rangePath}?key=${encodeURIComponent(apiKey)}`

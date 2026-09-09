@@ -5,13 +5,13 @@
 
 /** Canonical poll party key → ring stroke color. */
 export const KNESSET_PARTY_RING_COLORS: Record<string, string> = {
-  Likud: '#00B1FF',
-  'Religious Zionism': '#1B6FD1',
-  Shas: '#9BA8C4',
-  UTJ: '#4A5568',
-  'Otzma Yehudit': '#003D82',
-  "Ofer Winter's Party": '#002966',
-  'Yashar!': '#f7787c',
+  Likud: '#00C4FF',
+  'Religious Zionism': '#4598EB',
+  Shas: '#ADB9CE',
+  UTJ: '#8096AB',
+  'Otzma Yehudit': '#4E93D4',
+  "Ofer Winter's Party": '#3778BE',
+  'Yashar!': '#FA6469',
   "Bennett's Party": '#F06EAA',
   'Yesh Atid': '#D4DCE8',
   'Blue & White': '#E88B7A',

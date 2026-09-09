@@ -327,6 +327,7 @@ export function PollSummaryHeroPartiesChartPopup({
                 deltaOppositionPlusArabs={deltaOppositionPlusArabs}
                 focusedSegment={focusedSegment}
                 onToggleSegmentFocus={toggleSegmentFocus}
+                showRoundedSeatMandates
                 className="lpo-ps-hero-chart-bloc-bar"
               />
             </div>

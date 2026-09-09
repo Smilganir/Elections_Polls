@@ -107,6 +107,7 @@ export type UiStrings = {
   knessetStatsNewLabel: string
   knessetStatsGenderLabel: string
   knessetStatsAgeLabel: string
+  knessetStatsKnessetYearsLabel: string
   knessetStatsMilitaryLabel: string
   knessetStatsEducationLabel: string
   knessetStatsEduTorah: string
@@ -289,6 +290,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsNewLabel: 'New MKs',
     knessetStatsGenderLabel: 'Women',
     knessetStatsAgeLabel: 'Age',
+    knessetStatsKnessetYearsLabel: 'Knesset tenure',
     knessetStatsMilitaryLabel: 'Served',
     knessetStatsEducationLabel: 'Education',
     knessetStatsEduTorah: 'Torah',
@@ -460,6 +462,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsGenderLabel: 'נשים',
     knessetStatsMilitaryLabel: 'שירות צבאי',
     knessetStatsAgeLabel: 'גיל',
+    knessetStatsKnessetYearsLabel: 'ותק בכנסת',
     knessetStatsEducationLabel: 'השכלה',
     knessetStatsEduTorah: 'תורנית',
     knessetStatsEduHighSchool: 'תיכונית',

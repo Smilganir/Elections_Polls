@@ -8,6 +8,7 @@ export type KnessetMapFocus =
   | { kind: 'gender'; value: 'female' | 'male' }
   | { kind: 'military'; value: 'served' | 'not_served' }
   | { kind: 'age'; value: AgeBinId }
+  | { kind: 'knessetYears'; value: KnessetYearsBinId }
   | { kind: 'education'; value: EducationBucket }
   | null
 
@@ -24,6 +25,7 @@ export function mapFocusEquals(a: KnessetMapFocus, b: KnessetMapFocus): boolean 
   if (a.kind === 'gender' && b.kind === 'gender') return a.value === b.value
   if (a.kind === 'military' && b.kind === 'military') return a.value === b.value
   if (a.kind === 'age' && b.kind === 'age') return a.value === b.value
+  if (a.kind === 'knessetYears' && b.kind === 'knessetYears') return a.value === b.value
   if (a.kind === 'education' && b.kind === 'education') return a.value === b.value
   return false
 }
@@ -35,6 +37,7 @@ export function isDemographicFocus(focus: KnessetMapFocus): boolean {
     focus.kind === 'gender' ||
     focus.kind === 'military' ||
     focus.kind === 'age' ||
+    focus.kind === 'knessetYears' ||
     focus.kind === 'education'
   )
 }
@@ -87,6 +90,12 @@ function memberMatchesDemographic(
     const age = parseMemberAge(member.age)
     if (age == null) return false
     const bin = AGE_BIN_DEFS.find((d) => age >= d.min && age < d.max)
+    return bin?.id === focus.value
+  }
+  if (focus.kind === 'knessetYears') {
+    const years = parseMemberKnessetYears(member.knessetYears)
+    if (years == null) return false
+    const bin = KNESSET_YEARS_BIN_DEFS.find((d) => years >= d.min && years < d.max)
     return bin?.id === focus.value
   }
   if (focus.kind === 'education') {
@@ -170,8 +179,26 @@ export const AGE_BIN_DEFS = [
 
 export type AgeBinId = (typeof AGE_BIN_DEFS)[number]['id']
 
+/** Column L — ותק בכנסת (שנים); 5-year bins (30+ optional when empty). */
+export const KNESSET_YEARS_BIN_DEFS = [
+  { id: '0', min: 0, max: 5, optional: false },
+  { id: '5', min: 5, max: 10, optional: false },
+  { id: '10', min: 10, max: 15, optional: false },
+  { id: '15', min: 15, max: 20, optional: false },
+  { id: '20', min: 20, max: 25, optional: true },
+  { id: '25', min: 25, max: 30, optional: true },
+  { id: '30', min: 30, max: Number.POSITIVE_INFINITY, optional: true },
+] as const
+
+export type KnessetYearsBinId = (typeof KNESSET_YEARS_BIN_DEFS)[number]['id']
+
 export type KnessetAgeBin = {
   id: AgeBinId
+  count: number
+}
+
+export type KnessetYearsBin = {
+  id: KnessetYearsBinId
   count: number
 }
 
@@ -187,6 +214,7 @@ export type KnessetDemographics = {
   femalePct: number | null
   servedPct: number | null
   ageBins: KnessetAgeBin[]
+  knessetYearsBins: KnessetYearsBin[]
   education: KnessetEducationShare[]
 }
 
@@ -217,6 +245,19 @@ export function parseMemberAge(raw: string): number | null {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
+export function parseMemberKnessetYears(raw: string): number | null {
+  const t = raw.trim()
+  if (!t || t === 'אין מידע' || t.startsWith('אין מידע')) return null
+  const n = Number.parseInt(t, 10)
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+export function knessetYearsBinLabel(id: string): string {
+  if (id === '30') return '30+'
+  const start = Number(id)
+  return `${start}–${start + 5}`
+}
+
 export function projectedMembers(seats: readonly KnessetFilledSeat[]): KnessetMemberRow[] {
   const out: KnessetMemberRow[] = []
   for (const seat of seats) {
@@ -243,6 +284,8 @@ export function summarizeProjectedKnesset(
   let militaryKnown = 0
   const ageCounts = new Map<AgeBinId, number>()
   for (const def of AGE_BIN_DEFS) ageCounts.set(def.id, 0)
+  const knessetYearsCounts = new Map<KnessetYearsBinId, number>()
+  for (const def of KNESSET_YEARS_BIN_DEFS) knessetYearsCounts.set(def.id, 0)
   const eduCounts = new Map<EducationBucket, number>()
   for (const b of EDUCATION_BUCKETS) eduCounts.set(b, 0)
 
@@ -270,6 +313,12 @@ export function summarizeProjectedKnesset(
       if (bin) ageCounts.set(bin.id, (ageCounts.get(bin.id) ?? 0) + 1)
     }
 
+    const knessetYears = parseMemberKnessetYears(m.knessetYears)
+    if (knessetYears != null) {
+      const bin = KNESSET_YEARS_BIN_DEFS.find((d) => knessetYears >= d.min && knessetYears < d.max)
+      if (bin) knessetYearsCounts.set(bin.id, (knessetYearsCounts.get(bin.id) ?? 0) + 1)
+    }
+
     const edu = classifyEducation(m.education)
     if (edu) eduCounts.set(edu, (eduCounts.get(edu) ?? 0) + 1)
   }
@@ -281,12 +330,18 @@ export function summarizeProjectedKnesset(
     return !def.optional || count > 0
   }).map((def) => ({ id: def.id, count: ageCounts.get(def.id) ?? 0 }))
 
+  const knessetYearsBins: KnessetYearsBin[] = KNESSET_YEARS_BIN_DEFS.filter((def) => {
+    const count = knessetYearsCounts.get(def.id) ?? 0
+    return !def.optional || count > 0
+  }).map((def) => ({ id: def.id, count: knessetYearsCounts.get(def.id) ?? 0 }))
+
   return {
     memberCount: members.length,
     newPct: ratio(newCount, seniorityKnown),
     femalePct: ratio(femaleCount, genderKnown),
     servedPct: ratio(servedCount, militaryKnown),
     ageBins,
+    knessetYearsBins,
     education: EDUCATION_BUCKETS.map((bucket) => {
       const count = eduCounts.get(bucket) ?? 0
       return { bucket, count, share: eduTotal > 0 ? count / eduTotal : 0 }

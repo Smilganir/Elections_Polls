@@ -78,6 +78,8 @@ function BlocSide({
   hasPrior,
   focused,
   onToggle,
+  seatsLabel,
+  showRoundedSeatMandates,
 }: {
   segment: 'Coalition' | 'Opposition'
   label: string
@@ -86,6 +88,8 @@ function BlocSide({
   hasPrior: boolean
   focused: boolean
   onToggle?: (segment: 'Coalition' | 'Opposition') => void
+  seatsLabel?: string
+  showRoundedSeatMandates?: boolean
 }) {
   const sideClass =
     segment === 'Coalition' ? 'lpo-ps-hero-side--coal' : 'lpo-ps-hero-side--opp'
@@ -93,12 +97,31 @@ function BlocSide({
     segment === 'Coalition' ? 'lpo-ps-hero-lbl--coal' : 'lpo-ps-hero-lbl--opp'
   const numClass =
     segment === 'Coalition' ? 'lpo-ps-hero-num--coal' : 'lpo-ps-hero-num--opp'
+  const roundedSeats = Math.round(value)
+
+  const valueBlock = (
+    <span
+      className={`lpo-ps-hero-side-value-col${
+        showRoundedSeatMandates ? ' lpo-ps-hero-side-value-col--with-seats' : ''
+      }`}
+    >
+      <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+      {showRoundedSeatMandates && seatsLabel ? (
+        <span className="lpo-ps-hero-chart-seats-line">
+          <span className="lpo-ps-hero-chart-seats">({roundedSeats})</span>
+          <span className="lpo-ps-hero-chart-delta-unit" aria-hidden>
+            {seatsLabel}
+          </span>
+        </span>
+      ) : null}
+    </span>
+  )
 
   if (!onToggle) {
     return (
       <div className={`lpo-ps-hero-side ${sideClass}`}>
         <span className={`lpo-ps-hero-lbl ${lblClass}`}>{label}</span>
-        <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+        {valueBlock}
         {hasPrior ? <DeltaBadge delta={delta} /> : null}
       </div>
     )
@@ -114,7 +137,7 @@ function BlocSide({
       onClick={() => onToggle(segment)}
     >
       <span className={`lpo-ps-hero-lbl ${lblClass}`}>{label}</span>
-      <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+      {valueBlock}
       {hasPrior ? <DeltaBadge delta={delta} /> : null}
     </button>
   )
@@ -133,6 +156,7 @@ export function PollSummaryHeroBlocBar({
   deltaOppositionPlusArabs,
   focusedSegment,
   onToggleSegmentFocus,
+  showRoundedSeatMandates = false,
   className = '',
 }: {
   t: UiStrings
@@ -147,6 +171,7 @@ export function PollSummaryHeroBlocBar({
   deltaOppositionPlusArabs: number
   focusedSegment?: 'Coalition' | 'Opposition' | null
   onToggleSegmentFocus?: (segment: 'Coalition' | 'Opposition') => void
+  showRoundedSeatMandates?: boolean
   className?: string
 }) {
   return (
@@ -161,6 +186,8 @@ export function PollSummaryHeroBlocBar({
             hasPrior={hasPrior}
             focused={focusedSegment === 'Opposition'}
             onToggle={onToggleSegmentFocus}
+            seatsLabel={t.seats}
+            showRoundedSeatMandates={showRoundedSeatMandates}
           />
           <BlocSide
             segment="Coalition"
@@ -170,6 +197,8 @@ export function PollSummaryHeroBlocBar({
             hasPrior={hasPrior}
             focused={focusedSegment === 'Coalition'}
             onToggle={onToggleSegmentFocus}
+            seatsLabel={t.seats}
+            showRoundedSeatMandates={showRoundedSeatMandates}
           />
         </div>
         <span className="lpo-ps-maj-label-fly lpo-ps-maj-label-fly--12" aria-hidden>

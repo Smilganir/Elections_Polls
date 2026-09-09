@@ -2,16 +2,19 @@ import { useMemo } from 'react'
 import type { UiStrings } from '../i18n/strings'
 import type { KnessetFilledSeat } from '../lib/knessetSeatAllocation'
 import type {
+  AgeBinId,
   EducationBucket,
   KnessetDemographics,
   KnessetMapFilters,
   KnessetMapFocusItem,
+  KnessetYearsBinId,
 } from '../lib/knessetSeatDemographics'
 import {
   chartStatsExcludingKind,
   filterSeatsByFilters,
   filtersInclude,
   formatPctLabel,
+  knessetYearsBinLabel,
   summarizeProjectedKnesset,
 } from '../lib/knessetSeatDemographics'
 
@@ -158,6 +161,56 @@ function AgeHistogram({
   mapFilters: KnessetMapFilters
   onToggleFocus: (next: KnessetMapFocusItem) => void
 }) {
+  return (
+    <DemographicHistogram
+      bins={bins}
+      title={title}
+      mapFilters={mapFilters}
+      onToggleFocus={onToggleFocus}
+      focusKind="age"
+      tickLabel={ageTick}
+    />
+  )
+}
+
+function KnessetYearsHistogram({
+  bins,
+  title,
+  mapFilters,
+  onToggleFocus,
+}: {
+  bins: KnessetDemographics['knessetYearsBins']
+  title: string
+  mapFilters: KnessetMapFilters
+  onToggleFocus: (next: KnessetMapFocusItem) => void
+}) {
+  return (
+    <DemographicHistogram
+      bins={bins}
+      title={title}
+      mapFilters={mapFilters}
+      onToggleFocus={onToggleFocus}
+      focusKind="knessetYears"
+      tickLabel={knessetYearsBinLabel}
+    />
+  )
+}
+
+function DemographicHistogram({
+  bins,
+  title,
+  mapFilters,
+  onToggleFocus,
+  focusKind,
+  tickLabel,
+}: {
+  bins: readonly { id: string; count: number }[]
+  title: string
+  mapFilters: KnessetMapFilters
+  onToggleFocus: (next: KnessetMapFocusItem) => void
+  focusKind: 'age' | 'knessetYears'
+  tickLabel: (id: string) => string
+}) {
   const max = Math.max(1, ...bins.map((b) => b.count))
   const total = bins.reduce((s, b) => s + b.count, 0)
   if (total <= 0) return null
@@ -167,7 +220,10 @@ function AgeHistogram({
       <figcaption className="lpo-ps-knesset-stats-caption">{title}</figcaption>
       <div className="lpo-ps-knesset-age-plot" dir="ltr" role="group" aria-label={title}>
         {bins.map((bin) => {
-          const focus: KnessetMapFocusItem = { kind: 'age', value: bin.id }
+          const focus: KnessetMapFocusItem =
+            focusKind === 'age'
+              ? { kind: 'age', value: bin.id as AgeBinId }
+              : { kind: 'knessetYears', value: bin.id as KnessetYearsBinId }
           const active = filtersInclude(mapFilters, focus)
           return (
             <button
@@ -176,7 +232,7 @@ function AgeHistogram({
               className={`lpo-ps-knesset-age-col lpo-ps-knesset-stat-hit${
                 active ? ' lpo-ps-knesset-stat-hit--active' : ''
               }`}
-              title={`${ageTick(bin.id)}: ${bin.count}`}
+              title={`${tickLabel(bin.id)}: ${bin.count}`}
               aria-pressed={active}
               disabled={bin.count <= 0}
               onClick={() => onToggleFocus(focus)}
@@ -187,7 +243,7 @@ function AgeHistogram({
                   style={{ height: `${(bin.count / max) * 100}%` }}
                 />
               </div>
-              <span className="lpo-ps-knesset-age-tick">{ageTick(bin.id)}</span>
+              <span className="lpo-ps-knesset-age-tick">{tickLabel(bin.id)}</span>
             </button>
           )
         })}
@@ -343,6 +399,10 @@ export function KnessetStatsLeftStack({
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'education'),
     [seats, mapFilters, mergeArabsWithOpposition],
   )
+  const knessetYearsStats = useMemo(
+    () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'knessetYears'),
+    [seats, mapFilters, mergeArabsWithOpposition],
+  )
 
   return (
     <div className="lpo-ps-knesset-stats lpo-ps-knesset-stats--stage-left">
@@ -361,6 +421,12 @@ export function KnessetStatsLeftStack({
         rows={educationStats.education}
         title={t.knessetStatsEducationLabel}
         t={t}
+        mapFilters={mapFilters}
+        onToggleFocus={onToggleFocus}
+      />
+      <KnessetYearsHistogram
+        bins={knessetYearsStats.knessetYearsBins}
+        title={t.knessetStatsKnessetYearsLabel}
         mapFilters={mapFilters}
         onToggleFocus={onToggleFocus}
       />

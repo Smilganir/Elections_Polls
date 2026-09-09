@@ -134,13 +134,13 @@ export const SEGMENT_BG_COLORS: Record<Segment, string> = {
 
 /** Hero-chart list-logo dash — per-party (not bloc) so the underline reads on the dark chart. */
 export const PARTY_COLOR_MAP: Record<string, string> = {
-  Likud: '#00B1FF',
-  'Religious Zionism': '#1B6FD1',
-  Shas: '#9BA8C4',
-  UTJ: '#8B9CB3',
-  'Otzma Yehudit': '#1E4FA3',
-  "Ofer Winter's Party": '#1A3F8A',
-  'Yashar!': '#f7787c',
+  Likud: '#00C4FF',
+  'Religious Zionism': '#4598EB',
+  Shas: '#ADB9CE',
+  UTJ: '#8096AB',
+  'Otzma Yehudit': '#4E93D4',
+  "Ofer Winter's Party": '#3778BE',
+  'Yashar!': '#FA6469',
   "Bennett's Party": '#F06EAA',
   'Yesh Atid': '#D4DCE8',
   'Blue & White': '#E88B7A',

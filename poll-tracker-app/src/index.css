@@ -5787,6 +5787,38 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   margin-bottom: 0.35rem;
 }
 
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side-value-col {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.06rem;
+  min-width: 0;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side-value-col--with-seats {
+  align-items: stretch;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side--coal .lpo-ps-hero-side-value-col {
+  align-items: flex-end;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side-value-col .lpo-ps-hero-chart-seats-line {
+  justify-content: flex-start;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side--coal .lpo-ps-hero-side-value-col .lpo-ps-hero-chart-seats-line {
+  justify-content: flex-end;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side-value-col .lpo-ps-hero-chart-seats {
+  font-size: 0.68rem;
+}
+
+.lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side-value-col .lpo-ps-hero-chart-delta-unit {
+  font-size: 0.52rem;
+}
+
 .lpo-ps-hero-chart-dialog .lpo-ps-subtitle.lpo-ps-subtitle--outlets-trend-hint.lpo-ps-hero-chart-outlet-hint {
   margin: 0.1rem auto 0;
   max-width: 100%;
@@ -6101,7 +6133,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   height: 3px;
   border-radius: 2px;
   background: var(--lpo-ps-party-mark-color, #8da2be);
-  opacity: 0.95;
+  opacity: 1;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .lpo-ps-hero-chart-party-dash {
@@ -6787,14 +6819,14 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-knesset-edu-track {
   height: 0.72rem;
-  border-radius: 999px;
+  border-radius: 0 2px 2px 0;
   background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
 .lpo-ps-knesset-edu-fill {
   height: 100%;
-  border-radius: inherit;
+  border-radius: 0 2px 2px 0;
   min-width: 0;
   background: rgba(168, 186, 210, 0.78);
 }
