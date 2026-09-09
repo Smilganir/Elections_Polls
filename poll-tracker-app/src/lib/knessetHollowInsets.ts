@@ -3,12 +3,12 @@
  * Derived from wing seat coords in knessetSeatCoords.data.ts + seat dot radius.
  */
 export const KNESSET_HOLLOW_INSETS = {
-  left: 29,
-  right: 29,
+  left: 31,
+  right: 31,
   /** Just below the arch seats (~26% + seat radius). */
-  top: 29,
+  top: 30,
   /** Center floor is empty — keep a slim inset so the table can use the full U. */
-  bottom: 2,
+  bottom: 3,
 } as const
 
 export function knessetHollowInsetStyle(): Record<string, string> {

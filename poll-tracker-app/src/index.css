@@ -3609,14 +3609,116 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   min-width: 0;
 }
 
-.lpo-ps-hero-parties-chart-btn.lpo-ps-outlet-filter-btn {
+.lpo-ps-hero-parties-chart-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   flex: 0 0 auto;
-  padding: 0.2rem 0.26rem;
 }
 
-.lpo-ps-hero-parties-chart-btn-icon {
+.lpo-ps-hero-parties-chart-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.lpo-ps-hero-parties-chart-btn--prominent {
+  min-width: 3.35rem;
+  padding: 0.34rem 0.42rem 0.38rem;
+  border-radius: 8px;
+  border: 1px solid rgba(90, 158, 248, 0.55);
+  background: linear-gradient(165deg, rgba(26, 45, 74, 0.98) 0%, rgba(16, 28, 46, 0.98) 100%);
+  color: #e8f2ff;
+  box-shadow:
+    0 0 0 1px rgba(90, 158, 248, 0.14),
+    0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.lpo-ps-hero-parties-chart-btn--prominent:hover {
+  border-color: rgba(120, 180, 255, 0.78);
+  background: linear-gradient(165deg, rgba(32, 54, 88, 0.99) 0%, rgba(20, 34, 56, 0.99) 100%);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(120, 180, 255, 0.22),
+    0 6px 18px rgba(0, 0, 0, 0.34);
+}
+
+.lpo-ps-hero-parties-chart-btn--prominent:focus-visible {
+  outline: 2px solid rgba(90, 158, 248, 0.75);
+  outline-offset: 2px;
+}
+
+.lpo-ps-hero-parties-chart-btn-preview {
   display: block;
   flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.lpo-ps-hero-parties-chart-btn-preview-panel {
+  fill: rgba(8, 12, 20, 0.55);
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 0.35;
+}
+
+.lpo-ps-hero-parties-chart-btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.04rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.lpo-ps-hero-parties-chart-btn-label {
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.lpo-ps-hero-parties-chart-btn-seats {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #8ec0ff;
+  letter-spacing: 0.01em;
+}
+
+.lpo-ps-hero-parties-chart-btn--prominent:hover .lpo-ps-hero-parties-chart-btn-seats {
+  color: #b8d8ff;
+}
+
+@media (max-width: 640px) {
+  .lpo-ps-hero-parties-outer {
+    --lpo-ps-hero-chart-btn-pad-inline: 3.85rem;
+  }
+
+  .lpo-ps-hero-parties-side-col {
+    z-index: 5;
+    max-width: 3.75rem;
+  }
+
+  .lpo-ps-hero-parties-chart-btn-wrap {
+    border-radius: 9px;
+    padding: 0.12rem;
+    background: rgba(10, 14, 22, 0.94);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
+  }
+
+  .lpo-ps-hero-parties-chart-btn--prominent {
+    min-width: 3.15rem;
+    padding: 0.3rem 0.34rem 0.34rem;
+  }
 }
 
 .lpo-ps-hero-parties-names-scroll {
@@ -5925,6 +6027,19 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   outline-offset: 2px;
 }
 
+.lpo-ps-hero-chart-dialog-footer {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 14, 22, 0.55);
+  padding: 0.55rem 1.2rem;
+}
+
+.lpo-ps-hero-chart-dialog-footer .app-footer {
+  border-top: none;
+  background: transparent;
+  padding: 0;
+}
+
 .lpo-ps-hero-chart-body {
   display: flex;
   flex-direction: column;
@@ -5958,7 +6073,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   gap: 0.3rem;
   min-height: 0;
   min-width: 0;
-  padding-top: 0.45rem;
+  padding: 0.55rem 0.2rem 0.2rem;
   pointer-events: auto;
 }
 
@@ -5975,7 +6090,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   flex: 1 1 auto;
   min-height: 0;
   z-index: 1;
-  padding: 0.85rem 0.4rem 0.15rem;
+  padding: 0.95rem 0.55rem 0.28rem;
   border-radius: 8px;
   background: rgba(8, 12, 20, 0.48);
   overflow-x: hidden;
@@ -6392,6 +6507,16 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-seat {
   width: 3.55%;
+  z-index: 3;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-center-stack {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-center-stack .lpo-ps-hero-chart-row--selectable {
+  pointer-events: auto;
 }
 
 @media (min-width: 1101px) {

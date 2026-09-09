@@ -436,21 +436,20 @@ export function PollSummaryKnessetSeatMap({
             <div
               className="lpo-ps-knesset-map-stage"
               style={knessetHollowInsetStyle() as CSSProperties}
-              aria-hidden
             >
+              {stageOverlay}
               {seats.map((seat) => (
-              <SeatPortrait
-                key={seat.slot.id}
-                seat={seat}
-                dimmed={!seatMatchesFilters(seat, activeFilters, mergeArabsWithOpposition)}
-                locale={locale}
-                displayParty={displayParty}
-                onPointerEnter={(e) => updateTooltipPos(e, seat)}
+                <SeatPortrait
+                  key={seat.slot.id}
+                  seat={seat}
+                  dimmed={!seatMatchesFilters(seat, activeFilters, mergeArabsWithOpposition)}
+                  locale={locale}
+                  displayParty={displayParty}
+                  onPointerEnter={(e) => updateTooltipPos(e, seat)}
                   onLeave={() => setTooltip(null)}
                   onMove={(e) => updateTooltipPos(e, seat)}
                 />
               ))}
-              {stageOverlay}
             </div>
             {showStats ? (
               <div className="lpo-ps-knesset-stats-gutter lpo-ps-knesset-stats-gutter--right">

@@ -68,6 +68,8 @@ export type UiStrings = {
   pollSummaryHeroChipDeltaColorLegend: string
   /** Short label above hero chart toolbar button */
   pollSummaryToolbarChartLabel: string
+  /** Second line on hero chart button — opens seat map + bars */
+  pollSummaryToolbarChartSeatsLabel: string
   /** Short label above outlet filter toolbar button (unified table header) */
   pollSummaryToolbarFilterLabel: string
   /** Open cross-outlet average party bar chart (hero) */
@@ -256,8 +258,10 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroChipOutletCountLegend: '(n) = polls with a seat change vs prior',
     pollSummaryHeroChipDeltaColorLegend: 'Green/red = change vs prior poll',
     pollSummaryToolbarChartLabel: 'Chart',
+    pollSummaryToolbarChartSeatsLabel: '+ Seats',
     pollSummaryToolbarFilterLabel: 'Filter',
-    pollSummaryHeroPartiesChartOpenAria: 'Show cross-outlet party average breakdown',
+    pollSummaryHeroPartiesChartOpenAria:
+      'Show cross-outlet party averages with Knesset seat map and bar chart',
     pollSummaryHeroPartiesChartTitle: 'Cross-outlet party averages',
     pollSummaryHeroPartiesChartCloseAria: 'Close party breakdown',
     pollSummaryHeroPartiesChartWindowSuffix: ' · {n}-day window',
@@ -427,8 +431,10 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroChipOutletCountLegend: '(מספר) = סקרים עם שינוי מול הסקר הקודם',
     pollSummaryHeroChipDeltaColorLegend: 'ירוק/אדום = שינוי מול סקר קודם',
     pollSummaryToolbarChartLabel: 'גרף',
+    pollSummaryToolbarChartSeatsLabel: '+מושבים',
     pollSummaryToolbarFilterLabel: 'סינון',
-    pollSummaryHeroPartiesChartOpenAria: 'הצג פירוט ממוצע מנדטים לפי מפלגה בין הערוצים',
+    pollSummaryHeroPartiesChartOpenAria:
+      'הצג ממוצע מנדטים לפי מפלגה עם מפת 120 מושבים וגרף מנדטים',
     pollSummaryHeroPartiesChartTitle: 'ממוצע מנדטים לפי מפלגה בין הערוצים',
     pollSummaryHeroPartiesChartCloseAria: 'סגור פירוט מפלגות',
     pollSummaryHeroPartiesChartWindowSuffix: ' · חלון {n} ימים',

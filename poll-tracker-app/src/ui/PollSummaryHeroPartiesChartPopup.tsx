@@ -21,6 +21,7 @@ import { PollSummaryKnessetFiltersPane } from './PollSummaryKnessetFiltersPane'
 import { HeroChartPartyMark } from './HeroChartPartyMark'
 import { IconWithFallback } from './IconWithFallback'
 import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
+import { AppFooter } from './AppFooter'
 
 function formatChipNum(n: number): string {
   const r = Math.round(n * 10) / 10
@@ -90,41 +91,61 @@ export function PollSummaryOutletFilterStrip({
   )
 }
 
+function HeroPartiesChartButtonPreview() {
+  return (
+    <svg
+      className="lpo-ps-hero-parties-chart-btn-preview"
+      width="30"
+      height="22"
+      viewBox="0 0 30 22"
+      aria-hidden
+    >
+      <rect
+        className="lpo-ps-hero-parties-chart-btn-preview-panel"
+        x="5"
+        y="2.5"
+        width="20"
+        height="17"
+        rx="1.6"
+      />
+      <g className="lpo-ps-hero-parties-chart-btn-preview-bars" fill="currentColor">
+        <rect x="7" y="5.5" width="16" height="1.6" rx="0.4" opacity="0.96" />
+        <rect x="7" y="8.4" width="12.5" height="1.6" rx="0.4" opacity="0.84" />
+        <rect x="7" y="11.3" width="9.5" height="1.6" rx="0.4" opacity="0.72" />
+        <rect x="7" y="14.2" width="6.5" height="1.6" rx="0.4" opacity="0.6" />
+      </g>
+    </svg>
+  )
+}
+
 export function PollSummaryHeroPartiesChartButton({
   onClick,
   ariaLabel,
   label,
+  seatsLabel,
 }: {
   onClick: () => void
   ariaLabel: string
   label?: string
+  seatsLabel?: string
 }) {
   return (
-    <div className="lpo-ps-toolbar-micro-label-wrap">
-      {label ? (
-        <span className="lpo-ps-toolbar-micro-label" aria-hidden>
-          {label}
-        </span>
-      ) : null}
+    <div className="lpo-ps-hero-parties-chart-btn-wrap">
       <button
         type="button"
-        className="lpo-ps-hero-parties-chart-btn lpo-ps-outlet-filter-btn"
+        className="lpo-ps-hero-parties-chart-btn lpo-ps-hero-parties-chart-btn--prominent"
         onClick={onClick}
         aria-label={ariaLabel}
         aria-haspopup="dialog"
       >
-      <svg
-        className="lpo-ps-hero-parties-chart-btn-icon"
-        width="14"
-        height="14"
-        viewBox="0 0 16 16"
-        aria-hidden
-      >
-        <rect x="1.5" y="2.5" width="13" height="2.5" rx="0.55" fill="currentColor" />
-        <rect x="1.5" y="6.75" width="9" height="2.5" rx="0.55" fill="currentColor" />
-        <rect x="1.5" y="11" width="5.5" height="2.5" rx="0.55" fill="currentColor" />
-      </svg>
-    </button>
+        <HeroPartiesChartButtonPreview />
+        <span className="lpo-ps-hero-parties-chart-btn-text">
+          {label ? <span className="lpo-ps-hero-parties-chart-btn-label">{label}</span> : null}
+          {seatsLabel ? (
+            <span className="lpo-ps-hero-parties-chart-btn-seats">{seatsLabel}</span>
+          ) : null}
+        </span>
+      </button>
     </div>
   )
 }
@@ -466,6 +487,11 @@ export function PollSummaryHeroPartiesChartPopup({
             />
           </div>
         </div>
+        <footer className="lpo-ps-hero-chart-dialog-footer">
+          <div className="app-footer">
+            <AppFooter showVoteSmart />
+          </div>
+        </footer>
       </div>
     </div>,
     document.body,

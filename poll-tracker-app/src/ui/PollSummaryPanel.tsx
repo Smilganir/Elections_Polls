@@ -981,18 +981,21 @@ export function PollSummaryPanel({
           heroChartSideCol.style.marginInlineStart = '0px'
           if (chartCell) chartCell.style.marginTop = '0px'
 
-          const naturalBtnLeft = heroChartBtn.getBoundingClientRect().left
-          const filterLeft = filterBtn.getBoundingClientRect().left
-          const targetLeft = Math.max(filterLeft, naturalBtnLeft)
-          const dx = targetLeft - naturalBtnLeft
-          if (Math.abs(dx) > 0.5) {
-            heroChartSideCol.style.marginInlineStart = `${dx}px`
+          const narrowMobile = window.innerWidth <= 640
+          if (!narrowMobile) {
+            const naturalBtnLeft = heroChartBtn.getBoundingClientRect().left
+            const filterLeft = filterBtn.getBoundingClientRect().left
+            const targetLeft = Math.max(filterLeft, naturalBtnLeft)
+            const dx = targetLeft - naturalBtnLeft
+            if (Math.abs(dx) > 0.5) {
+              heroChartSideCol.style.marginInlineStart = `${dx}px`
+            }
           }
 
           const chipIcon = heroPartiesScrollRef.current?.querySelector<HTMLElement>(
             '.lpo-ps-chip:not(.lpo-ps-chip--empty) .lpo-ps-chip-ring .mapped-icon',
           )
-          if (chartCell && chipIcon) {
+          if (!narrowMobile && chartCell && chipIcon) {
             const iconRect = chipIcon.getBoundingClientRect()
             const btnRect = heroChartBtn.getBoundingClientRect()
             const dy =
@@ -1234,6 +1237,7 @@ export function PollSummaryPanel({
                     onClick={() => setHeroPartiesChartOpen(true)}
                     ariaLabel={t.pollSummaryHeroPartiesChartOpenAria}
                     label={t.pollSummaryToolbarChartLabel}
+                    seatsLabel={t.pollSummaryToolbarChartSeatsLabel}
                   />
                 </div>
               </div>
@@ -1297,6 +1301,7 @@ export function PollSummaryPanel({
                   onClick={() => setHeroPartiesChartOpen(true)}
                   ariaLabel={t.pollSummaryHeroPartiesChartOpenAria}
                   label={t.pollSummaryToolbarChartLabel}
+                  seatsLabel={t.pollSummaryToolbarChartSeatsLabel}
                 />
                 <div className="lpo-ps-hero-parties-scroll">
                   <PollSummaryChipsStrip
