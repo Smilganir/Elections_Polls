@@ -20,7 +20,7 @@ const HeroPartiesChartOverlayContext =
   createContext<HeroPartiesChartOverlayContextValue | null>(null)
 
 export function HeroPartiesChartOverlayProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   const [deferRotateHint, setDeferRotateHint] = useState(false)
 
   const value = useMemo(

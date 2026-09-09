@@ -798,8 +798,8 @@ export function PollSummaryPanel({
   )
 
   useEffect(() => {
-    setDeferRotateHint(!!heroAvgChips && heroPartiesChartOpen)
-  }, [heroAvgChips, heroPartiesChartOpen, setDeferRotateHint])
+    setDeferRotateHint(heroPartiesChartOpen)
+  }, [heroPartiesChartOpen, setDeferRotateHint])
   /** Cross-outlet column order: Opposition → Arabs → Coalition; seats desc within bloc. */
   const unifiedPartyOrder = useMemo(() => {
     if (!heroAvgChips) return []

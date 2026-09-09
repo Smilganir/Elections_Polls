@@ -6004,26 +6004,42 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-dialog-close {
   flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
   font: inherit;
-  font-size: 1.35rem;
+  font-size: 1.55rem;
+  font-weight: 700;
   line-height: 1;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2.45rem;
+  height: 2.45rem;
   padding: 0;
-  border: none;
-  border-radius: 0.35rem;
-  background: transparent;
-  color: #9fb3cc;
+  border: 1px solid rgba(168, 186, 210, 0.62);
+  border-radius: 999px;
+  background: rgba(10, 16, 26, 0.94);
+  color: #f0f6fc;
   cursor: pointer;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.12s ease;
 }
 
 .lpo-ps-hero-chart-dialog-close:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e8ecf2;
+  background: rgba(32, 48, 72, 0.98);
+  border-color: rgba(196, 214, 236, 0.88);
+  color: #ffffff;
+}
+
+.lpo-ps-hero-chart-dialog-close:active {
+  transform: scale(0.96);
 }
 
 .lpo-ps-hero-chart-dialog-close:focus-visible {
-  outline: 2px solid rgba(58, 123, 213, 0.65);
+  outline: 2px solid rgba(120, 170, 230, 0.85);
   outline-offset: 2px;
 }
 
@@ -6049,6 +6065,167 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   flex: 1 1 auto;
   overflow: hidden;
   padding: 0 0.35rem 0.35rem;
+}
+
+/* Scale-to-fit: 769–1439px band only (JS omits wrapper outside this range). */
+@media (min-width: 769px) and (max-width: 1439px) {
+  .lpo-ps-hero-chart-scale-viewport {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lpo-ps-hero-chart-scale-shell {
+    position: relative;
+    flex: 0 0 auto;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .lpo-ps-hero-chart-scale-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    will-change: transform;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-body {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap {
+    flex: 0 0 auto;
+    min-height: auto;
+  }
+
+  /* Wide-desktop hemicycle layout inside the fixed stage. */
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats {
+    display: grid;
+    grid-template-columns: 13.5rem minmax(0, 64rem) 12.75rem;
+    grid-template-areas: none;
+    align-items: start;
+    justify-content: center;
+    max-width: min(100%, 92.5rem);
+    gap: 0.7rem 1.35rem;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats .lpo-ps-knesset-map-stage {
+    width: 100%;
+    max-width: 64rem;
+    min-height: 26rem;
+    margin: 0;
+    min-width: 0;
+    grid-column: auto;
+    grid-row: auto;
+    max-height: none;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-seat {
+    width: 3.72%;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter {
+    display: block;
+    overflow: clip;
+    grid-area: auto;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter .lpo-ps-knesset-stats {
+    display: flex;
+    max-width: none;
+    width: 100%;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter--left .lpo-ps-knesset-stats {
+    max-width: 13.5rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter--right .lpo-ps-knesset-stats {
+    max-width: 12.75rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats {
+    gap: 0.55rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats > :not(:first-child) {
+    margin-top: 0.35rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--new,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--gender,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--tenure,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--age,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--education {
+    grid-column: auto;
+    grid-row: auto;
+    padding-inline: 0;
+    border-inline-start: none;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-caption {
+    font-size: 0.72rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-donut {
+    width: 92px;
+    height: 92px;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-donut-pct {
+    width: calc(100% - 22px);
+    height: calc(100% - 22px);
+    font-size: 0.92rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-age-plot {
+    height: 5.65rem;
+    gap: 0.16rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-age-bar {
+    max-width: 0.95rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-age-tick {
+    min-height: 2.15rem;
+    font-size: 0.66rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-list {
+    min-height: 5.25rem;
+    gap: 0.38rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-row {
+    grid-template-columns: 5.85rem minmax(0, 1fr) 2.35rem;
+    gap: 0.36rem;
+    padding: 0.12rem 0.16rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-name,
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-pct {
+    font-size: 0.68rem;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-track {
+    height: 0.9rem;
+  }
 }
 
 .lpo-ps-hero-chart-hemicycle-wrap {
@@ -6086,11 +6263,14 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-hero-chart-table--inset {
+  --lpo-ps-hero-chart-mark-icon-max-h: 24px;
+  --lpo-ps-hero-chart-mark-gap: 1px;
+  --lpo-ps-hero-chart-mark-dash-h: 2px;
   position: static;
   flex: 1 1 auto;
   min-height: 0;
   z-index: 1;
-  padding: 0.95rem 0.55rem 0.28rem;
+  padding: 0.95rem 0.55rem 0.34rem;
   border-radius: 8px;
   background: rgba(8, 12, 20, 0.48);
   overflow-x: hidden;
@@ -6110,7 +6290,7 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   flex: 1 1 0;
   min-height: 0;
   padding-block: 0;
-  align-items: center;
+  align-items: stretch;
   overflow: hidden;
 }
 
@@ -6139,10 +6319,13 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-party-label-col {
-  padding: 0.1rem 0.18rem;
+  padding: 0.06rem 0.14rem;
   gap: 0;
   height: 100%;
+  align-self: stretch;
   justify-content: center;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .lpo-ps-hero-chart-table .lpo-ps-hero-chart-party-mark {
@@ -6153,10 +6336,16 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark {
   width: 64px;
-  height: auto;
-  max-height: none;
+  height: 100%;
+  max-height: 100%;
   min-height: 0;
-  justify-content: center;
+  flex-shrink: 1;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--lpo-ps-hero-chart-mark-gap);
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged {
@@ -6213,42 +6402,87 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon,
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   width: auto;
   height: auto;
   max-width: 64px;
-  max-height: 28px;
+  min-height: 0;
+  max-height: min(
+    var(--lpo-ps-hero-chart-mark-icon-max-h),
+    calc(100% - var(--lpo-ps-hero-chart-mark-gap) - var(--lpo-ps-hero-chart-mark-dash-h))
+  );
   font-size: 0.62rem;
 }
 
-.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon {
-  width: 82px;
-  max-width: 82px;
-  height: 30px;
-  max-height: 30px;
+/* Trim built-in vertical padding in list logos so marks fit tighter rows. */
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon {
   object-fit: contain;
-  object-position: top center;
-  clip-path: inset(0 0 26% 0);
-  transform: scale(1.14);
-  transform-origin: top center;
-  margin-bottom: -7px;
+  object-position: center;
+  clip-path: inset(8% 0 14% 0);
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-dash {
+  --lpo-ps-hero-chart-dash-width: 44px;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon {
+  width: auto;
+  max-width: 82px;
+  height: auto;
+  min-height: 0;
+  max-height: min(
+    var(--lpo-ps-hero-chart-mark-icon-max-h),
+    calc(100% - var(--lpo-ps-hero-chart-mark-gap) - var(--lpo-ps-hero-chart-mark-dash-h))
+  );
+  object-fit: contain;
+  object-position: center;
+  clip-path: inset(6% 0 18% 0);
+  transform: none;
+  margin-bottom: 0;
+}
+
+/* Democrats: trim top/bottom blanks only; keep בראשות יאיר גולן; scale up slightly. */
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats {
+  width: 74px;
+}
+
+.lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats .mapped-icon {
+  max-width: 74px;
+  clip-path: inset(17% 0 11% 0);
+  transform: scale(1.3);
+  transform-origin: center center;
+  object-position: center;
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
   max-width: 82px;
+  min-height: 18px;
   max-height: 28px;
   font-size: 0.68rem;
 }
 
 .lpo-ps-hero-chart-party-dash {
+  --lpo-ps-hero-chart-dash-thickness: 2px;
+  --lpo-ps-hero-chart-dash-width: 44px;
   position: relative;
-  flex: 0 0 3px;
+  z-index: 2;
+  display: block;
+  flex: 0 0 var(--lpo-ps-hero-chart-dash-thickness);
   flex-shrink: 0;
-  width: 44px;
-  height: 3px;
+  width: var(--lpo-ps-hero-chart-dash-width);
+  height: var(--lpo-ps-hero-chart-dash-thickness);
+  min-height: var(--lpo-ps-hero-chart-dash-thickness);
   border-radius: 2px;
   background: var(--lpo-ps-party-mark-color, #8da2be);
   opacity: 1;
+}
+
+/* Preserve dash visual thickness when the hero stage is transform-scaled. */
+.lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-party-dash {
+  flex-basis: calc(var(--lpo-ps-hero-chart-dash-thickness) / var(--lpo-ps-hero-chart-scale, 1));
+  width: calc(var(--lpo-ps-hero-chart-dash-width) / var(--lpo-ps-hero-chart-scale, 1));
+  height: calc(var(--lpo-ps-hero-chart-dash-thickness) / var(--lpo-ps-hero-chart-scale, 1));
+  min-height: calc(var(--lpo-ps-hero-chart-dash-thickness) / var(--lpo-ps-hero-chart-scale, 1));
 }
 
 .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .lpo-ps-hero-chart-party-dash {
@@ -7383,72 +7617,216 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   }
 }
 
+@media (max-width: 768px) {
+  /* Portrait phone: fixed-size map, stats grid below (860px layout), scroll body only. */
+  .lpo-ps-hero-chart-overlay {
+    padding: 0.12rem 0.4rem 0.2rem;
+  }
+
+  .lpo-ps-hero-chart-dialog {
+    width: 100%;
+    min-height: 0;
+    height: calc(100dvh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.3rem);
+    max-height: calc(100dvh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.3rem);
+  }
+
+  .lpo-ps-hero-chart-dialog-header {
+    padding: 0.45rem 0.55rem 0.5rem;
+    gap: 0.45rem;
+  }
+
+  .lpo-ps-hero-chart-dialog-heading {
+    gap: 0.35rem;
+  }
+
+  .lpo-ps-hero-chart-body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 0.2rem 0.15rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  /* Keep 860px stats grid; do not flex-grow the map stage (prevents stretch while scrolling). */
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats {
+    display: grid;
+    flex: none;
+    min-height: auto;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats .lpo-ps-knesset-map-stage {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+    aspect-ratio: 1.127 / 1;
+    margin: 0;
+    --lpo-ps-knesset-hollow-top: 24%;
+    --lpo-ps-knesset-hollow-bottom: 2%;
+    --lpo-ps-knesset-hollow-left: 27%;
+    --lpo-ps-knesset-hollow-right: 27%;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-center-stack {
+    top: var(--lpo-ps-knesset-hollow-top, 24%);
+    right: var(--lpo-ps-knesset-hollow-right, 27%);
+    bottom: var(--lpo-ps-knesset-hollow-bottom, 2%);
+    left: var(--lpo-ps-knesset-hollow-left, 27%);
+    padding: 0.28rem 0.1rem 0.08rem;
+    gap: 0.1rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset {
+    --lpo-ps-hero-chart-mark-icon-max-h: 100%;
+    padding: 0.28rem 0.24rem 0.14rem;
+    overflow-y: hidden;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row {
+    grid-template-columns: minmax(0, 54px) minmax(0, 1fr);
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row--enlarged-mark {
+    grid-template-columns: minmax(0, 60px) minmax(0, 1fr);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-label-col {
+    padding: 0.01rem 0.05rem;
+    height: 100%;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark {
+    width: 54px;
+    height: 100%;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged {
+    width: 60px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
+    max-width: 54px;
+    max-height: calc(100% - var(--lpo-ps-hero-chart-mark-gap) - var(--lpo-ps-hero-chart-mark-dash-h));
+    font-size: 0.56rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon {
+    clip-path: inset(5% 0 18% 0);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon {
+    max-width: 60px;
+    clip-path: inset(4% 0 16% 0);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats {
+    width: 64px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats .mapped-icon {
+    max-width: 64px;
+    clip-path: inset(16% 0 10% 0);
+    transform: scale(1.28);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
+    max-width: 60px;
+    font-size: 0.54rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-dash {
+    --lpo-ps-hero-chart-dash-thickness: 2px;
+    --lpo-ps-hero-chart-dash-width: 40px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-cell {
+    padding-block: 0.02rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-bar-track {
+    height: min(11px, 36%);
+    min-height: 8px;
+  }
+
+  .lpo-ps-hero-chart-dialog-footer {
+    display: none;
+  }
+
+  .lpo-ps-hero-chart-dialog .lpo-ps-subtitle.lpo-ps-subtitle--outlets-trend-hint.lpo-ps-hero-chart-outlet-hint {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .lpo-ps-knesset-seat {
     width: 3.9%;
   }
 
-  /* Hemicycle hollow party table — compact marks so rows do not overlap. */
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-center-stack {
-    padding: 0.35rem 0.12rem 0.12rem;
-    gap: 0.15rem;
-  }
-
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset {
-    padding: 0.42rem 0.28rem 0.16rem;
+    padding: 0.24rem 0.2rem 0.12rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row {
-    grid-template-columns: minmax(0, 42px) minmax(0, 1fr);
-  }
-
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row--enlarged-mark {
     grid-template-columns: minmax(0, 50px) minmax(0, 1fr);
   }
 
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-label-col {
-    padding: 0.04rem 0.08rem;
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row--enlarged-mark {
+    grid-template-columns: minmax(0, 56px) minmax(0, 1fr);
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark {
-    width: 42px;
-    max-height: 100%;
-    gap: 1px;
-    overflow: hidden;
+    width: 50px;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged {
-    width: 50px;
-    gap: 1px;
+    width: 56px;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon,
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
-    max-width: 42px;
-    max-height: 14px;
-    font-size: 0.48rem;
+    max-width: 50px;
+    font-size: 0.52rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon {
+    clip-path: inset(5% 0 18% 0);
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon {
-    width: 50px;
-    max-width: 50px;
-    height: auto;
-    max-height: 15px;
-    clip-path: none;
-    transform: none;
-    margin-bottom: 0;
-    object-position: center;
+    width: 56px;
+    max-width: 56px;
+    clip-path: inset(4% 0 16% 0);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats {
+    width: 58px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats .mapped-icon {
+    max-width: 58px;
+    clip-path: inset(15% 0 9% 0);
+    transform: scale(1.26);
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
-    max-width: 50px;
-    max-height: 14px;
+    max-width: 56px;
     font-size: 0.5rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-dash {
-    width: 34px;
-    height: 2px;
+    --lpo-ps-hero-chart-dash-thickness: 2px;
+    --lpo-ps-hero-chart-dash-width: 36px;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-cell {
@@ -7480,11 +7858,6 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-change-badge {
     font-size: 0.58rem;
-  }
-
-  /* Demographics: tighter sizing on narrow phones (grid layout from 860px breakpoint). */
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-stage {
-    max-height: 20rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats {

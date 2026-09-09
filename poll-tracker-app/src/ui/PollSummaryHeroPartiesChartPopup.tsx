@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
@@ -22,6 +22,106 @@ import { HeroChartPartyMark } from './HeroChartPartyMark'
 import { IconWithFallback } from './IconWithFallback'
 import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
 import { AppFooter } from './AppFooter'
+
+const HERO_CHART_SCALE_BAND_MIN_PX = 769
+const HERO_CHART_SCALE_BAND_MAX_PX = 1439
+const HERO_CHART_STAGE_WIDTH_PX = 1440
+
+function useHeroChartScaleBandActive(): boolean {
+  const [active, setActive] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const width = window.innerWidth
+    return width >= HERO_CHART_SCALE_BAND_MIN_PX && width <= HERO_CHART_SCALE_BAND_MAX_PX
+  })
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      `(min-width: ${HERO_CHART_SCALE_BAND_MIN_PX}px) and (max-width: ${HERO_CHART_SCALE_BAND_MAX_PX}px)`,
+    )
+    const sync = () => setActive(mediaQuery.matches)
+    sync()
+    mediaQuery.addEventListener('change', sync)
+    return () => mediaQuery.removeEventListener('change', sync)
+  }, [])
+
+  return active
+}
+
+function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+  const [shellSize, setShellSize] = useState<{ width: number; height: number } | null>(
+    null,
+  )
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    const stage = stageRef.current
+    if (!viewport || !stage) return
+
+    const update = () => {
+      const availableWidth = viewport.clientWidth
+      const availableHeight = viewport.clientHeight
+      const naturalHeight = stage.offsetHeight
+      const widthScale =
+        availableWidth > 0 ? availableWidth / HERO_CHART_STAGE_WIDTH_PX : 1
+      const heightScale =
+        availableHeight > 0 && naturalHeight > 0
+          ? availableHeight / naturalHeight
+          : widthScale
+      const nextScale = Math.min(widthScale, heightScale)
+      setScale(nextScale)
+      setShellSize({
+        width: Math.max(0, Math.ceil(HERO_CHART_STAGE_WIDTH_PX * nextScale)),
+        height: Math.max(0, Math.ceil(naturalHeight * nextScale)),
+      })
+    }
+
+    const viewportObserver = new ResizeObserver(update)
+    const stageObserver = new ResizeObserver(update)
+    viewportObserver.observe(viewport)
+    stageObserver.observe(stage)
+    update()
+
+    return () => {
+      viewportObserver.disconnect()
+      stageObserver.disconnect()
+    }
+  }, [])
+
+  return (
+    <div ref={viewportRef} className="lpo-ps-hero-chart-scale-viewport">
+      <div
+        className="lpo-ps-hero-chart-scale-shell"
+        style={
+          shellSize
+            ? { width: shellSize.width, height: shellSize.height }
+            : undefined
+        }
+      >
+        <div
+          ref={stageRef}
+          className="lpo-ps-hero-chart-scale-stage"
+          style={{
+            width: HERO_CHART_STAGE_WIDTH_PX,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            ['--lpo-ps-hero-chart-scale' as string]: String(scale),
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HeroChartScaleFit({ children }: { children: React.ReactNode }) {
+  const scaleBandActive = useHeroChartScaleBandActive()
+  if (!scaleBandActive) return <>{children}</>
+  return <HeroChartScaleFitStage>{children}</HeroChartScaleFitStage>
+}
 
 function formatChipNum(n: number): string {
   const r = Math.round(n * 10) / 10
@@ -227,15 +327,6 @@ export function PollSummaryHeroPartiesChartPopup({
     }
   }, [open])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-
   const changedByParty = useMemo(
     () => new Map(changedParties.map((cp) => [cp.party, cp])),
     [changedParties],
@@ -290,19 +381,16 @@ export function PollSummaryHeroPartiesChartPopup({
   if (!open) return null
 
   return createPortal(
-    <div
-      className="lpo-ps-hero-chart-overlay"
-      role="presentation"
-      onClick={onClose}
-    >
+    <div className="lpo-ps-hero-chart-overlay" role="presentation">
       <div
         className="lpo-ps-hero-chart-dialog"
         role="dialog"
-        aria-modal="false"
+        aria-modal="true"
         aria-label={`${t.pollSummaryHeroPartiesChartTitle}${windowSuffix}`}
         dir={locale === 'he' ? 'rtl' : 'ltr'}
         onClick={(e) => e.stopPropagation()}
       >
+        <HeroChartScaleFit>
         <header className="lpo-ps-hero-chart-dialog-header">
           <div className="lpo-ps-hero-chart-dialog-heading">
             <h2 className="lpo-ps-hero-chart-dialog-title">
@@ -487,6 +575,7 @@ export function PollSummaryHeroPartiesChartPopup({
             />
           </div>
         </div>
+        </HeroChartScaleFit>
         <footer className="lpo-ps-hero-chart-dialog-footer">
           <div className="app-footer">
             <AppFooter showVoteSmart />

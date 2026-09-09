@@ -16,7 +16,9 @@ export function HeroChartPartyMark({
   return (
     <div
       className={`lpo-ps-hero-chart-party-mark${
-        partyKey === 'The Democrats' ? ' lpo-ps-hero-chart-party-mark--enlarged' : ''
+        partyKey === 'The Democrats'
+          ? ' lpo-ps-hero-chart-party-mark--enlarged lpo-ps-hero-chart-party-mark--democrats'
+          : ''
       }`}
       style={{ '--lpo-ps-party-mark-color': color } as CSSProperties}
     >
