@@ -89,9 +89,7 @@ function memberMatchesDemographic(
   if (focus.kind === 'military') {
     const bucket = classifyMilitaryService(member.militaryService)
     if (focus.value === 'served') {
-      return (
-        bucket === 'regular' || bucket === 'officer' || bucket === 'national_service'
-      )
+      return isMilitaryServiceServed(bucket)
     }
     return bucket === focus.value
   }
@@ -268,6 +266,9 @@ const UNKNOWN_MILITARY = /^(אין מידע|\-|,|\s)*$/
 
 const MILITARY_NATIONAL = /שירות\s*לאומי/
 
+/** Negated national-service clause — strip before national-service detection. */
+const MILITARY_NATIONAL_NEGATED = /לא\s+שירת[\u0590-\u05FF]*\s+ב?שירות\s*לאומי/gi
+
 const MILITARY_NOT_SERVED = /^לא\s*שירת/
 
 /** Commissioned officer — סגן and above (incl. סג"מ), plus explicit קצין / command roles. */
@@ -276,11 +277,24 @@ const MILITARY_OFFICER =
 
 const MILITARY_REGULAR = /(?:^|[,\s])סדיר(?:[,\s]|$)/
 
+const MILITARY_SHORTENED = /שירות\s*מקוצר|שלב\s*ב['׳']/
+
+/** Career service without an explicit rank token (e.g. "קבע, מגלן"). */
+const MILITARY_CAREER_BARE = /(?:^|[,\s/])קבע(?:[,\s/]|$)/
+
 const MILITARY_SERVED_HINT =
   /צה"ל|צה״ל|מילואים|שירת|גדוד|חטיב|טייס|שייטת|דובדן|יחידת|לוחם|קרב|נח"ל|גולני|גבעתי|סמל|פרמדיק|חי"ר|צנחנ|עורף|מודיעין|חיל/
 
+function preprocessMilitaryServiceText(raw: string): string {
+  return raw.trim().replace(MILITARY_NATIONAL_NEGATED, '').trim()
+}
+
+export function isMilitaryServiceServed(bucket: MilitaryServiceBucket): boolean {
+  return bucket === 'regular' || bucket === 'officer'
+}
+
 export function classifyMilitaryService(raw: string): MilitaryServiceBucket {
-  const t = raw.trim()
+  const t = preprocessMilitaryServiceText(raw)
   if (!t || UNKNOWN_MILITARY.test(t) || t.startsWith('אין מידע')) return 'unknown'
   if (MILITARY_NOT_SERVED.test(t)) {
     return MILITARY_NATIONAL.test(t) ? 'national_service' : 'not_served'
@@ -288,6 +302,8 @@ export function classifyMilitaryService(raw: string): MilitaryServiceBucket {
   if (MILITARY_NATIONAL.test(t)) return 'national_service'
   if (MILITARY_OFFICER.test(t)) return 'officer'
   if (MILITARY_REGULAR.test(t)) return 'regular'
+  if (MILITARY_SHORTENED.test(t)) return 'regular'
+  if (MILITARY_CAREER_BARE.test(t)) return 'regular'
   if (MILITARY_SERVED_HINT.test(t)) return 'regular'
   return 'unknown'
 }
@@ -295,8 +311,8 @@ export function classifyMilitaryService(raw: string): MilitaryServiceBucket {
 export function classifyMilitary(raw: string): 'served' | 'not_served' | null {
   const bucket = classifyMilitaryService(raw)
   if (bucket === 'unknown') return null
-  if (bucket === 'not_served') return 'not_served'
-  return 'served'
+  if (isMilitaryServiceServed(bucket)) return 'served'
+  return 'not_served'
 }
 
 export function parseMemberAge(raw: string): number | null {
@@ -325,16 +341,21 @@ export function projectedMembers(seats: readonly KnessetFilledSeat[]): KnessetMe
   return out
 }
 
-/** Military served (regular/officer only) as a share of all projected MKs — matches K25 baseline. */
+/**
+ * Military served (regular/officer only) as a share of projected MKs with known service info.
+ * National service counts in the denominator but not the numerator (matches hero donut).
+ */
 export function militaryServedPctOfAll(seats: readonly KnessetFilledSeat[]): number | null {
   const members = projectedMembers(seats)
-  if (members.length === 0) return null
   let served = 0
+  let known = 0
   for (const m of members) {
     const bucket = classifyMilitaryService(m.militaryService)
-    if (bucket === 'regular' || bucket === 'officer') served++
+    if (bucket === 'unknown') continue
+    known++
+    if (isMilitaryServiceServed(bucket)) served++
   }
-  return served / members.length
+  return known > 0 ? served / known : null
 }
 
 function ratio(part: number, whole: number): number | null {
@@ -382,7 +403,7 @@ export function summarizeProjectedKnesset(
     militaryCounts.set(milBucket, (militaryCounts.get(milBucket) ?? 0) + 1)
     if (milBucket !== 'unknown') {
       militaryKnown++
-      if (milBucket !== 'not_served') servedCount++
+      if (isMilitaryServiceServed(milBucket)) servedCount++
     }
 
     const age = parseMemberAge(m.age)
