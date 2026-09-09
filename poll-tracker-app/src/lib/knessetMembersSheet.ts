@@ -14,9 +14,23 @@ export type KnessetMemberRow = {
   partyKey: string | null
   listRank: number
   name: string
+  /** Column Q (fallback D) — transparent cutout for hemicycle seats. */
   imageUrl: string
-  background: string
+  /** Column D (fallback E, then Q) — fuller portrait for tooltips. */
+  portraitImageUrl: string
   seniority: KnessetMemberSeniority
+  /** Column I — מין */
+  gender: string
+  /** Column J — גיל */
+  age: string
+  /** Column K — ניסיון מקצועי */
+  professionalExperience: string
+  /** Column L — ותק בכנסת (שנים) */
+  knessetYears: string
+  /** Column M — השכלה */
+  education: string
+  /** Column N — שירות צבאי/לאומי */
+  militaryService: string
 }
 
 /** Hebrew sheet list name → canonical unpivot party key. */
@@ -90,10 +104,17 @@ const HEADER_RANK = 'מקום ברשימה'
 const HEADER_NAME = 'שם המועמד/ת'
 /** Column Q — Cloudinary/Drive cutouts used on the hemicycle. */
 const HEADER_TRANSPARENT_IMAGE = 'תמונה שקופה (URL)'
-/** Column D — Wikipedia stills; used only when Q is empty. */
+/** Column D — Wikipedia / source stills (tooltip portrait). */
 const HEADER_WIKI_IMAGE = 'קישור לתמונה (וויקיפדיה)'
-const HEADER_BACKGROUND = 'רקע קצר'
+/** Column E — תמונה */
+const HEADER_PHOTO = 'תמונה'
 const HEADER_SENIORITY = 'ותק'
+const HEADER_GENDER = 'מין'
+const HEADER_AGE = 'גיל'
+const HEADER_PROFESSIONAL = 'ניסיון מקצועי'
+const HEADER_KNESSET_YEARS = 'ותק בכנסת (שנים)'
+const HEADER_EDUCATION = 'השכלה'
+const HEADER_MILITARY = 'שירות צבאי/לאומי'
 
 function headerIndex(headers: readonly string[], name: string): number {
   return headers.findIndex((h) => h.trim() === name)
@@ -116,6 +137,15 @@ export function pickMemberImageUrl(cols: readonly string[], headers: readonly st
   return cell(cols, headers, HEADER_WIKI_IMAGE, 3)
 }
 
+/** Fuller head-and-shoulders source for tooltip (D → E → seat cutout). */
+export function pickMemberPortraitUrl(cols: readonly string[], headers: readonly string[]): string {
+  const wiki = cell(cols, headers, HEADER_WIKI_IMAGE, 3)
+  if (wiki) return wiki
+  const photo = cell(cols, headers, HEADER_PHOTO, 4)
+  if (photo) return photo
+  return pickMemberImageUrl(cols, headers)
+}
+
 export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
   const lines = csv.split(/\r?\n/).filter((l) => l.trim())
   if (lines.length < 2) return []
@@ -128,8 +158,14 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
     const listRank = Number.parseInt(cell(cols, headers, HEADER_RANK, 1), 10) || 0
     const name = cell(cols, headers, HEADER_NAME, 2)
     const imageUrl = pickMemberImageUrl(cols, headers)
-    const background = cell(cols, headers, HEADER_BACKGROUND, 5)
+    const portraitImageUrl = pickMemberPortraitUrl(cols, headers)
     const seniority = parseSeniority(cell(cols, headers, HEADER_SENIORITY, 6))
+    const gender = cell(cols, headers, HEADER_GENDER, 8)
+    const age = cell(cols, headers, HEADER_AGE, 9)
+    const professionalExperience = cell(cols, headers, HEADER_PROFESSIONAL, 10)
+    const knessetYears = cell(cols, headers, HEADER_KNESSET_YEARS, 11)
+    const education = cell(cols, headers, HEADER_EDUCATION, 12)
+    const militaryService = cell(cols, headers, HEADER_MILITARY, 13)
 
     return {
       partyHeb,
@@ -137,8 +173,14 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
       listRank,
       name,
       imageUrl,
-      background,
+      portraitImageUrl,
       seniority,
+      gender,
+      age,
+      professionalExperience,
+      knessetYears,
+      education,
+      militaryService,
     }
   })
 }

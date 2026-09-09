@@ -92,6 +92,16 @@ export type UiStrings = {
   knessetMapSeniorityNew: string
   /** Tooltip: list rank of {rank} out of {total} party mandates */
   knessetMapListRank: string
+  knessetMapTooltipAge: string
+  knessetMapTooltipGender: string
+  knessetMapTooltipKnessetYears: string
+  /** Tooltip: Knesset tenure; {n} = years */
+  knessetMapKnessetYearsValue: string
+  knessetMapTooltipProfessional: string
+  knessetMapTooltipEducation: string
+  knessetMapTooltipMilitary: string
+  knessetMapGenderMale: string
+  knessetMapGenderFemale: string
   /** Hero trend panel header; {n} = rolling window days */
   pollSummaryHeroTrendPanelTitle: string
   /** Hero chip → cross-outlet average trend */
@@ -244,6 +254,15 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapSeniorityVeteran: 'Experienced MK',
     knessetMapSeniorityNew: 'New candidate',
     knessetMapListRank: 'List rank {rank} of {total}',
+    knessetMapTooltipAge: 'Age',
+    knessetMapTooltipGender: 'Gender',
+    knessetMapTooltipKnessetYears: 'Knesset tenure',
+    knessetMapKnessetYearsValue: '{n} years',
+    knessetMapTooltipProfessional: 'Professional experience',
+    knessetMapTooltipEducation: 'Education',
+    knessetMapTooltipMilitary: 'Military / national service',
+    knessetMapGenderMale: 'Male',
+    knessetMapGenderFemale: 'Female',
     pollSummaryHeroTrendPanelTitle: 'Cross-outlet average · {n}-day window',
     pollSummaryHeroPartyTrendOpenAria: 'Show cross-outlet average seat trend for {party}',
     pollSummaryHeroPartyTrendNoData: 'No poll history for this party in the window.',
@@ -385,6 +404,15 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapSeniorityVeteran: 'חבר כנסת ותיק',
     knessetMapSeniorityNew: 'מועמד חדש',
     knessetMapListRank: 'מקום {rank} מתוך {total}',
+    knessetMapTooltipAge: 'גיל',
+    knessetMapTooltipGender: 'מין',
+    knessetMapTooltipKnessetYears: 'ותק בכנסת',
+    knessetMapKnessetYearsValue: '{n} שנים',
+    knessetMapTooltipProfessional: 'ניסיון מקצועי',
+    knessetMapTooltipEducation: 'השכלה',
+    knessetMapTooltipMilitary: 'שירות צבאי/לאומי',
+    knessetMapGenderMale: 'זכר',
+    knessetMapGenderFemale: 'נקבה',
     pollSummaryHeroTrendPanelTitle: 'ממוצע ערוצים · חלון {n} ימים',
     pollSummaryHeroPartyTrendOpenAria: 'הצג מגמת מנדטים ממוצעת בין ערוצים עבור {party}',
     pollSummaryHeroPartyTrendNoData: 'אין היסטוריית סקרים למפלגה זו בחלון.',

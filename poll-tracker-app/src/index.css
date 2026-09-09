@@ -6328,32 +6328,18 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   background: rgba(180, 190, 200, 0.45);
 }
 
-.lpo-ps-knesset-seat-seniority {
-  position: absolute;
-  right: -2px;
-  bottom: -1px;
-  width: 0.55rem;
-  height: 0.55rem;
-  font-size: 0.42rem;
-  line-height: 0.55rem;
-  text-align: center;
-  color: #1a2230;
-  background: #f0d878;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
-}
-
 .lpo-ps-knesset-tooltip {
   position: fixed;
   z-index: 10120;
-  max-width: min(16rem, 88vw);
-  padding: 0.55rem 0.7rem 0.65rem;
+  max-width: min(20rem, 92vw);
+  padding: 0.42rem 0.52rem 0.48rem;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(12, 18, 28, 0.96);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   pointer-events: none;
+  direction: rtl;
+  text-align: start;
 }
 
 .lpo-ps-knesset-tooltip--above {
@@ -6364,49 +6350,90 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   transform: translate(-50%, 10px);
 }
 
+.lpo-ps-knesset-tooltip-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  gap: 0.42rem;
+  align-items: start;
+  margin-bottom: 0;
+}
+
+.lpo-ps-knesset-tooltip-header-text {
+  min-width: 0;
+}
+
+.lpo-ps-knesset-tooltip-portrait {
+  width: 5rem;
+  height: 6.25rem;
+  flex-shrink: 0;
+  object-fit: cover;
+  /* Slightly above center — head and shoulders without tight face crop. */
+  object-position: center 22%;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .lpo-ps-knesset-tooltip-name {
-  margin: 0 0 0.2rem;
-  font-size: 0.95rem;
+  margin: 0 0 0.1rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
   color: #f2f5fa;
 }
 
 .lpo-ps-knesset-tooltip-rank {
-  margin: 0 0 0.25rem;
-  font-size: 0.72rem;
-  line-height: 1.2;
+  margin: 0 0 0.12rem;
+  font-size: 0.7rem;
+  line-height: 1.15;
   color: #a8b8cc;
   font-variant-numeric: tabular-nums;
 }
 
 .lpo-ps-knesset-tooltip-meta {
-  margin: 0 0 0.25rem;
+  margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.55rem;
-  font-size: 0.72rem;
-  color: #9fb3cc;
+  gap: 0.2rem 0.4rem;
+  font-size: 0.7rem;
 }
 
 .lpo-ps-knesset-tooltip-segment {
+  font-weight: 700;
+}
+
+.lpo-ps-knesset-tooltip-party {
   font-weight: 600;
 }
 
-.lpo-ps-knesset-tooltip-seniority {
-  margin: 0 0 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.68rem;
-  color: #c5d4e8;
+.lpo-ps-knesset-tooltip-details {
+  margin: 0.22rem 0 0;
+  display: grid;
+  gap: 0.14rem;
 }
 
-.lpo-ps-knesset-tooltip-bg {
-  margin: 0.35rem 0 0;
-  font-size: 0.68rem;
-  line-height: 1.4;
-  color: #b8c8dc;
+.lpo-ps-knesset-tooltip-detail-row {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  gap: 0.28rem 0.38rem;
+  align-items: start;
+}
+
+.lpo-ps-knesset-tooltip-detail-label,
+.lpo-ps-knesset-tooltip-detail-value {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.28;
+}
+
+.lpo-ps-knesset-tooltip-detail-label {
+  color: #8fa3bc;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lpo-ps-knesset-tooltip-detail-value {
+  color: #c5d4e8;
 }
 
 @media (max-width: 860px) {

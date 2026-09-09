@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import { buildKnessetFilledSeats, type KnessetFilledSeat } from '../lib/knessetSeatAllocation'
-import { PARTY_ICON_MAP } from '../config/mappings'
+import { PARTY_COLOR_MAP, PARTY_ICON_MAP, SEGMENT_COLORS } from '../config/mappings'
 import {
   fetchKnessetMembers,
   membersByPartyKey,
@@ -23,28 +23,82 @@ type TooltipState = {
   placement: TooltipPlacement
 }
 
+function genderLabel(
+  gender: string,
+  locale: AppLocale,
+  t: UiStrings,
+): string {
+  const raw = gender.trim()
+  if (!raw) return ''
+  if (locale === 'he') return raw
+  if (raw === 'זכר') return t.knessetMapGenderMale
+  if (raw === 'נקבה') return t.knessetMapGenderFemale
+  return raw
+}
+
+function knessetYearsLabel(years: string, t: UiStrings): string {
+  const n = years.trim()
+  if (!n) return ''
+  return t.knessetMapKnessetYearsValue.replace(/\{n\}/g, n)
+}
+
+function memberTooltipDetailRows(
+  member: KnessetMemberRow,
+  locale: AppLocale,
+  t: UiStrings,
+): { label: string; value: string }[] {
+  const rows: { label: string; value: string }[] = []
+  if (member.age.trim()) rows.push({ label: t.knessetMapTooltipAge, value: member.age.trim() })
+  const gender = genderLabel(member.gender, locale, t)
+  if (gender) rows.push({ label: t.knessetMapTooltipGender, value: gender })
+  const knessetYears = knessetYearsLabel(member.knessetYears, t)
+  if (knessetYears) {
+    rows.push({ label: t.knessetMapTooltipKnessetYears, value: knessetYears })
+  }
+  if (member.professionalExperience.trim()) {
+    rows.push({
+      label: t.knessetMapTooltipProfessional,
+      value: member.professionalExperience.trim(),
+    })
+  }
+  if (member.militaryService.trim()) {
+    rows.push({ label: t.knessetMapTooltipMilitary, value: member.militaryService.trim() })
+  }
+  if (member.education.trim()) {
+    rows.push({ label: t.knessetMapTooltipEducation, value: member.education.trim() })
+  }
+  return rows
+}
+
+function MemberTooltipDetails({
+  member,
+  locale,
+  t,
+}: {
+  member: KnessetMemberRow
+  locale: AppLocale
+  t: UiStrings
+}) {
+  const detailRows = memberTooltipDetailRows(member, locale, t)
+  if (!detailRows.length) return null
+  return (
+    <dl className="lpo-ps-knesset-tooltip-details">
+      {detailRows.map((row) => (
+        <div key={row.label} className="lpo-ps-knesset-tooltip-detail-row">
+          <dt className="lpo-ps-knesset-tooltip-detail-label">{row.label}</dt>
+          <dd className="lpo-ps-knesset-tooltip-detail-value">{row.value}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
 function tooltipPlacement(clientY: number): TooltipPlacement {
   const raw = getComputedStyle(document.documentElement).getPropertyValue(
     '--lpo-ps-hero-chart-overlay-top',
   )
   const overlayTop = Number.parseFloat(raw) || 88
   return clientY < overlayTop + 100 ? 'below' : 'above'
-}
-
-function SeniorityBadge({
-  seniority,
-  title,
-}: {
-  seniority: KnessetMemberRow['seniority']
-  title: string
-}) {
-  if (seniority === 'unknown') return null
-  const glyph = seniority === 'veteran' ? '★' : '✦'
-  return (
-    <span className="lpo-ps-knesset-seat-seniority" title={title} aria-hidden>
-      {glyph}
-    </span>
-  )
 }
 
 function SeatPortrait({
@@ -86,22 +140,14 @@ function SeatPortrait({
       aria-label={isMember ? seat.member.name : seat.partyKey}
     >
       {isMember && seat.member.imageUrl ? (
-        <>
-          <img
-            className="lpo-ps-knesset-seat-img"
-            src={seat.member.imageUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-          />
-          {seat.member.listRank === 1 ? (
-            <SeniorityBadge
-              seniority={seat.member.seniority}
-              title={seat.member.seniority === 'veteran' ? 'veteran' : 'new'}
-            />
-          ) : null}
-        </>
+        <img
+          className="lpo-ps-knesset-seat-img"
+          src={seat.member.imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
       ) : (
         <>
           {partyIcon ? (
@@ -177,12 +223,6 @@ export function PollSummaryKnessetSeatMap({
       knessetMapArabs: t.knessetMapArabs,
     })
 
-  const seniorityLabel = (s: KnessetMemberRow['seniority']) => {
-    if (s === 'veteran') return t.knessetMapSeniorityVeteran
-    if (s === 'new') return t.knessetMapSeniorityNew
-    return ''
-  }
-
   const rankLabel = (seat: KnessetFilledSeat) =>
     t.knessetMapListRank
       .replace(/\{rank\}/g, String(seat.listRank))
@@ -223,35 +263,54 @@ export function PollSummaryKnessetSeatMap({
                 <div
                   className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${tooltip.placement}`}
                   style={{ left: tooltip.x, top: tooltip.y }}
+                  dir="rtl"
                   role="tooltip"
                 >
-                  {tooltip.seat.kind === 'member' ? (
-                    <p className="lpo-ps-knesset-tooltip-name">{tooltip.seat.member.name}</p>
-                  ) : (
-                    <p className="lpo-ps-knesset-tooltip-name">
-                      {displayParty(tooltip.seat.partyKey)}
-                    </p>
-                  )}
-                  <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
-                  <p className="lpo-ps-knesset-tooltip-meta">
-                    <span className="lpo-ps-knesset-tooltip-segment">
-                      {segLabel(tooltip.seat.segment)}
-                    </span>
-                    <span className="lpo-ps-knesset-tooltip-party">
-                      {displayParty(tooltip.seat.partyKey)}
-                    </span>
-                  </p>
-                  {tooltip.seat.kind === 'member' && tooltip.seat.member.seniority !== 'unknown' ? (
-                    <p className="lpo-ps-knesset-tooltip-seniority">
-                      <SeniorityBadge
-                        seniority={tooltip.seat.member.seniority}
-                        title={seniorityLabel(tooltip.seat.member.seniority)}
+                  <div className="lpo-ps-knesset-tooltip-header">
+                    <div className="lpo-ps-knesset-tooltip-header-text">
+                      {tooltip.seat.kind === 'member' ? (
+                        <p className="lpo-ps-knesset-tooltip-name">{tooltip.seat.member.name}</p>
+                      ) : (
+                        <p className="lpo-ps-knesset-tooltip-name">
+                          {displayParty(tooltip.seat.partyKey)}
+                        </p>
+                      )}
+                      <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
+                      <p className="lpo-ps-knesset-tooltip-meta">
+                        <span
+                          className="lpo-ps-knesset-tooltip-segment"
+                          style={{ color: SEGMENT_COLORS[tooltip.seat.segment] }}
+                        >
+                          {segLabel(tooltip.seat.segment)}
+                        </span>
+                        <span
+                          className="lpo-ps-knesset-tooltip-party"
+                          style={{
+                            color:
+                              PARTY_COLOR_MAP[tooltip.seat.partyKey] ?? tooltip.seat.ringColor,
+                          }}
+                        >
+                          {displayParty(tooltip.seat.partyKey)}
+                        </span>
+                      </p>
+                    </div>
+                    {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
+                      <img
+                        className="lpo-ps-knesset-tooltip-portrait"
+                        src={tooltip.seat.member.portraitImageUrl}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
                       />
-                      {seniorityLabel(tooltip.seat.member.seniority)}
-                    </p>
-                  ) : null}
-                  {tooltip.seat.kind === 'member' && tooltip.seat.member.background ? (
-                    <p className="lpo-ps-knesset-tooltip-bg">{tooltip.seat.member.background}</p>
+                    ) : null}
+                  </div>
+                  {tooltip.seat.kind === 'member' ? (
+                    <MemberTooltipDetails
+                      member={tooltip.seat.member}
+                      locale={locale}
+                      t={t}
+                    />
                   ) : null}
                 </div>,
                 document.body,
