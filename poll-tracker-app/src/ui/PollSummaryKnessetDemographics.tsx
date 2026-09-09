@@ -14,18 +14,19 @@ import {
   chartStatsExcludingKind,
   filterSeatsByFilters,
   filtersInclude,
-  knessetMapFiltersActive,
   formatDemographicMean,
   formatPctLabel,
   knessetYearsBinLabel,
+  militaryServedPctOfAll,
   summarizeProjectedKnesset,
 } from '../lib/knessetSeatDemographics'
 import {
   formatKnessetPpDelta,
   formatKnessetScalarPctDelta,
-  KNESSET_25_DEMOGRAPHICS_BASELINE,
   knessetScalarPctDelta,
   knessetSharePpDelta,
+  resolveKnesset25Baseline,
+  type Knesset25BaselineScope,
 } from '../lib/knesset25DemographicsBaseline'
 
 function statsCaptionAria(
@@ -39,13 +40,21 @@ function statsCaptionAria(
     .replace(/\{value\}/g, formatDemographicMean(mean))
 }
 
+function k25ScopeLabel(scope: Knesset25BaselineScope, t: UiStrings): string {
+  if (scope === 'party') return t.knessetStatsVsK25Party
+  if (scope === 'bloc') return t.knessetStatsVsK25Bloc
+  return t.knessetStatsVsK25
+}
+
 function K25ComparisonBadge({
   delta,
   mode,
+  scope,
   t,
 }: {
   delta: number | null | undefined
   mode: 'pp' | 'pct'
+  scope: Knesset25BaselineScope
   t: UiStrings
 }) {
   if (delta == null || !Number.isFinite(delta) || Math.abs(delta) < 0.05) return null
@@ -62,7 +71,7 @@ function K25ComparisonBadge({
         </span>
         {value}
       </span>
-      <span className="lpo-ps-knesset-stat-k25-label">{t.knessetStatsVsK25}</span>
+      <span className="lpo-ps-knesset-stat-k25-label">{k25ScopeLabel(scope, t)}</span>
     </div>
   )
 }
@@ -71,11 +80,13 @@ function DemographicStatsCaption({
   label,
   mean,
   k25DeltaPct,
+  k25Scope,
   t,
 }: {
   label: string
   mean: number | null | undefined
   k25DeltaPct?: number | null
+  k25Scope?: Knesset25BaselineScope | null
   t: UiStrings
 }) {
   return (
@@ -93,7 +104,9 @@ function DemographicStatsCaption({
           </>
         ) : null}
       </figcaption>
-      <K25ComparisonBadge delta={k25DeltaPct} mode="pct" t={t} />
+      {k25Scope ? (
+        <K25ComparisonBadge delta={k25DeltaPct} mode="pct" scope={k25Scope} t={t} />
+      ) : null}
     </header>
   )
 }
@@ -125,6 +138,7 @@ function Doughnut({
   label,
   aria,
   k25DeltaPp,
+  k25Scope,
   t,
   primaryFocus,
   complementFocus,
@@ -136,6 +150,7 @@ function Doughnut({
   label: string
   aria: string
   k25DeltaPp?: number | null
+  k25Scope?: Knesset25BaselineScope | null
   t: UiStrings
   primaryFocus: KnessetMapFocusItem
   complementFocus: KnessetMapFocusItem
@@ -159,7 +174,9 @@ function Doughnut({
     <figure className={`lpo-ps-knesset-donut-fig${layoutSlot ? ` ${layoutSlot}` : ''}`}>
       <header className="lpo-ps-knesset-stat-heading">
         <figcaption className="lpo-ps-knesset-stats-caption">{label}</figcaption>
-        <K25ComparisonBadge delta={k25DeltaPp} mode="pp" t={t} />
+        {k25Scope ? (
+          <K25ComparisonBadge delta={k25DeltaPp} mode="pp" scope={k25Scope} t={t} />
+        ) : null}
       </header>
       <div className="lpo-ps-knesset-donut" role="group" aria-label={aria}>
         <svg
@@ -244,6 +261,7 @@ function AgeHistogram({
   title,
   avgValue,
   k25DeltaPct,
+  k25Scope,
   t,
   mapFilters,
   onToggleFocus,
@@ -253,6 +271,7 @@ function AgeHistogram({
   title: string
   avgValue: number | null
   k25DeltaPct: number | null
+  k25Scope: Knesset25BaselineScope | null
   t: UiStrings
   mapFilters: KnessetMapFilters
   onToggleFocus: (next: KnessetMapFocusItem) => void
@@ -264,6 +283,7 @@ function AgeHistogram({
       label={title}
       avgValue={avgValue}
       k25DeltaPct={k25DeltaPct}
+      k25Scope={k25Scope}
       t={t}
       mapFilters={mapFilters}
       onToggleFocus={onToggleFocus}
@@ -279,6 +299,7 @@ function KnessetYearsHistogram({
   title,
   avgValue,
   k25DeltaPct,
+  k25Scope,
   t,
   mapFilters,
   onToggleFocus,
@@ -288,6 +309,7 @@ function KnessetYearsHistogram({
   title: string
   avgValue: number | null
   k25DeltaPct: number | null
+  k25Scope: Knesset25BaselineScope | null
   t: UiStrings
   mapFilters: KnessetMapFilters
   onToggleFocus: (next: KnessetMapFocusItem) => void
@@ -299,6 +321,7 @@ function KnessetYearsHistogram({
       label={title}
       avgValue={avgValue}
       k25DeltaPct={k25DeltaPct}
+      k25Scope={k25Scope}
       t={t}
       mapFilters={mapFilters}
       onToggleFocus={onToggleFocus}
@@ -314,6 +337,7 @@ function DemographicHistogram({
   label,
   avgValue,
   k25DeltaPct,
+  k25Scope,
   t,
   mapFilters,
   onToggleFocus,
@@ -325,6 +349,7 @@ function DemographicHistogram({
   label: string
   avgValue: number | null
   k25DeltaPct: number | null
+  k25Scope: Knesset25BaselineScope | null
   t: UiStrings
   mapFilters: KnessetMapFilters
   onToggleFocus: (next: KnessetMapFocusItem) => void
@@ -343,6 +368,7 @@ function DemographicHistogram({
         label={label}
         mean={avgValue}
         k25DeltaPct={k25DeltaPct}
+        k25Scope={k25Scope}
         t={t}
       />
       <div className="lpo-ps-knesset-age-plot" dir="ltr" role="group" aria-label={aria}>
@@ -545,18 +571,17 @@ export function KnessetStatsRightStack({
     [seats, mapFilters, mergeArabsWithOpposition],
   )
 
-  const showK25 = !knessetMapFiltersActive(mapFilters)
-  const k25 = KNESSET_25_DEMOGRAPHICS_BASELINE
-  const femaleK25Pp = showK25
+  const k25Resolve = resolveKnesset25Baseline(mapFilters, mergeArabsWithOpposition)
+  const k25 = k25Resolve?.slice
+  const k25Scope = k25Resolve?.scope ?? null
+  const femaleK25Pp = k25
     ? knessetSharePpDelta(genderStats.femalePct, k25.femalePct)
     : null
-  const newK25Pp = showK25
-    ? knessetSharePpDelta(seniorityStats.newPct, k25.newPct)
-    : null
-  const tenureK25Pct = showK25
+  const newK25Pp = k25 ? knessetSharePpDelta(seniorityStats.newPct, k25.newPct) : null
+  const tenureK25Pct = k25
     ? knessetScalarPctDelta(knessetYearsStats.avgKnessetYears, k25.avgKnessetYears)
     : null
-  const ageK25Pct = showK25 ? knessetScalarPctDelta(ageStats.avgAge, k25.avgAge) : null
+  const ageK25Pct = k25 ? knessetScalarPctDelta(ageStats.avgAge, k25.avgAge) : null
 
   return (
     <div className="lpo-ps-knesset-stats lpo-ps-knesset-stats--right">
@@ -566,6 +591,7 @@ export function KnessetStatsRightStack({
           label={t.knessetStatsGenderLabel}
           aria={donutAria(t.knessetStatsGenderLabel, genderStats.femalePct, t)}
           k25DeltaPp={femaleK25Pp}
+          k25Scope={k25Scope}
           t={t}
           primaryFocus={{ kind: 'gender', value: 'female' }}
           complementFocus={{ kind: 'gender', value: 'male' }}
@@ -580,6 +606,7 @@ export function KnessetStatsRightStack({
           label={t.knessetStatsNewLabel}
           aria={donutAria(t.knessetStatsNewLabel, seniorityStats.newPct, t)}
           k25DeltaPp={newK25Pp}
+          k25Scope={k25Scope}
           t={t}
           primaryFocus={{ kind: 'seniority', value: 'new' }}
           complementFocus={{ kind: 'seniority', value: 'veteran' }}
@@ -593,6 +620,7 @@ export function KnessetStatsRightStack({
         title={t.knessetStatsKnessetYearsLabel}
         avgValue={knessetYearsStats.avgKnessetYears}
         k25DeltaPct={tenureK25Pct}
+        k25Scope={k25Scope}
         t={t}
         mapFilters={mapFilters}
         onToggleFocus={onToggleFocus}
@@ -603,6 +631,7 @@ export function KnessetStatsRightStack({
         title={t.knessetStatsAgeLabel}
         avgValue={ageStats.avgAge}
         k25DeltaPct={ageK25Pct}
+        k25Scope={k25Scope}
         t={t}
         mapFilters={mapFilters}
         onToggleFocus={onToggleFocus}
@@ -632,12 +661,20 @@ export function KnessetStatsLeftStack({
     [seats, mapFilters, mergeArabsWithOpposition],
   )
 
-  const showK25 = !knessetMapFiltersActive(mapFilters)
-  const militaryK25Pp = showK25
-    ? knessetSharePpDelta(
-        militaryStats.servedPct,
-        KNESSET_25_DEMOGRAPHICS_BASELINE.servedPct,
-      )
+  const k25Resolve = resolveKnesset25Baseline(mapFilters, mergeArabsWithOpposition)
+  const k25 = k25Resolve?.slice
+  const k25Scope = k25Resolve?.scope ?? null
+  const militaryFilteredSeats = useMemo(
+    () =>
+      filterSeatsByFilters(
+        seats,
+        chartStatsExcludingKind(mapFilters, 'military'),
+        mergeArabsWithOpposition,
+      ),
+    [seats, mapFilters, mergeArabsWithOpposition],
+  )
+  const militaryK25Pp = k25
+    ? knessetSharePpDelta(militaryServedPctOfAll(militaryFilteredSeats), k25.servedPct)
     : null
 
   return (
@@ -648,6 +685,7 @@ export function KnessetStatsLeftStack({
           label={t.knessetStatsMilitaryLabel}
           aria={donutAria(t.knessetStatsMilitaryLabel, militaryStats.servedPct, t)}
           k25DeltaPp={militaryK25Pp}
+          k25Scope={k25Scope}
           t={t}
           primaryFocus={{ kind: 'military', value: 'served' }}
           complementFocus={{ kind: 'military', value: 'not_served' }}

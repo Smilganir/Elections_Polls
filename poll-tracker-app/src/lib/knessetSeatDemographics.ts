@@ -325,6 +325,18 @@ export function projectedMembers(seats: readonly KnessetFilledSeat[]): KnessetMe
   return out
 }
 
+/** Military served (regular/officer only) as a share of all projected MKs — matches K25 baseline. */
+export function militaryServedPctOfAll(seats: readonly KnessetFilledSeat[]): number | null {
+  const members = projectedMembers(seats)
+  if (members.length === 0) return null
+  let served = 0
+  for (const m of members) {
+    const bucket = classifyMilitaryService(m.militaryService)
+    if (bucket === 'regular' || bucket === 'officer') served++
+  }
+  return served / members.length
+}
+
 function ratio(part: number, whole: number): number | null {
   if (whole <= 0) return null
   return part / whole

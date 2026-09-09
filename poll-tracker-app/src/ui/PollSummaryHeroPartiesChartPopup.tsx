@@ -128,6 +128,118 @@ function formatChipNum(n: number): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(1)
 }
 
+function HeroChartInfoIcon() {
+  return (
+    <svg className="lpo-ps-hero-chart-dialog-info-icon" viewBox="0 0 16 16" aria-hidden>
+      <circle cx="8" cy="4.25" r="1.35" fill="currentColor" />
+      <path
+        d="M8 7.5v5.75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function HeroChartMethodologyInfo({
+  locale,
+  t,
+  windowDays,
+}: {
+  locale: AppLocale
+  t: UiStrings
+  windowDays: number
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [pinned, setPinned] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const open = pinned || hovered
+
+  const windowToken = String(windowDays)
+  const bullets = [
+    t.pollSummaryHeroPartiesChartInfoBulletWindow,
+    t.pollSummaryHeroPartiesChartInfoBulletBars,
+    t.pollSummaryHeroPartiesChartInfoBulletDelta,
+    t.pollSummaryHeroPartiesChartInfoBulletInclusion,
+    t.pollSummaryHeroPartiesChartInfoBulletMap,
+    t.pollSummaryHeroPartiesChartInfoBulletFilters,
+  ].map((line) => line.replace(/\{n\}/g, windowToken))
+
+  useEffect(() => {
+    if (!open) setDetailsOpen(false)
+  }, [open])
+
+  useEffect(() => {
+    if (!pinned) return
+    const onDocPointerDown = (e: PointerEvent) => {
+      if (wrapRef.current?.contains(e.target as Node)) return
+      setPinned(false)
+    }
+    document.addEventListener('pointerdown', onDocPointerDown)
+    return () => document.removeEventListener('pointerdown', onDocPointerDown)
+  }, [pinned])
+
+  return (
+    <div
+      ref={wrapRef}
+      className="lpo-ps-hero-chart-dialog-info"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <button
+        type="button"
+        className="lpo-ps-hero-chart-dialog-info-btn"
+        aria-label={t.pollSummaryHeroPartiesChartInfoAria}
+        aria-expanded={open}
+        onClick={() => setPinned((v) => !v)}
+      >
+        <HeroChartInfoIcon />
+      </button>
+      {open ? (
+        <div
+          className="lpo-ps-hero-chart-dialog-info-panel"
+          role="tooltip"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
+        >
+          <p className="lpo-ps-hero-chart-dialog-info-title">
+            {t.pollSummaryHeroPartiesChartInfoTitle}
+          </p>
+          <ul className="lpo-ps-hero-chart-dialog-info-list">
+            {bullets.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="lpo-ps-hero-chart-dialog-info-details-toggle"
+            aria-expanded={detailsOpen}
+            onClick={(e) => {
+              e.stopPropagation()
+              setDetailsOpen((v) => !v)
+            }}
+          >
+            {t.pollSummaryHeroPartiesChartInfoDetailsToggle}
+          </button>
+          <div
+            className={`lpo-ps-hero-chart-dialog-info-details-wrap${
+              detailsOpen ? ' lpo-ps-hero-chart-dialog-info-details-wrap--open' : ''
+            }`}
+          >
+            <div className="lpo-ps-hero-chart-dialog-info-details-inner">
+              <p className="lpo-ps-hero-chart-dialog-info-details-body">
+                {t.pollSummaryHeroPartiesChartInfoDetailsBody}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean): string {
   if (mergeArabsWithOpposition && segment === 'Arabs') return SEGMENT_COLORS.Opposition
   return SEGMENT_COLORS[segment]
@@ -390,6 +502,7 @@ export function PollSummaryHeroPartiesChartPopup({
         dir={locale === 'he' ? 'rtl' : 'ltr'}
         onClick={(e) => e.stopPropagation()}
       >
+        <HeroChartMethodologyInfo locale={locale} t={t} windowDays={windowDays} />
         <HeroChartScaleFit>
         <header className="lpo-ps-hero-chart-dialog-header">
           <div className="lpo-ps-hero-chart-dialog-heading">

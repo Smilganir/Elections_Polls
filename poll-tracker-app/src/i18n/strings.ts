@@ -3,6 +3,8 @@ import type { AppLocale } from './localeContext'
 export type UiStrings = {
   titleLatest: string
   titleElectionPolls: string
+  /** Page title while hero chart dialog is open */
+  titleElectionPollsHeroChart: string
   titleOverview: string
   coalition: string
   opposition: string
@@ -83,6 +85,18 @@ export type UiStrings = {
   pollSummaryHeroPartiesChartOutletIncludeAria: string
   /** Hint under chart popup title (outlet icon toggle) */
   pollSummaryHeroPartiesChartOutletHint: string
+  /** Hero chart dialog info button */
+  pollSummaryHeroPartiesChartInfoAria: string
+  pollSummaryHeroPartiesChartInfoTitle: string
+  /** Hero chart methodology bullets; {n} = rolling window days */
+  pollSummaryHeroPartiesChartInfoBulletWindow: string
+  pollSummaryHeroPartiesChartInfoBulletBars: string
+  pollSummaryHeroPartiesChartInfoBulletDelta: string
+  pollSummaryHeroPartiesChartInfoBulletInclusion: string
+  pollSummaryHeroPartiesChartInfoBulletMap: string
+  pollSummaryHeroPartiesChartInfoBulletFilters: string
+  pollSummaryHeroPartiesChartInfoDetailsToggle: string
+  pollSummaryHeroPartiesChartInfoDetailsBody: string
   /** Knesset hemicycle seat map in hero chart popup */
   knessetMapAria: string
   knessetMapLoading: string
@@ -115,6 +129,8 @@ export type UiStrings = {
   knessetStatsMeanWord: string
   /** vs Knesset 25 baseline label under demographic stat captions */
   knessetStatsVsK25: string
+  knessetStatsVsK25Party: string
+  knessetStatsVsK25Bloc: string
   knessetStatsMilitaryLabel: string
   knessetStatsMilitaryBreakdownLabel: string
   knessetStatsMilRegular: string
@@ -213,6 +229,7 @@ export const UI: Record<AppLocale, UiStrings> = {
   en: {
     titleLatest: '',
     titleElectionPolls: 'Election Polls in Israel',
+    titleElectionPollsHeroChart: 'Knesset 26 mandate polls & list mapping',
     titleOverview: '',
     coalition: 'Coalition',
     opposition: 'Opposition',
@@ -282,6 +299,23 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartOutletIncludeAria: 'Include {outlet} in average',
     pollSummaryHeroPartiesChartOutletHint:
       'Click an outlet icon to include or exclude it from the average',
+    pollSummaryHeroPartiesChartInfoAria: 'Methodology and how to use this chart',
+    pollSummaryHeroPartiesChartInfoTitle: 'Methodology & how to read',
+    pollSummaryHeroPartiesChartInfoBulletWindow:
+      'Shows the latest poll from each outlet in the last {n} days. Tap an outlet icon to include or exclude it from the averages.',
+    pollSummaryHeroPartiesChartInfoBulletBars:
+      'Bars show each party’s mean seat count across included outlets (one decimal). The number in parentheses is that average rounded to whole seats for the hemicycle map.',
+    pollSummaryHeroPartiesChartInfoBulletDelta:
+      'Deltas (green up / red down) compare today’s cross-outlet mean to the mean from each outlet’s prior poll. (n) is how many outlets reported any seat change for that party.',
+    pollSummaryHeroPartiesChartInfoBulletInclusion:
+      'A party enters the mean at an outlet only if it currently holds seats there or changed vs that outlet’s previous poll (including falling to zero).',
+    pollSummaryHeroPartiesChartInfoBulletMap:
+      'The seat map fills candidate placeholders from published lists using largest-remainder rounding to 120 mandates from the averaged poll. Party averages include every list above the electoral threshold, so parties with fewer than 4 seats may appear.',
+    pollSummaryHeroPartiesChartInfoBulletFilters:
+      'Click a party row, bloc bar, or demographic chart to filter seats and stats. Reset filters above the map.',
+    pollSummaryHeroPartiesChartInfoDetailsToggle: 'Knesset 25 comparison · More details',
+    pollSummaryHeroPartiesChartInfoDetailsBody:
+      'Measured on the 120 MKs seated on Sep 9, 2026, not those elected in 2022. Women: 33 (29 were elected; replacements raised it). Military service (regular/career/shortened; national service not counted): 77 — 64.2% of all, 71.3% of the 108 with verified info; 12 unknown. New: 39 first entered in this Knesset. Tenure: 7.8 actual years (median 5.4). Age: 55.3 (median 53.2; 119 with known DOB). Blocs as of Sep 9, 2026; Shas left the government but stayed in the coalition.\n\nBloc K25 baselines follow the “merge Arabs with opposition” toggle: merged — opposition+Arabs (60 seats); separate — opposition excluding Arab parties (50). Coalition (60): women 18.3%, new 40%, military served 66.7%, avg age 54.9, tenure 7.7. Opposition excl. Arabs (50): women 40%, new 24%, military served 72%, avg age 55.3, tenure 7.7.\n\nSources: Knesset API, VoteSmart, Wikipedia — a cited source per MK.',
     knessetMapAria: 'Knesset seat map from latest poll averages',
     knessetMapLoading: 'Loading candidate lists…',
     knessetMapLoadError: 'Could not load candidate lists.',
@@ -309,6 +343,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsCaptionWithMean: '{label} · avg {value}',
     knessetStatsMeanWord: 'avg',
     knessetStatsVsK25: 'vs K25 (full Knesset)',
+    knessetStatsVsK25Party: 'vs K25 (party)',
+    knessetStatsVsK25Bloc: 'vs K25 (bloc)',
     knessetStatsMilitaryLabel: 'Served',
     knessetStatsMilitaryBreakdownLabel: 'Military / national service',
     knessetStatsMilRegular: 'Regular service',
@@ -394,7 +430,8 @@ export const UI: Record<AppLocale, UiStrings> = {
   },
   he: {
     titleLatest: '',
-    titleElectionPolls: 'סקרי מנדטים בישראל',
+    titleElectionPolls: 'סקרי מנדטים לכנסת ה-26',
+    titleElectionPollsHeroChart: 'סקרי מנדטים ומיפוי רשימות לכנסת ה-26',
     titleOverview: '',
     coalition: 'קואליציה',
     opposition: 'אופוזיציה',
@@ -464,6 +501,23 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartOutletIncludeAria: 'כלול את {outlet} בממוצע',
     pollSummaryHeroPartiesChartOutletHint:
       'לחצו על ערוץ כדי לכלול או להוציא אותו מהממוצע',
+    pollSummaryHeroPartiesChartInfoAria: 'מתודולוגיה והסבר על השימוש בגרף',
+    pollSummaryHeroPartiesChartInfoTitle: 'מתודולוגיה ואיך לקרוא',
+    pollSummaryHeroPartiesChartInfoBulletWindow:
+      'מוצג הסקר האחרון מכל ערוץ ב-{n} הימים האחרונים. לחצו על אייקון ערוץ כדי לכלול או להוציא אותו מהממוצע.',
+    pollSummaryHeroPartiesChartInfoBulletBars:
+      'העמודות מציגות ממוצע מנדטים לפי מפלגה בין הערוצים שנבחרו (ספרה עשרונית אחת). המספר בסוגריים הוא העיגול למנדטים שלמים למפת המושבים.',
+    pollSummaryHeroPartiesChartInfoBulletDelta:
+      'השינויים (ירוק/אדום) מודדים את הממוצע הנוכחי מול הממוצע מסקר קודם בכל ערוץ. (מספר) = בכמה סקרים הייתה תזוזה במנדטים.',
+    pollSummaryHeroPartiesChartInfoBulletInclusion:
+      'מפלגה נכנסת לממוצע בערוץ רק אם יש לה מנדטים שם כעת או שינוי מול הסקר הקודם של אותו ערוץ (כולל ירידה ל־0).',
+    pollSummaryHeroPartiesChartInfoBulletMap:
+      'מפת המושבים ממלאת מועמדים מרשימות שפורסמו, עם עיגול בשיטת השאריות הגדולות ל־120 מנדטים לפי ממוצע הסקרים. הממוצע כולל כל מפלגה מעל אחוז החסימה, ולכן עשויות להופיע מפלגות עם פחות מ־4 מנדטים.',
+    pollSummaryHeroPartiesChartInfoBulletFilters:
+      'לחצו על מפלגה, גוש או תרשים דמוגרפי כדי לסנן מושבים וסטטיסטיקות. איפוס מסננים מעל המפה.',
+    pollSummaryHeroPartiesChartInfoDetailsToggle: 'השוואה לכנסת 25 · פרטים נוספים',
+    pollSummaryHeroPartiesChartInfoDetailsBody:
+      'נמדד על 120 המכהנים ב-9.9.26, לא על הנבחרים של 2022. נשים: 33 (נבחרו 29, החלפות העלו). שירות צבאי (סדיר/קבע/מקוצר; שירות לאומי לא נספר): 77 — 64.2% מכולם, 71.3% מתוך 108 עם מידע מאומת; 12 בלי מידע. חדשים: 39 נכנסו לראשונה בכנסת זו. ותק: 7.8 שנים בפועל (חציון 5.4). גיל: 55.3 (חציון 53.2; 119 עם תאריך ידוע). גושים נכון ל-9.9.26; ש"ס מחוץ לממשלה אך בקואליציה.\n\nהשוואת גושים תואמת להגדרת «מזג ערבים עם אופוזיציה»: במיזוג — אופוזיציה+ערבים (60); בנפרד — אופוזיציה ללא מפלגות ערביות (50). קואליציה (60): נשים 18.3%, חדשים 40%, שירות צבאי 66.7%, גיל ממוצע 54.9, ותק 7.7. אופוזיציה ללא ערבים (50): נשים 40%, חדשים 24%, שירות צבאי 72%, גיל 55.3, ותק 7.7.\n\nמקורות: API הכנסת, VoteSmart, ויקיפדיה — מקור מתועד לכל ח"כ.',
     knessetMapAria: 'מפת מושבים בכנסת לפי ממוצע הסקרים',
     knessetMapLoading: 'טוען רשימות מועמדים…',
     knessetMapLoadError: 'לא ניתן לטעון רשימות מועמדים.',
@@ -498,6 +552,8 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsCaptionWithMean: '{label} · ממוצע {value}',
     knessetStatsMeanWord: 'ממוצע',
     knessetStatsVsK25: 'לעומת כ"כ25 (כל המליאה)',
+    knessetStatsVsK25Party: 'לעומת כ"כ25 (מפלגה)',
+    knessetStatsVsK25Bloc: 'לעומת כ"כ25 (גוש)',
     knessetStatsEducationLabel: 'השכלה',
     knessetStatsEduTorah: 'תורנית',
     knessetStatsEduHighSchool: 'תיכונית',

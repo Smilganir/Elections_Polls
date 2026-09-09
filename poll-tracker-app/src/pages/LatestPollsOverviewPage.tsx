@@ -26,6 +26,7 @@ import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
 import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
 import { buildRollingWindowReport, dedupePollsPreferSplitArabs } from '../lib/pollRollingWindow'
+import { useHeroPartiesChartOverlay } from '../ui/HeroPartiesChartOverlayContext'
 import { OutletFilterDropdown, PollSummaryPanel } from '../ui/PollSummaryPanel'
 import {
   harmonizeArabList,
@@ -814,6 +815,7 @@ function BlocArabsToggle({
 export function LatestPollsOverviewPage() {
   const { locale, setLocale } = useLocale()
   const t = UI[locale]
+  const { open: heroPartiesChartOpen } = useHeroPartiesChartOverlay()
   const { unpivot, events, majorEvents, partiesDim, mediaOutletsDim, loading, error } = useDashboardData()
   const [pageIndex, setPageIndex] = useState(0)
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
@@ -1612,7 +1614,11 @@ export function LatestPollsOverviewPage() {
             </div>
             <h2 dir={locale === 'he' ? 'rtl' : 'ltr'}>
             {t.titleLatest}
-            <strong>{t.titleElectionPolls}</strong>
+            <strong>
+              {showPollSummary && heroPartiesChartOpen
+                ? t.titleElectionPollsHeroChart
+                : t.titleElectionPolls}
+            </strong>
             {t.titleOverview}
           </h2>
             <div className="dashboard-heading-actions">

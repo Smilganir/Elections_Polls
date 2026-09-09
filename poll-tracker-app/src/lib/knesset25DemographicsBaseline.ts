@@ -1,25 +1,103 @@
+import baselineData from '../data/knesset25FactionBlocBaseline.json'
+import type { KnessetMapFilters } from './knessetSeatDemographics'
+
 /**
- * Knesset 25 (elected Nov 2022, sworn in Nov 2022) **full-roster** demographic baselines
- * for hero-chart “vs K25” badges. Compared only when no map filters are active —
- * per-party K25 slices are not yet modeled. Percentage donuts use percentage-point (pp)
- * deltas; averages use relative % change.
- *
- * Sources:
- * - Women (29/120): IDI preview — https://www.idi.org.il/articles/46426
- * - New MKs (23/120 at inauguration): IDI — https://www.idi.org.il/articles/46426
- * - Avg age (50.5): IDI EN — https://en.idi.org.il/articles/46412
- * - Avg Knesset tenure (~7.3y): Knesset Research Center gender brief (weighted
- *   male 7y7m, female 6y4m over 91M/29F) — https://main.knesset.gov.il/EN/activity/mmm/Years%20of%20Parliamentary%20Service%20Worldwide%20and%20in%20the%20Knesset%20A%20Gender%20Perspective%20(Abstract).pdf
- * - Military / national service served share (92/120): ICE/i24 analysis of the
- *   37th-government MK roster, incl. national service — https://www.ice.co.il/research/news/article/960385
+ * Knesset 25 roster demographics (120 MKs seated as of 2026-09-09), by faction and bloc.
+ * Source: knesset25_faction_bloc_stats.xlsx — not the 2022 elected cohort alone.
  */
+export type Knesset25BaselineSlice = {
+  n: number
+  femalePct: number
+  newPct: number
+  /** Military service only (regular/career/shortened), as a share of all MKs in the slice. */
+  servedPct: number
+  avgAge: number
+  avgKnessetYears: number
+}
+
+export type Knesset25BaselineScope = 'full' | 'party' | 'bloc'
+
+export type Knesset25BaselineResolve = {
+  scope: Knesset25BaselineScope
+  slice: Knesset25BaselineSlice
+}
+
+const FACTION_BASELINE = baselineData.factions as Record<string, Knesset25BaselineSlice>
+const BLOC_BASELINE = baselineData.blocs as {
+  coalition: Knesset25BaselineSlice
+  oppositionMerged: Knesset25BaselineSlice
+  oppositionExclArabs: Knesset25BaselineSlice
+}
+const FULL_BASELINE = baselineData.full as Knesset25BaselineSlice
+
+/** @deprecated Use resolveKnesset25Baseline().slice — kept for imports. */
 export const KNESSET_25_DEMOGRAPHICS_BASELINE = {
-  femalePct: 29 / 120,
-  newPct: 23 / 120,
-  servedPct: 92 / 120,
-  avgAge: 50.5,
-  avgKnessetYears: 7.3,
+  femalePct: FULL_BASELINE.femalePct,
+  newPct: FULL_BASELINE.newPct,
+  servedPct: FULL_BASELINE.servedPct,
+  avgAge: FULL_BASELINE.avgAge,
+  avgKnessetYears: FULL_BASELINE.avgKnessetYears,
 } as const
+
+/** K26 canonical party key → K25 seated faction name (when a slice exists). */
+const PARTY_KEY_TO_K25_FACTION: Partial<Record<string, string>> = {
+  Likud: 'הליכוד',
+  'Yesh Atid': 'יש עתיד',
+  Shas: 'ש"ס',
+  'Blue & White': 'כחול לבן - המחנה הממלכתי',
+  'Religious Zionism': 'הציונות הדתית',
+  UTJ: 'יהדות התורה',
+  'Yisrael Beiteinu': 'ישראל ביתנו',
+  'Otzma Yehudit': 'עוצמה יהודית',
+  "Hadash Ta'al": 'חד"ש-תע"ל',
+  "Ra'am": 'רע"ם',
+  'The Democrats': 'העבודה',
+  "Bennett's Party": 'הימין הממלכתי',
+}
+
+function factionBaselineByPartyKey(partyKey: string): Knesset25BaselineSlice | null {
+  const factionName = PARTY_KEY_TO_K25_FACTION[partyKey]
+  if (!factionName) return null
+  return FACTION_BASELINE[factionName] ?? null
+}
+
+/**
+ * Pick the K25 baseline slice for hero-chart badges.
+ * - No filters → full Knesset
+ * - Party filter → matching K25 faction (if mapped)
+ * - Bloc filter → coalition / opposition bloc
+ * - Demographic-only filters → none (hide badge)
+ */
+export function resolveKnesset25Baseline(
+  filters: KnessetMapFilters,
+  mergeArabsWithOpposition = false,
+): Knesset25BaselineResolve | null {
+  const partyFilter = filters.find((f) => f.kind === 'party')
+  const segmentFilter = filters.find((f) => f.kind === 'segment')
+  const hasDemographicOnly = filters.some(
+    (f) => f.kind !== 'party' && f.kind !== 'segment',
+  )
+
+  if (partyFilter) {
+    const slice = factionBaselineByPartyKey(partyFilter.partyKey)
+    if (!slice) return null
+    return { scope: 'party', slice }
+  }
+
+  if (segmentFilter) {
+    if (segmentFilter.segment === 'Coalition') {
+      return { scope: 'bloc', slice: BLOC_BASELINE.coalition }
+    }
+    const slice = mergeArabsWithOpposition
+      ? BLOC_BASELINE.oppositionMerged
+      : BLOC_BASELINE.oppositionExclArabs
+    return { scope: 'bloc', slice }
+  }
+
+  if (hasDemographicOnly) return null
+
+  return { scope: 'full', slice: FULL_BASELINE }
+}
 
 /** Percentage-point delta for share metrics (current & baseline are 0–1 portions). */
 export function knessetSharePpDelta(
