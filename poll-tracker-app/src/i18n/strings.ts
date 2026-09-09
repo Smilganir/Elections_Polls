@@ -110,6 +110,11 @@ export type UiStrings = {
   knessetStatsGenderLabel: string
   knessetStatsAgeLabel: string
   knessetStatsKnessetYearsLabel: string
+  /** {label} {value} — demographic chart caption with mean (aria) */
+  knessetStatsCaptionWithMean: string
+  knessetStatsMeanWord: string
+  /** vs Knesset 25 baseline label under demographic stat captions */
+  knessetStatsVsK25: string
   knessetStatsMilitaryLabel: string
   knessetStatsMilitaryBreakdownLabel: string
   knessetStatsMilRegular: string
@@ -301,6 +306,9 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsGenderLabel: 'Women',
     knessetStatsAgeLabel: 'Age',
     knessetStatsKnessetYearsLabel: 'Knesset tenure',
+    knessetStatsCaptionWithMean: '{label} · avg {value}',
+    knessetStatsMeanWord: 'avg',
+    knessetStatsVsK25: 'vs K25 (full Knesset)',
     knessetStatsMilitaryLabel: 'Served',
     knessetStatsMilitaryBreakdownLabel: 'Military / national service',
     knessetStatsMilRegular: 'Regular service',
@@ -487,6 +495,9 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilUnknown: 'אין מידע',
     knessetStatsAgeLabel: 'גיל',
     knessetStatsKnessetYearsLabel: 'ותק בכנסת',
+    knessetStatsCaptionWithMean: '{label} · ממוצע {value}',
+    knessetStatsMeanWord: 'ממוצע',
+    knessetStatsVsK25: 'לעומת כ"כ25 (כל המליאה)',
     knessetStatsEducationLabel: 'השכלה',
     knessetStatsEduTorah: 'תורנית',
     knessetStatsEduHighSchool: 'תיכונית',

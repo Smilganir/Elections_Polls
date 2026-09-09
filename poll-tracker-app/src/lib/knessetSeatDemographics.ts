@@ -15,6 +15,11 @@ export type KnessetMapFocus =
 export type KnessetMapFocusItem = Exclude<KnessetMapFocus, null>
 export type KnessetMapFilters = readonly KnessetMapFocusItem[]
 
+/** True when any map filter narrows the projected roster (party, bloc, or demographic). */
+export function knessetMapFiltersActive(filters: KnessetMapFilters): boolean {
+  return filters.length > 0
+}
+
 export function mapFocusEquals(a: KnessetMapFocus, b: KnessetMapFocus): boolean {
   if (a === b) return true
   if (!a || !b) return false
@@ -236,6 +241,10 @@ export type KnessetDemographics = {
   newPct: number | null
   femalePct: number | null
   servedPct: number | null
+  /** Mean age (years) among members with a known age. */
+  avgAge: number | null
+  /** Mean Knesset tenure (years), including explicit 0. */
+  avgKnessetYears: number | null
   ageBins: KnessetAgeBin[]
   knessetYearsBins: KnessetYearsBin[]
   education: KnessetEducationShare[]
@@ -340,6 +349,10 @@ export function summarizeProjectedKnesset(
   for (const b of EDUCATION_BUCKETS) eduCounts.set(b, 0)
   const militaryCounts = new Map<MilitaryServiceBucket, number>()
   for (const b of MILITARY_SERVICE_BUCKETS) militaryCounts.set(b, 0)
+  let ageSum = 0
+  let ageCount = 0
+  let knessetYearsSum = 0
+  let knessetYearsCount = 0
 
   for (const m of members) {
     if (m.seniority === 'new' || m.seniority === 'veteran') {
@@ -362,12 +375,16 @@ export function summarizeProjectedKnesset(
 
     const age = parseMemberAge(m.age)
     if (age != null) {
+      ageSum += age
+      ageCount++
       const bin = AGE_BIN_DEFS.find((d) => age >= d.min && age < d.max)
       if (bin) ageCounts.set(bin.id, (ageCounts.get(bin.id) ?? 0) + 1)
     }
 
     const knessetYears = parseMemberKnessetYears(m.knessetYears)
     if (knessetYears != null) {
+      knessetYearsSum += knessetYears
+      knessetYearsCount++
       const bin = KNESSET_YEARS_BIN_DEFS.find((d) => knessetYears >= d.min && knessetYears < d.max)
       if (bin) knessetYearsCounts.set(bin.id, (knessetYearsCounts.get(bin.id) ?? 0) + 1)
     }
@@ -393,6 +410,8 @@ export function summarizeProjectedKnesset(
     newPct: ratio(newCount, seniorityKnown),
     femalePct: ratio(femaleCount, genderKnown),
     servedPct: ratio(servedCount, militaryKnown),
+    avgAge: ageCount > 0 ? ageSum / ageCount : null,
+    avgKnessetYears: knessetYearsCount > 0 ? knessetYearsSum / knessetYearsCount : null,
     ageBins,
     knessetYearsBins,
     education: EDUCATION_BUCKETS.map((bucket) => {
@@ -412,4 +431,9 @@ export function summarizeProjectedKnesset(
 
 export function formatPctLabel(portion: number): string {
   return `${Math.round(portion * 100)}%`
+}
+
+export function formatDemographicMean(value: number): string {
+  const rounded = Math.round(value * 10) / 10
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
 }

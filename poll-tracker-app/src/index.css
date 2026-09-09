@@ -6987,6 +6987,12 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 .lpo-ps-knesset-stats-caption {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.28em;
   font-size: 0.62rem;
   line-height: 1.15;
   font-weight: 650;
@@ -6994,6 +7000,52 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   text-align: center;
   width: 100%;
   margin: 0;
+}
+
+.lpo-ps-knesset-stats-caption-mean {
+  color: #e8ecf2;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
+
+.lpo-ps-knesset-stat-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.14rem;
+  width: 100%;
+}
+
+.lpo-ps-knesset-stat-k25 {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.28em;
+  line-height: 1;
+}
+
+.lpo-ps-knesset-stat-k25-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12em;
+  font-size: 0.58rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lpo-ps-knesset-stat-k25-arrow {
+  font-size: 0.72em;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.lpo-ps-knesset-stat-k25-label {
+  font-size: 0.52rem;
+  font-weight: 600;
+  color: #6f849c;
+  letter-spacing: 0.01em;
 }
 
 .lpo-ps-knesset-donut {
