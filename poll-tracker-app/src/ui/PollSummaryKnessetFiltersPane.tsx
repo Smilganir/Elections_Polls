@@ -5,6 +5,7 @@ import {
   type EducationBucket,
   type KnessetMapFilters,
   type KnessetMapFocusItem,
+  type MilitaryServiceBucket,
 } from '../lib/knessetSeatDemographics'
 
 function ageBinLabel(id: string): string {
@@ -19,6 +20,15 @@ function educationLabel(bucket: EducationBucket, t: UiStrings): string {
   if (bucket === 'ba') return t.knessetStatsEduBa
   if (bucket === 'ma') return t.knessetStatsEduMa
   return t.knessetStatsEduPhd
+}
+
+function militaryServiceLabel(bucket: MilitaryServiceBucket | 'served', t: UiStrings): string {
+  if (bucket === 'served') return t.knessetStatsMilitaryLabel
+  if (bucket === 'regular') return t.knessetStatsMilRegular
+  if (bucket === 'officer') return t.knessetStatsMilOfficer
+  if (bucket === 'national_service') return t.knessetStatsMilNationalService
+  if (bucket === 'not_served') return t.knessetStatsMilNotServed
+  return t.knessetStatsMilUnknown
 }
 
 export function mapFilterLabel(
@@ -37,7 +47,7 @@ export function mapFilterLabel(
     return filter.value === 'female' ? t.knessetMapGenderFemale : t.knessetMapGenderMale
   }
   if (filter.kind === 'military') {
-    return filter.value === 'served' ? t.knessetStatsMilitaryLabel : t.knessetFilterMilitaryNotServed
+    return militaryServiceLabel(filter.value, t)
   }
   if (filter.kind === 'age') return ageBinLabel(filter.value)
   if (filter.kind === 'knessetYears') return knessetYearsBinLabel(filter.value)

@@ -6,7 +6,7 @@ export type KnessetMapFocus =
   | { kind: 'segment'; segment: 'Coalition' | 'Opposition' }
   | { kind: 'seniority'; value: 'new' | 'veteran' }
   | { kind: 'gender'; value: 'female' | 'male' }
-  | { kind: 'military'; value: 'served' | 'not_served' }
+  | { kind: 'military'; value: MilitaryFocusValue }
   | { kind: 'age'; value: AgeBinId }
   | { kind: 'knessetYears'; value: KnessetYearsBinId }
   | { kind: 'education'; value: EducationBucket }
@@ -82,9 +82,13 @@ function memberMatchesDemographic(
     return focus.value === 'female' ? member.gender.trim() === 'נקבה' : member.gender.trim() === 'זכר'
   }
   if (focus.kind === 'military') {
-    const mil = classifyMilitary(member.militaryService)
-    if (!mil) return false
-    return focus.value === 'served' ? mil === 'served' : mil === 'not_served'
+    const bucket = classifyMilitaryService(member.militaryService)
+    if (focus.value === 'served') {
+      return (
+        bucket === 'regular' || bucket === 'officer' || bucket === 'national_service'
+      )
+    }
+    return bucket === focus.value
   }
   if (focus.kind === 'age') {
     const age = parseMemberAge(member.age)
@@ -167,6 +171,19 @@ export function partyKeysMatchingFilters(
 export const EDUCATION_BUCKETS = ['torah', 'highschool', 'ba', 'ma', 'phd'] as const
 export type EducationBucket = (typeof EDUCATION_BUCKETS)[number]
 
+/** Column N — שירות צבאי/לאומי breakdown (sheet taxonomy). */
+export const MILITARY_SERVICE_BUCKETS = [
+  'regular',
+  'officer',
+  'national_service',
+  'not_served',
+  'unknown',
+] as const
+export type MilitaryServiceBucket = (typeof MILITARY_SERVICE_BUCKETS)[number]
+
+/** Donut aggregate filter: any served bucket (regular, officer, national). */
+export type MilitaryFocusValue = MilitaryServiceBucket | 'served'
+
 export const AGE_BIN_DEFS = [
   { id: '20', min: 20, max: 30, optional: false },
   { id: '30', min: 30, max: 40, optional: false },
@@ -208,6 +225,12 @@ export type KnessetEducationShare = {
   share: number
 }
 
+export type KnessetMilitaryServiceShare = {
+  bucket: MilitaryServiceBucket
+  count: number
+  share: number
+}
+
 export type KnessetDemographics = {
   memberCount: number
   newPct: number | null
@@ -216,6 +239,7 @@ export type KnessetDemographics = {
   ageBins: KnessetAgeBin[]
   knessetYearsBins: KnessetYearsBin[]
   education: KnessetEducationShare[]
+  militaryService: KnessetMilitaryServiceShare[]
 }
 
 const UNKNOWN_EDU = /^(אין מידע|\-|,|\s)*$/
@@ -231,12 +255,38 @@ export function classifyEducation(raw: string): EducationBucket | null {
   return null
 }
 
-export function classifyMilitary(raw: string): 'served' | 'not_served' | null {
+const UNKNOWN_MILITARY = /^(אין מידע|\-|,|\s)*$/
+
+const MILITARY_NATIONAL = /שירות\s*לאומי/
+
+const MILITARY_NOT_SERVED = /^לא\s*שירת/
+
+/** Commissioned officer — סגן and above (incl. סג"מ), plus explicit קצין / command roles. */
+const MILITARY_OFFICER =
+  /קצינ(?:ה|ים|ת)?(?:\s|$|[,\/"'])|קצון(?:ה|ים)\s*בקבע|קצין\s*בקבע|קצין\s*ב(?:צה"ל|צה״ל|דימוס)|בדימוס\s*בדרגת|(?:^|[\s,./;]|")(?:רב-?אלוף|תת-?אלוף|אלוף|אל"מ|אל״מ|סא"ל|סא״ל|רס"ן|רס״ן|רב-?סרן|סרן|סג"מ|סג״מ|סגן(?:\s*משנה)?)(?:[\s,."']|$|במיל)|(?:^|[\s,./;]|")סגן(?:[\s,."']|$|-)|(?:^|[\s,])(?:מג"ד|מג״ד|סמג"ד|סמג״ד)(?:[\s,]|$)|ראש\s*אגף|מפקד\s*(?:גדוד|חטיב|טייסת|גיס|יחיד)/
+
+const MILITARY_REGULAR = /(?:^|[,\s])סדיר(?:[,\s]|$)/
+
+const MILITARY_SERVED_HINT =
+  /צה"ל|צה״ל|מילואים|שירת|גדוד|חטיב|טייס|שייטת|דובדן|יחידת|לוחם|קרב|נח"ל|גולני|גבעתי|סמל|פרמדיק|חי"ר|צנחנ|עורף|מודיעין|חיל/
+
+export function classifyMilitaryService(raw: string): MilitaryServiceBucket {
   const t = raw.trim()
-  if (!t || t === 'אין מידע' || t.startsWith('אין מידע')) return null
-  if (t.startsWith('לא שירתו')) {
-    return t.includes('שירות לאומי') ? 'served' : 'not_served'
+  if (!t || UNKNOWN_MILITARY.test(t) || t.startsWith('אין מידע')) return 'unknown'
+  if (MILITARY_NOT_SERVED.test(t)) {
+    return MILITARY_NATIONAL.test(t) ? 'national_service' : 'not_served'
   }
+  if (MILITARY_NATIONAL.test(t)) return 'national_service'
+  if (MILITARY_OFFICER.test(t)) return 'officer'
+  if (MILITARY_REGULAR.test(t)) return 'regular'
+  if (MILITARY_SERVED_HINT.test(t)) return 'regular'
+  return 'unknown'
+}
+
+export function classifyMilitary(raw: string): 'served' | 'not_served' | null {
+  const bucket = classifyMilitaryService(raw)
+  if (bucket === 'unknown') return null
+  if (bucket === 'not_served') return 'not_served'
   return 'served'
 }
 
@@ -288,6 +338,8 @@ export function summarizeProjectedKnesset(
   for (const def of KNESSET_YEARS_BIN_DEFS) knessetYearsCounts.set(def.id, 0)
   const eduCounts = new Map<EducationBucket, number>()
   for (const b of EDUCATION_BUCKETS) eduCounts.set(b, 0)
+  const militaryCounts = new Map<MilitaryServiceBucket, number>()
+  for (const b of MILITARY_SERVICE_BUCKETS) militaryCounts.set(b, 0)
 
   for (const m of members) {
     if (m.seniority === 'new' || m.seniority === 'veteran') {
@@ -301,10 +353,11 @@ export function summarizeProjectedKnesset(
       if (g === 'נקבה') femaleCount++
     }
 
-    const mil = classifyMilitary(m.militaryService)
-    if (mil) {
+    const milBucket = classifyMilitaryService(m.militaryService)
+    militaryCounts.set(milBucket, (militaryCounts.get(milBucket) ?? 0) + 1)
+    if (milBucket !== 'unknown') {
       militaryKnown++
-      if (mil === 'served') servedCount++
+      if (milBucket !== 'not_served') servedCount++
     }
 
     const age = parseMemberAge(m.age)
@@ -345,6 +398,14 @@ export function summarizeProjectedKnesset(
     education: EDUCATION_BUCKETS.map((bucket) => {
       const count = eduCounts.get(bucket) ?? 0
       return { bucket, count, share: eduTotal > 0 ? count / eduTotal : 0 }
+    }),
+    militaryService: MILITARY_SERVICE_BUCKETS.map((bucket) => {
+      const count = militaryCounts.get(bucket) ?? 0
+      return {
+        bucket,
+        count,
+        share: members.length > 0 ? count / members.length : 0,
+      }
     }),
   }
 }

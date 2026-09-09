@@ -41,12 +41,28 @@ function englishNameFromWikipediaUrl(url: string): string | null {
   return name
 }
 
-function localBioTranslation(text: string, noInfoLabel: string): string {
+function isNoInfoOnly(text: string): boolean {
   const trimmed = text.trim()
-  if (!trimmed || NO_INFO.test(trimmed) || trimmed.startsWith('אין מידע')) {
-    return noInfoLabel
-  }
+  return !trimmed || NO_INFO.test(trimmed) || trimmed.startsWith('אין מידע')
+}
+
+/** Collapse repeated "אין מידע" (and comma-only separators) to a single label. */
+export function normalizeMemberSheetField(raw: string, noInfoLabel: string): string {
+  const trimmed = raw.trim()
+  if (isNoInfoOnly(trimmed)) return noInfoLabel
+
+  const parts = trimmed
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+  if (parts.length > 1 && parts.every(isNoInfoOnly)) return noInfoLabel
+
   return trimmed
+}
+
+function localBioTranslation(text: string, noInfoLabel: string): string {
+  if (isNoInfoOnly(text)) return noInfoLabel
+  return text.trim()
 }
 
 async function fetchEnglishNameFromHebrewWikipedia(hebrewName: string): Promise<string | null> {
@@ -145,10 +161,8 @@ async function resolveEnglishName(member: KnessetMemberRow): Promise<string> {
 }
 
 async function translateHebrewOnline(text: string, noInfoLabel: string): Promise<string> {
-  const trimmed = text.trim()
-  if (!trimmed || NO_INFO.test(trimmed) || trimmed.startsWith('אין מידע')) {
-    return noInfoLabel
-  }
+  const trimmed = normalizeMemberSheetField(text, noInfoLabel)
+  if (isNoInfoOnly(trimmed) || trimmed === noInfoLabel) return noInfoLabel
   if (!hasHebrew(trimmed)) return trimmed
 
   const cached = translationCache.get(trimmed)
@@ -247,6 +261,7 @@ export function memberTooltipFieldValue(
   locale: AppLocale,
   noInfoLabel: string,
 ): string {
-  if (locale === 'he') return raw.trim()
-  return localBioTranslation(raw, noInfoLabel)
+  const normalized = normalizeMemberSheetField(raw, noInfoLabel)
+  if (locale === 'he') return normalized
+  return localBioTranslation(normalized, noInfoLabel)
 }
