@@ -6543,7 +6543,14 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats {
-    gap: 1.25rem;
+    gap: 0.5rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats > :not(:first-child) {
+    margin-top: 0.3rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-caption {
@@ -6612,7 +6619,12 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats {
-    gap: 1.4rem;
+    gap: 0.55rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats > :not(:first-child) {
+    margin-top: 0.35rem;
+    padding-top: 0.9rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-caption {
