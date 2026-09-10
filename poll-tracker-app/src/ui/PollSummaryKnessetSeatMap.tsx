@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -33,8 +34,18 @@ import {
   type KnessetMapFilters,
   type KnessetMapFocusItem,
 } from '../lib/knessetSeatDemographics'
+import { computePartySwingSeats } from '../lib/knessetPartySwingSeats'
 import type { Segment } from '../types/data'
 import { KnessetStatsLeftStack, KnessetStatsRightStack } from './PollSummaryKnessetDemographics'
+
+/**
+ * Keep in sync with HERO_CHART_COMPACT_MQ in PollSummaryHeroPartiesChartPopup.tsx and the
+ * `@media (max-width: 768px), (max-height: 500px)` blocks in index.css that style
+ * `.lpo-ps-hero-chart-*`. Landscape phones (short viewport height, wide width) need the same
+ * in-flow mobile treatment as portrait phones — not a duplicate literal import to avoid a
+ * circular module dependency between these two files.
+ */
+const HERO_CHART_COMPACT_MQ = '(max-width: 768px), (max-height: 500px)'
 
 type TooltipPlacement = 'above' | 'below'
 
@@ -259,14 +270,6 @@ function KnessetSeatTooltip({
               {displayParty(tooltip.seat.partyKey)}
             </span>
           </p>
-          {member ? (
-            <MemberTooltipDetails
-              member={member}
-              locale={locale}
-              t={t}
-              enProfile={enProfile}
-            />
-          ) : null}
         </div>
         {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
           <img
@@ -276,6 +279,14 @@ function KnessetSeatTooltip({
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
+          />
+        ) : null}
+        {member ? (
+          <MemberTooltipDetails
+            member={member}
+            locale={locale}
+            t={t}
+            enProfile={enProfile}
           />
         ) : null}
       </div>
@@ -289,6 +300,164 @@ function tooltipPlacement(clientY: number): TooltipPlacement {
   )
   const overlayTop = Number.parseFloat(raw) || 88
   return clientY < overlayTop + 100 ? 'below' : 'above'
+}
+
+function SwingSeatPortrait({
+  seat,
+  locale,
+  displayParty,
+  onPointerEnter,
+  onLeave,
+  onMove,
+}: {
+  seat: KnessetFilledSeat
+  locale: AppLocale
+  displayParty: (partyKey: string) => string
+  onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onLeave: () => void
+  onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
+}) {
+  const isMember = seat.kind === 'member'
+  const isPlaceholder = seat.kind === 'placeholder'
+  const ring = seat.ringColor
+  const partyIcon = PARTY_ICON_MAP[seat.partyKey]
+
+  return (
+    <button
+      type="button"
+      className={`lpo-ps-knesset-seat lpo-ps-knesset-seat--swing${
+        isPlaceholder ? ' lpo-ps-knesset-seat--placeholder' : ''
+      }`}
+      style={{ '--lpo-ps-knesset-ring': ring } as CSSProperties}
+      onMouseEnter={onPointerEnter}
+      onMouseLeave={onLeave}
+      onFocus={(e) => onPointerEnter(e as unknown as React.MouseEvent<HTMLButtonElement>)}
+      onBlur={onLeave}
+      onMouseMove={onMove}
+      aria-label={
+        isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
+      }
+    >
+      {isMember && seat.member.imageUrl ? (
+        <img
+          className="lpo-ps-knesset-seat-img"
+          src={seat.member.imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <>
+          {partyIcon ? (
+            <img
+              className="lpo-ps-knesset-seat-party-icon"
+              src={partyIcon}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          ) : null}
+          <span className="lpo-ps-knesset-seat-empty-portrait" aria-hidden />
+        </>
+      )}
+    </button>
+  )
+}
+
+function PartySwingSeatsOverlay({
+  swing,
+  locale,
+  t,
+  displayParty,
+  onPointerEnter,
+  onLeave,
+  onMove,
+}: {
+  swing: NonNullable<ReturnType<typeof computePartySwingSeats>>
+  locale: AppLocale
+  t: UiStrings
+  displayParty: (partyKey: string) => string
+  onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+  onLeave: () => void
+  onMove: (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+}) {
+  if (swing.nextOut.length === 0 && swing.atRiskIn.length === 0) return null
+
+  const showOut = swing.nextOut.length > 0
+  const showIn = swing.atRiskIn.length > 0
+
+  return (
+    <div className={`lpo-ps-knesset-swing-anchor lpo-ps-knesset-swing-anchor--wing-${swing.side}`}>
+      <div
+        className={`lpo-ps-knesset-swing-panel${
+          locale === 'he' ? ' lpo-ps-knesset-swing-panel--he' : ''
+        }`}
+        dir="ltr"
+        aria-label={t.knessetMapSwingTitle}
+      >
+        <div className="lpo-ps-knesset-swing-header">
+          <p className="lpo-ps-knesset-swing-title">{t.knessetMapSwingTitle}</p>
+          <div className="lpo-ps-knesset-swing-labels-row">
+            {showOut ? (
+              <p className="lpo-ps-knesset-swing-group-label">{t.knessetMapSwingOutLabel}</p>
+            ) : null}
+            {showOut && showIn ? <div className="lpo-ps-knesset-swing-divider" aria-hidden /> : null}
+            {showIn ? (
+              <p className="lpo-ps-knesset-swing-group-label">{t.knessetMapSwingInLabel}</p>
+            ) : null}
+          </div>
+        </div>
+        <div className="lpo-ps-knesset-swing-portraits-row">
+          <div className="lpo-ps-knesset-swing-groups">
+            {showOut ? (
+              <div className="lpo-ps-knesset-swing-group" aria-label={t.knessetMapSwingOutAria}>
+                <div className="lpo-ps-knesset-swing-portraits">
+                  {swing.nextOut.map((seat) => (
+                    <SwingSeatPortrait
+                      key={`out-${seat.kind === 'member' ? seat.member.listRank : seat.slot.id}`}
+                      seat={seat}
+                      locale={locale}
+                      displayParty={displayParty}
+                      onPointerEnter={(e) => onPointerEnter(e, seat)}
+                      onLeave={onLeave}
+                      onMove={(e) => onMove(e, seat)}
+                    />
+                  ))}
+                </div>
+                <span
+                  className="lpo-ps-knesset-swing-arrow lpo-ps-knesset-swing-arrow--out"
+                  aria-hidden
+                />
+              </div>
+            ) : null}
+            {showOut && showIn ? <div className="lpo-ps-knesset-swing-divider" aria-hidden /> : null}
+            {showIn ? (
+              <div className="lpo-ps-knesset-swing-group" aria-label={t.knessetMapSwingInAria}>
+                <div className="lpo-ps-knesset-swing-portraits">
+                  {swing.atRiskIn.map((seat) => (
+                    <SwingSeatPortrait
+                      key={`in-${seat.kind === 'member' ? seat.member.listRank : seat.slot.id}`}
+                      seat={seat}
+                      locale={locale}
+                      displayParty={displayParty}
+                      onPointerEnter={(e) => onPointerEnter(e, seat)}
+                      onLeave={onLeave}
+                      onMove={(e) => onMove(e, seat)}
+                    />
+                  ))}
+                </div>
+                <span
+                  className="lpo-ps-knesset-swing-arrow lpo-ps-knesset-swing-arrow--in"
+                  aria-hidden
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function SeatPortrait({
@@ -411,6 +580,90 @@ export function PollSummaryKnessetSeatMap({
 
   const activeFilters = mapFilters ?? []
 
+  const membersByParty = useMemo(
+    () => (members ? membersByPartyKey(members) : new Map<string, KnessetMemberRow[]>()),
+    [members],
+  )
+
+  const focusedPartyKey = activeFilters.find((f) => f.kind === 'party')?.partyKey ?? null
+
+  const partySwing = useMemo(() => {
+    if (!focusedPartyKey || !members) return null
+    return computePartySwingSeats(focusedPartyKey, seats, membersByParty)
+  }, [focusedPartyKey, seats, membersByParty, members])
+
+  const [swingPortalEl, setSwingPortalEl] = useState<HTMLElement | null>(null)
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current?.closest(
+      '.lpo-ps-hero-chart-hemicycle-wrap',
+    ) as HTMLElement | null
+    if (!wrap) {
+      setSwingPortalEl(null)
+      return
+    }
+
+    const dialog = wrap.closest('.lpo-ps-hero-chart-dialog') as HTMLElement | null
+
+    const updateSwingLayout = () => {
+      const isMobileLayout = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
+      const portalTarget = isMobileLayout && dialog ? dialog : wrap
+      const wrapRect = wrap.getBoundingClientRect()
+      const resetBtn = wrap.querySelector(
+        '.lpo-ps-knesset-filters-reset',
+      ) as HTMLElement | null
+      const mapStage = wrap.querySelector('.lpo-ps-knesset-map-stage') as HTMLElement | null
+
+      setSwingPortalEl(portalTarget)
+      wrap.classList.toggle('lpo-ps-hero-chart-hemicycle-wrap--swing-mobile', isMobileLayout)
+      dialog?.classList.toggle(
+        'lpo-ps-hero-chart-dialog--swing-mobile',
+        isMobileLayout && Boolean(partySwing),
+      )
+
+      if (!mapStage) return
+
+      const stageRect = mapStage.getBoundingClientRect()
+      const stageTop = stageRect.top - wrapRect.top
+      const stageWidth = stageRect.width
+      const faceSize = Math.round(Math.max(22, Math.min(40, stageWidth * 0.0355 * 1.55)))
+
+      portalTarget.style.setProperty('--lpo-ps-knesset-swing-face-size', `${faceSize}px`)
+
+      if (isMobileLayout && dialog) {
+        const dialogRect = dialog.getBoundingClientRect()
+        const panelHeight = faceSize + 36
+        const top = stageRect.top - dialogRect.top - panelHeight - 4
+        const inset = Math.max(6, dialogRect.width * 0.015)
+
+        dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-top', `${top}px`)
+        dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-left', `${inset}px`)
+        dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-right', `${inset}px`)
+        return
+      }
+
+      wrap.style.setProperty('--lpo-ps-knesset-swing-stage-top', `${stageTop}px`)
+
+      const portraitTop = stageTop + stageRect.height * 0.045
+      wrap.style.setProperty('--lpo-ps-knesset-swing-portraits-top', `${portraitTop}px`)
+      if (resetBtn) {
+        const labelTop = resetBtn.getBoundingClientRect().top - wrapRect.top
+        wrap.style.setProperty('--lpo-ps-knesset-swing-top', `${labelTop}px`)
+      }
+    }
+
+    updateSwingLayout()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateSwingLayout) : null
+    ro?.observe(wrap)
+    if (dialog) ro?.observe(dialog)
+    window.addEventListener('resize', updateSwingLayout)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener('resize', updateSwingLayout)
+      dialog?.classList.remove('lpo-ps-hero-chart-dialog--swing-mobile')
+    }
+  }, [loadError, members, partySwing])
+
   useEffect(() => {
     if (!onMatchingPartyKeysChange) return
     if (!activeFilters.length) {
@@ -509,6 +762,20 @@ export function PollSummaryKnessetSeatMap({
               </div>
             ) : null}
           </div>
+          {partySwing && swingPortalEl
+            ? createPortal(
+                <PartySwingSeatsOverlay
+                  swing={partySwing}
+                  locale={locale}
+                  t={t}
+                  displayParty={displayParty}
+                  onPointerEnter={(e, seat) => updateTooltipPos(e, seat)}
+                  onLeave={() => setTooltip(null)}
+                  onMove={(e, seat) => updateTooltipPos(e, seat)}
+                />,
+                swingPortalEl,
+              )
+            : null}
           {tooltip
             ? createPortal(
                 <KnessetSeatTooltip

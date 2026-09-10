@@ -109,6 +109,12 @@ export type UiStrings = {
   knessetMapSeniorityNew: string
   /** Tooltip: list rank of {rank} out of {total} party mandates */
   knessetMapListRank: string
+  /** Swing-seat strip above a focused party wedge */
+  knessetMapSwingTitle: string
+  knessetMapSwingInLabel: string
+  knessetMapSwingOutLabel: string
+  knessetMapSwingOutAria: string
+  knessetMapSwingInAria: string
   knessetMapTooltipAge: string
   knessetMapTooltipGender: string
   knessetMapTooltipKnessetYears: string
@@ -334,6 +340,11 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapSeniorityVeteran: 'Experienced MK',
     knessetMapSeniorityNew: 'New candidate',
     knessetMapListRank: 'List rank {rank} of {total}',
+    knessetMapSwingTitle: 'On the bubble',
+    knessetMapSwingInLabel: 'In',
+    knessetMapSwingOutLabel: 'Out',
+    knessetMapSwingOutAria: 'Next in line if the party gains seats',
+    knessetMapSwingInAria: 'Last in if the party loses seats',
     knessetMapTooltipAge: 'Age',
     knessetMapTooltipGender: 'Gender',
     knessetMapTooltipKnessetYears: 'Knesset tenure',
@@ -544,6 +555,11 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapSeniorityVeteran: 'חבר כנסת ותיק',
     knessetMapSeniorityNew: 'מועמד חדש',
     knessetMapListRank: 'מקום {rank} מתוך {total}',
+    knessetMapSwingTitle: 'מתנדנדים',
+    knessetMapSwingInLabel: 'בפנים',
+    knessetMapSwingOutLabel: 'בחוץ',
+    knessetMapSwingOutAria: 'הבאים בתור אם המפלגה תרוויח מנדטים',
+    knessetMapSwingInAria: 'האחרונים במקום אם המפלגה תאבד מנדטים',
     knessetMapTooltipAge: 'גיל',
     knessetMapTooltipGender: 'מין',
     knessetMapTooltipKnessetYears: 'ותק בכנסת',

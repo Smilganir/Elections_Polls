@@ -11,6 +11,13 @@ export const KNESSET_HOLLOW_INSETS = {
   bottom: 3,
 } as const
 
+/** Fixed wing slots for מתנדנדים — filters-row band on the hemicycle wrap (not per-party). */
+export const KNESSET_SWING_ANCHORS = {
+  topRem: 0.18,
+  wingInsetPct: 9,
+  wingMaxWidthRem: 11.75,
+} as const
+
 export function knessetHollowInsetStyle(): Record<string, string> {
   const { left, right, top, bottom } = KNESSET_HOLLOW_INSETS
   return {
