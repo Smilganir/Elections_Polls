@@ -50,27 +50,36 @@ function useHeroChartScaleBandActive(): boolean {
 function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  const lockedLayoutRef = useRef<{
+    viewport: { width: number; height: number }
+    naturalHeight: number
+    scale: number
+  } | null>(null)
   const [scale, setScale] = useState(1)
   const [shellSize, setShellSize] = useState<{ width: number; height: number } | null>(
     null,
   )
+  const [lockedViewport, setLockedViewport] = useState<{
+    width: number
+    height: number
+  } | null>(null)
 
   useEffect(() => {
     const viewport = viewportRef.current
     const stage = stageRef.current
     if (!viewport || !stage) return
 
-    const update = () => {
-      const availableWidth = viewport.clientWidth
-      const availableHeight = viewport.clientHeight
-      const naturalHeight = stage.offsetHeight
-      const widthScale =
-        availableWidth > 0 ? availableWidth / HERO_CHART_STAGE_WIDTH_PX : 1
-      const heightScale =
-        availableHeight > 0 && naturalHeight > 0
-          ? availableHeight / naturalHeight
-          : widthScale
-      const nextScale = Math.min(widthScale, heightScale)
+    const applyLayout = (
+      locked: { width: number; height: number },
+      naturalHeight: number,
+      nextScale: number,
+    ) => {
+      lockedLayoutRef.current = {
+        viewport: locked,
+        naturalHeight,
+        scale: nextScale,
+      }
+      setLockedViewport(locked)
       setScale(nextScale)
       setShellSize({
         width: Math.max(0, Math.ceil(HERO_CHART_STAGE_WIDTH_PX * nextScale)),
@@ -78,20 +87,59 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
       })
     }
 
-    const viewportObserver = new ResizeObserver(update)
-    const stageObserver = new ResizeObserver(update)
-    viewportObserver.observe(viewport)
-    stageObserver.observe(stage)
-    update()
+    const measure = () => {
+      const cached = lockedLayoutRef.current
+      if (cached) {
+        applyLayout(cached.viewport, cached.naturalHeight, cached.scale)
+        return true
+      }
+
+      const width = viewport.clientWidth
+      const height = viewport.clientHeight
+      const naturalHeight = stage.offsetHeight
+      if (width <= 0 || height <= 0 || naturalHeight <= 0) return false
+
+      const locked = { width, height }
+      const widthScale = locked.width / HERO_CHART_STAGE_WIDTH_PX
+      const heightScale = locked.height / naturalHeight
+      const nextScale = Math.min(widthScale, heightScale)
+      applyLayout(locked, naturalHeight, nextScale)
+      return true
+    }
+
+    const onWindowResize = () => {
+      lockedLayoutRef.current = null
+      setLockedViewport(null)
+      requestAnimationFrame(measure)
+    }
+
+    let frame = 0
+    const settleMeasure = () => {
+      if (measure()) return
+      frame += 1
+      if (frame < 12) requestAnimationFrame(settleMeasure)
+    }
+
+    requestAnimationFrame(settleMeasure)
+    window.addEventListener('resize', onWindowResize)
 
     return () => {
-      viewportObserver.disconnect()
-      stageObserver.disconnect()
+      window.removeEventListener('resize', onWindowResize)
     }
   }, [])
 
   return (
-    <div ref={viewportRef} className="lpo-ps-hero-chart-scale-viewport">
+    <div
+      ref={viewportRef}
+      className={`lpo-ps-hero-chart-scale-viewport${
+        lockedViewport ? ' lpo-ps-hero-chart-scale-viewport--locked' : ''
+      }`}
+      style={
+        lockedViewport
+          ? { height: lockedViewport.height, maxHeight: lockedViewport.height }
+          : undefined
+      }
+    >
       <div
         className="lpo-ps-hero-chart-scale-shell"
         style={
@@ -410,32 +458,49 @@ export function PollSummaryHeroPartiesChartPopup({
   useEffect(() => {
     if (!open) return
     const syncGrid = document.querySelector('.dashboard-heading-sync-grid')
+    const scrollY = window.scrollY
+    const prevHtmlOverflow = document.documentElement.style.overflow
+    const prevBodyOverflow = document.body.style.overflow
 
-    const applyOverlayTop = () => {
-      if (!syncGrid) {
-        document.documentElement.style.setProperty(
-          '--lpo-ps-hero-chart-overlay-top',
-          '5.5rem',
-        )
-        return
-      }
-      const bottom = syncGrid.getBoundingClientRect().bottom
+    const applyLayout = () => {
+      const rootFontSize =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+      const isMobile = window.matchMedia('(max-width: 768px)').matches
+      const insetPx = (isMobile ? 0.3 : 0.5) * rootFontSize
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+      const overlayTop = syncGrid
+        ? Math.ceil(syncGrid.getBoundingClientRect().bottom)
+        : Math.ceil(5.5 * rootFontSize)
+      const dialogHeight = Math.max(0, Math.floor(viewportHeight - overlayTop - insetPx))
+
       document.documentElement.style.setProperty(
         '--lpo-ps-hero-chart-overlay-top',
-        `${Math.ceil(bottom)}px`,
+        `${overlayTop}px`,
+      )
+      document.documentElement.style.setProperty(
+        '--lpo-ps-hero-chart-dialog-height',
+        `${dialogHeight}px`,
       )
     }
 
-    applyOverlayTop()
+    applyLayout()
+    document.documentElement.classList.add('lpo-ps-hero-chart-open')
     document.body.classList.add('lpo-ps-hero-chart-open')
-    window.addEventListener('resize', applyOverlayTop)
-    window.addEventListener('scroll', applyOverlayTop, true)
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('resize', applyLayout)
+    window.visualViewport?.addEventListener('resize', applyLayout)
 
     return () => {
+      document.documentElement.classList.remove('lpo-ps-hero-chart-open')
       document.body.classList.remove('lpo-ps-hero-chart-open')
+      document.documentElement.style.overflow = prevHtmlOverflow
+      document.body.style.overflow = prevBodyOverflow
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-overlay-top')
-      window.removeEventListener('resize', applyOverlayTop)
-      window.removeEventListener('scroll', applyOverlayTop, true)
+      document.documentElement.style.removeProperty('--lpo-ps-hero-chart-dialog-height')
+      window.removeEventListener('resize', applyLayout)
+      window.visualViewport?.removeEventListener('resize', applyLayout)
+      window.scrollTo(0, scrollY)
     }
   }, [open])
 

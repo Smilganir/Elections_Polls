@@ -5804,14 +5804,43 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   z-index: 10070;
 }
 
+html.lpo-ps-hero-chart-open,
+body.lpo-ps-hero-chart-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.lpo-ps-hero-chart-open .page-content {
+  overflow-y: hidden;
+  overscroll-behavior: none;
+}
+
+body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-overlay {
+  overscroll-behavior: contain;
+}
+
+body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .lpo-ps-hero-chart-dialog {
   position: relative;
   width: min(100%, 87.5rem);
-  min-height: min(
-    920px,
+  height: var(
+    --lpo-ps-hero-chart-dialog-height,
     calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem)
   );
-  max-height: calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem);
+  min-height: var(
+    --lpo-ps-hero-chart-dialog-height,
+    min(920px, calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem))
+  );
+  max-height: var(
+    --lpo-ps-hero-chart-dialog-height,
+    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem)
+  );
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -6225,6 +6254,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
 /* Scale-to-fit: 769–1439px band only (JS omits wrapper outside this range). */
 @media (min-width: 769px) and (max-width: 1439px) {
+  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-scale-viewport {
+    overflow-y: visible;
+  }
+
   .lpo-ps-hero-chart-scale-viewport {
     flex: 1 1 auto;
     min-height: 0;
@@ -6234,6 +6267,12 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
     display: flex;
     flex-direction: column;
     align-items: center;
+  }
+
+  /* Lock height after first measure so page/dialog scroll does not re-stretch scale. */
+  .lpo-ps-hero-chart-scale-viewport--locked {
+    flex: 0 0 auto;
+    min-height: 0;
   }
 
   .lpo-ps-hero-chart-scale-shell {
@@ -6276,14 +6315,23 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
   }
 
   .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats .lpo-ps-knesset-map-stage {
+    flex: 0 0 auto;
     width: 100%;
     max-width: 64rem;
-    min-height: 26rem;
+    min-height: 0;
+    height: auto;
     margin: 0;
     min-width: 0;
     grid-column: auto;
     grid-row: auto;
     max-height: none;
+    align-self: start;
+    aspect-ratio: 1.127 / 1;
+  }
+
+  .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-table--inset .lpo-party-row {
+    flex: 0 0 auto;
+    min-height: 0;
   }
 
   .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-seat {
@@ -7667,6 +7715,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 }
 
 @media (max-width: 860px) {
+  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-body {
+    overflow-y: visible;
+  }
+
   .lpo-ps-hero-chart-body {
     overflow-y: auto;
   }
@@ -7830,9 +7882,15 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
   .lpo-ps-hero-chart-dialog {
     width: 100%;
-    min-height: 0;
-    height: calc(100dvh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.3rem);
-    max-height: calc(100dvh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.3rem);
+    height: var(
+      --lpo-ps-hero-chart-dialog-height,
+      calc(100dvh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.3rem)
+    );
+    min-height: var(--lpo-ps-hero-chart-dialog-height, 0);
+    max-height: var(
+      --lpo-ps-hero-chart-dialog-height,
+      calc(100dvh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.3rem)
+    );
   }
 
   .lpo-ps-hero-chart-dialog-header {
@@ -7842,6 +7900,10 @@ body.lpo-ps-hero-chart-open .dashboard-heading-sync-grid {
 
   .lpo-ps-hero-chart-dialog-heading {
     gap: 0.35rem;
+  }
+
+  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-body {
+    overflow-y: visible;
   }
 
   .lpo-ps-hero-chart-body {
