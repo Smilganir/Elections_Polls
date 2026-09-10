@@ -91,18 +91,18 @@ function DemographicStatsCaption({
 }) {
   return (
     <header className="lpo-ps-knesset-stat-heading">
-      <figcaption className="lpo-ps-knesset-stats-caption">
-        <span className="lpo-ps-knesset-stats-caption-label">{label}</span>
+      <figcaption className="lpo-ps-knesset-stats-caption" dir={mean != null ? 'ltr' : undefined}>
         {mean != null ? (
           <>
-            <span className="lpo-ps-knesset-stats-caption-sep" aria-hidden="true">
-              · {t.knessetStatsMeanWord}
-            </span>
             <span className="lpo-ps-knesset-stats-caption-mean">
               {formatDemographicMean(mean)}
             </span>
+            <span className="lpo-ps-knesset-stats-caption-sep" aria-hidden="true">
+              · {t.knessetStatsMeanWord}
+            </span>
           </>
         ) : null}
+        <span className="lpo-ps-knesset-stats-caption-label">{label}</span>
       </figcaption>
       {k25Scope ? (
         <K25ComparisonBadge delta={k25DeltaPct} mode="pct" scope={k25Scope} t={t} />

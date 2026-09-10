@@ -80,6 +80,7 @@ export type UiStrings = {
   pollSummaryHeroPartiesChartCloseAria: string
   /** Appended to chart popup title; {n} = rolling window days */
   pollSummaryHeroPartiesChartWindowSuffix: string
+  pollSummaryLastPollDate: string
   pollSummaryHeroPartiesChartOutletsAria: string
   pollSummaryHeroPartiesChartOutletExcludeAria: string
   pollSummaryHeroPartiesChartOutletIncludeAria: string
@@ -293,6 +294,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartTitle: 'Cross-outlet party averages',
     pollSummaryHeroPartiesChartCloseAria: 'Close party breakdown',
     pollSummaryHeroPartiesChartWindowSuffix: ' · {n}-day window',
+    pollSummaryLastPollDate: 'Last poll: {date}',
     pollSummaryHeroPartiesChartOutletsAria:
       'Outlets in the rolling window; click to include or exclude from the average',
     pollSummaryHeroPartiesChartOutletExcludeAria: 'Exclude {outlet} from average',
@@ -495,6 +497,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartTitle: 'ממוצע מנדטים לפי מפלגה בין הערוצים',
     pollSummaryHeroPartiesChartCloseAria: 'סגור פירוט מפלגות',
     pollSummaryHeroPartiesChartWindowSuffix: ' · חלון {n} ימים',
+    pollSummaryLastPollDate: 'סקר אחרון: {date}',
     pollSummaryHeroPartiesChartOutletsAria:
       'ערוצים בחלון הסקרים; לחיצה לכלילה או הוצאה מהממוצע',
     pollSummaryHeroPartiesChartOutletExcludeAria: 'הוצא את {outlet} מהממוצע',

@@ -24,7 +24,10 @@ import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 import type { UiStrings } from '../i18n/strings'
 import { trackMergeArabsToggle } from '../lib/gtagEvents'
-import { getLivePollSummaryBackground } from '../content/pickPollSummaryNarrative'
+import {
+  getLivePollSummaryBackground,
+  resolvePollSummaryNarrativeAsOfDisplay,
+} from '../content/pickPollSummaryNarrative'
 import { buildRollingWindowReport, dedupePollsPreferSplitArabs } from '../lib/pollRollingWindow'
 import { useHeroPartiesChartOverlay } from '../ui/HeroPartiesChartOverlayContext'
 import { OutletFilterDropdown, PollSummaryPanel } from '../ui/PollSummaryPanel'
@@ -1164,6 +1167,11 @@ export function LatestPollsOverviewPage() {
     [locale],
   )
 
+  const pollSummaryLastPollDateDisplay = useMemo(() => {
+    if (pollRollingReport.rows.length === 0) return undefined
+    return resolvePollSummaryNarrativeAsOfDisplay(pollRollingReport.rows, locale)
+  }, [pollRollingReport.rows, locale])
+
   /** False when this column is that outlet's earliest poll — there is no prior poll to diff against. */
   function hasPriorPollInSeries(poll: PollColumn): boolean {
     return previousByPollId.has(poll.pollId)
@@ -1657,9 +1665,29 @@ export function LatestPollsOverviewPage() {
               />
               <p
                 className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title"
-                dir={locale === 'he' ? 'rtl' : 'ltr'}
+                dir={pollSummaryLastPollDateDisplay ? 'ltr' : locale === 'he' ? 'rtl' : 'ltr'}
               >
-                {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
+                <span
+                  className="lpo-ps-heading-subtitle-line"
+                  dir={pollSummaryLastPollDateDisplay ? 'ltr' : locale === 'he' ? 'rtl' : 'ltr'}
+                >
+                  {pollSummaryLastPollDateDisplay ? (
+                    <>
+                      <span className="lpo-ps-subtitle-last-poll">
+                        {t.pollSummaryLastPollDate.replace(
+                          /\{date\}/g,
+                          pollSummaryLastPollDateDisplay,
+                        )}
+                      </span>
+                      <span className="lpo-ps-heading-subtitle-sep" aria-hidden="true">
+                        {' · '}
+                      </span>
+                    </>
+                  ) : null}
+                  <span dir={locale === 'he' ? 'rtl' : 'ltr'}>
+                    {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
+                  </span>
+                </span>
               </p>
               <div className="lpo-ps-window-days-row">
                 <PollSummaryWindowDaysStepper

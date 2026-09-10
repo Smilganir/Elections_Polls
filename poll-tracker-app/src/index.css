@@ -229,6 +229,27 @@ body {
   text-align: center;
 }
 
+.lpo-ps-heading-subtitle-line {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  max-width: 100%;
+}
+
+.lpo-ps-subtitle-last-poll {
+  font-size: 0.72rem;
+  color: #9fb3cc;
+  white-space: nowrap;
+}
+
+.lpo-ps-heading-subtitle-sep {
+  font-size: 0.72rem;
+  color: #9fb3cc;
+  white-space: pre;
+}
+
 /* LTR row + stretch: flex-end pins label to physical right (same band as actions col). */
 .dashboard-heading-sync-grid .lpo-ps-heading-meta .lpo-ps-window-days-row {
   grid-column: 3;
