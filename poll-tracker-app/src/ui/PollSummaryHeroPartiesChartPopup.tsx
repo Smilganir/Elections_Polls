@@ -39,6 +39,12 @@ const HERO_CHART_STAGE_WIDTH_PX = 1440
  */
 export const HERO_CHART_COMPACT_MQ = '(max-width: 768px), (max-height: 500px)'
 
+/**
+ * Landscape phones only (short height, wide width). Portrait stays on width-driven stage sizing;
+ * keep in sync with the `@media (max-height: 500px) and (min-width: 601px)` block in index.css.
+ */
+export const HERO_CHART_LANDSCAPE_COMPACT_MQ = '(max-height: 500px) and (min-width: 601px)'
+
 function useHeroChartScaleBandActive(): boolean {
   const getActive = () => {
     if (typeof window === 'undefined') return false
@@ -500,6 +506,38 @@ export function PollSummaryHeroPartiesChartPopup({
     const prevHtmlOverflow = document.documentElement.style.overflow
     const prevBodyOverflow = document.body.style.overflow
 
+    const measureLandscapeStageHeight = (dialogHeight: number) => {
+      const isLandscapeCompact = window.matchMedia(HERO_CHART_LANDSCAPE_COMPACT_MQ).matches
+      if (!isLandscapeCompact) {
+        document.documentElement.style.removeProperty('--lpo-ps-hero-chart-landscape-stage-height')
+        return
+      }
+
+      const dialog = document.querySelector('.lpo-ps-hero-chart-dialog')
+      const header = dialog?.querySelector(
+        '.lpo-ps-hero-chart-dialog-header',
+      ) as HTMLElement | null
+      const body = dialog?.querySelector('.lpo-ps-hero-chart-body') as HTMLElement | null
+      const filters = dialog?.querySelector('.lpo-ps-knesset-filters-slot') as HTMLElement | null
+      if (!header) return
+
+      const headerHeight = Math.ceil(header.getBoundingClientRect().height)
+      const filtersHeight = Math.ceil(filters?.getBoundingClientRect().height ?? 0)
+      const bodyStyles = body ? getComputedStyle(body) : null
+      const bodyPad =
+        (parseFloat(bodyStyles?.paddingTop ?? '0') || 0) +
+        (parseFloat(bodyStyles?.paddingBottom ?? '0') || 0)
+      const stageHeight = Math.max(
+        96,
+        Math.floor(dialogHeight - headerHeight - filtersHeight - bodyPad),
+      )
+
+      document.documentElement.style.setProperty(
+        '--lpo-ps-hero-chart-landscape-stage-height',
+        `${stageHeight}px`,
+      )
+    }
+
     const applyLayout = () => {
       const rootFontSize =
         parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
@@ -519,6 +557,7 @@ export function PollSummaryHeroPartiesChartPopup({
         '--lpo-ps-hero-chart-dialog-height',
         `${dialogHeight}px`,
       )
+      measureLandscapeStageHeight(dialogHeight)
     }
 
     applyLayout()
@@ -529,6 +568,27 @@ export function PollSummaryHeroPartiesChartPopup({
     window.addEventListener('resize', applyLayout)
     window.visualViewport?.addEventListener('resize', applyLayout)
 
+    const headerEl = document.querySelector('.lpo-ps-hero-chart-dialog-header')
+    const filtersEl = document.querySelector('.lpo-ps-knesset-filters-slot')
+    const landscapeRo =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            const dialogHeight = parseFloat(
+              getComputedStyle(document.documentElement).getPropertyValue(
+                '--lpo-ps-hero-chart-dialog-height',
+              ),
+            )
+            if (dialogHeight > 0) measureLandscapeStageHeight(dialogHeight)
+          })
+        : null
+    if (headerEl) landscapeRo?.observe(headerEl)
+    if (filtersEl) landscapeRo?.observe(filtersEl)
+
+    requestAnimationFrame(() => {
+      applyLayout()
+      requestAnimationFrame(applyLayout)
+    })
+
     return () => {
       document.documentElement.classList.remove('lpo-ps-hero-chart-open')
       document.body.classList.remove('lpo-ps-hero-chart-open')
@@ -536,8 +596,10 @@ export function PollSummaryHeroPartiesChartPopup({
       document.body.style.overflow = prevBodyOverflow
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-overlay-top')
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-dialog-height')
+      document.documentElement.style.removeProperty('--lpo-ps-hero-chart-landscape-stage-height')
       window.removeEventListener('resize', applyLayout)
       window.visualViewport?.removeEventListener('resize', applyLayout)
+      landscapeRo?.disconnect()
       window.scrollTo(0, scrollY)
     }
   }, [open])

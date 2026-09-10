@@ -6460,6 +6460,40 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-track {
     height: 0.9rem;
   }
+
+  /* Portrait: side gutters shrink to content; map stage fills all remaining width. */
+  @media (orientation: portrait) {
+    .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.25rem 0.05rem;
+      max-width: 100%;
+      width: 100%;
+      margin-inline: 0;
+      justify-content: stretch;
+      justify-items: stretch;
+    }
+
+    .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats .lpo-ps-knesset-map-stage {
+      width: 100%;
+      max-width: none;
+      min-height: 0;
+      height: auto;
+      margin: 0;
+      justify-self: stretch;
+      align-self: start;
+    }
+
+    .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter--left .lpo-ps-knesset-stats,
+    .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter--right .lpo-ps-knesset-stats {
+      max-width: none;
+      width: auto;
+    }
+
+    /* Seat wings sit inset of the stage box — nudge wider so arcs reach the side gutters. */
+    .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-seat {
+      width: 4.2%;
+    }
+  }
 }
 
 .lpo-ps-hero-chart-hemicycle-wrap {
@@ -8428,6 +8462,197 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
   .lpo-ps-hero-chart-dialog .lpo-ps-subtitle.lpo-ps-subtitle--outlets-trend-hint.lpo-ps-hero-chart-outlet-hint {
     display: none;
+  }
+}
+
+/* Landscape phones: height-driven hemicycle stage (keep in sync with HERO_CHART_LANDSCAPE_COMPACT_MQ
+   in PollSummaryHeroPartiesChartPopup.tsx). Portrait compact keeps width-driven aspect-ratio above. */
+@media (max-height: 500px) and (min-width: 601px) {
+  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
+    overflow: hidden;
+  }
+
+  .lpo-ps-hero-chart-dialog-header {
+    padding: 0.28rem 0.45rem 0.3rem;
+    gap: 0.25rem;
+  }
+
+  .lpo-ps-hero-chart-dialog-heading {
+    gap: 0.18rem;
+  }
+
+  .lpo-ps-hero-chart-dialog-title {
+    font-size: 0.82rem;
+    line-height: 1.15;
+  }
+
+  .lpo-ps-hero-chart-dialog .lpo-ps-hero-chip-outlet-legend {
+    display: none;
+  }
+
+  .lpo-ps-hero-chart-outlets {
+    gap: 0.28rem;
+    margin-top: 0.08rem;
+    padding-bottom: 0;
+  }
+
+  .lpo-ps-hero-chart-outlet-btn {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lpo-ps-hero-chart-outlet-btn .mapped-icon,
+  .lpo-ps-hero-chart-outlet-btn .icon-fallback {
+    max-width: 22px;
+    max-height: 22px;
+  }
+
+  .lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-nums-between {
+    margin-bottom: 0.12rem;
+  }
+
+  .lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side-value-col .lpo-ps-hero-chart-seats-line {
+    display: none;
+  }
+
+  .lpo-ps-hero-chart-bloc-summary--header .lpo-ps-hero-side--selectable {
+    padding: 0.04rem 0.14rem;
+    margin: -0.04rem -0.14rem;
+  }
+
+  .lpo-ps-hero-lbl {
+    font-size: 0.62rem;
+  }
+
+  .lpo-ps-hero-num {
+    font-size: 0.82rem;
+  }
+
+  .lpo-ps-hero-chart-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap {
+    min-height: 0;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats .lpo-ps-knesset-map-stage {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
+    min-height: 0;
+    height: var(--lpo-ps-hero-chart-landscape-stage-height, 42vh);
+    max-height: var(--lpo-ps-hero-chart-landscape-stage-height, 42vh);
+    aspect-ratio: 1.127 / 1;
+    margin-inline: auto;
+    --lpo-ps-knesset-hollow-top: 22%;
+    --lpo-ps-knesset-hollow-bottom: 2%;
+    --lpo-ps-knesset-hollow-left: 20%;
+    --lpo-ps-knesset-hollow-right: 20%;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-center-stack {
+    padding: 0.16rem 0.06rem 0.05rem;
+    gap: 0.05rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset {
+    padding: 0.16rem 0.12rem 0.08rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row {
+    grid-template-columns: minmax(0, 28px) minmax(0, 1fr);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-row--enlarged-mark {
+    grid-template-columns: minmax(0, 32px) minmax(0, 1fr);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark {
+    width: 28px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged {
+    width: 32px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .mapped-icon,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark .icon-fallback {
+    max-width: 28px;
+    font-size: 0.44rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .mapped-icon {
+    max-width: 32px;
+    clip-path: inset(4% 0 16% 0);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats {
+    width: 34px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--democrats .mapped-icon {
+    max-width: 34px;
+    clip-path: inset(15% 0 9% 0);
+    transform: scale(1.16);
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-mark--enlarged .icon-fallback {
+    max-width: 32px;
+    font-size: 0.42rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-party-dash {
+    --lpo-ps-hero-chart-dash-thickness: 1.5px;
+    --lpo-ps-hero-chart-dash-width: 24px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-party-cell {
+    padding-block: 0.01rem;
+    overflow: visible;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-bar-track {
+    height: min(8px, 32%);
+    min-height: 5px;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-votes {
+    font-size: 0.48rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-bar-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3.15rem);
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-bar-meta {
+    grid-template-columns: minmax(1.65rem, auto) minmax(1.35rem, auto);
+    gap: 0.01rem 0.08rem;
+    min-width: 0;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-seats {
+    font-size: 0.44rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-delta-unit {
+    font-size: 0.38rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-ps-hero-chart-seats-line {
+    gap: 0.03rem;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-hero-chart-table--inset .lpo-change-badge {
+    font-size: 0.48rem;
   }
 }
 
