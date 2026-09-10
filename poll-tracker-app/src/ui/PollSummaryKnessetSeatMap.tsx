@@ -657,9 +657,14 @@ export function PollSummaryKnessetSeatMap({
     ro?.observe(wrap)
     if (dialog) ro?.observe(dialog)
     window.addEventListener('resize', updateSwingLayout)
+    // The mobile/compact dialog scrolls as a single unit (header + body), so the swing panel's
+    // fixed-pixel offset (measured from the dialog's own bounding rect) must be recomputed as the
+    // user scrolls — otherwise it drifts away from the seat map it's meant to sit above.
+    dialog?.addEventListener('scroll', updateSwingLayout, { passive: true })
     return () => {
       ro?.disconnect()
       window.removeEventListener('resize', updateSwingLayout)
+      dialog?.removeEventListener('scroll', updateSwingLayout)
       dialog?.classList.remove('lpo-ps-hero-chart-dialog--swing-mobile')
     }
   }, [loadError, members, partySwing])

@@ -27,21 +27,45 @@ const HERO_CHART_SCALE_BAND_MIN_PX = 769
 const HERO_CHART_SCALE_BAND_MAX_PX = 1439
 const HERO_CHART_STAGE_WIDTH_PX = 1440
 
+/**
+ * "Compact" viewports get the in-flow, scrollable, non-scaled mobile layout instead of the
+ * scale-to-fit desktop/tablet stage. This is width-based (portrait phones) OR height-based
+ * (landscape phones — e.g. iPhone/Android landscape are 360–430px tall but 700–950px wide,
+ * which used to fall inside the scale-fit band and get crushed down to an unreadable/near-
+ * frozen thumbnail because the fit-to-height scale collapsed to ~0.2). Keep this string in
+ * sync with the `@media (max-width: 768px), (max-height: 500px)` blocks in index.css that
+ * style `.lpo-ps-hero-chart-*` and with the matching matchMedia check in
+ * PollSummaryKnessetSeatMap.tsx.
+ */
+export const HERO_CHART_COMPACT_MQ = '(max-width: 768px), (max-height: 500px)'
+
 function useHeroChartScaleBandActive(): boolean {
-  const [active, setActive] = useState(() => {
+  const getActive = () => {
     if (typeof window === 'undefined') return false
     const width = window.innerWidth
-    return width >= HERO_CHART_SCALE_BAND_MIN_PX && width <= HERO_CHART_SCALE_BAND_MAX_PX
-  })
+    const inWidthBand =
+      width >= HERO_CHART_SCALE_BAND_MIN_PX && width <= HERO_CHART_SCALE_BAND_MAX_PX
+    const isCompact = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
+    return inWidthBand && !isCompact
+  }
+
+  const [active, setActive] = useState(getActive)
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(
+    const widthQuery = window.matchMedia(
       `(min-width: ${HERO_CHART_SCALE_BAND_MIN_PX}px) and (max-width: ${HERO_CHART_SCALE_BAND_MAX_PX}px)`,
     )
-    const sync = () => setActive(mediaQuery.matches)
+    const compactQuery = window.matchMedia(HERO_CHART_COMPACT_MQ)
+    const sync = () => setActive(getActive())
     sync()
-    mediaQuery.addEventListener('change', sync)
-    return () => mediaQuery.removeEventListener('change', sync)
+    widthQuery.addEventListener('change', sync)
+    compactQuery.addEventListener('change', sync)
+    window.addEventListener('resize', sync)
+    return () => {
+      widthQuery.removeEventListener('change', sync)
+      compactQuery.removeEventListener('change', sync)
+      window.removeEventListener('resize', sync)
+    }
   }, [])
 
   return active
@@ -479,7 +503,7 @@ export function PollSummaryHeroPartiesChartPopup({
     const applyLayout = () => {
       const rootFontSize =
         parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
-      const isMobile = window.matchMedia('(max-width: 768px)').matches
+      const isMobile = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
       const insetPx = (isMobile ? 0.3 : 0.5) * rootFontSize
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight
       const overlayTop = syncGrid

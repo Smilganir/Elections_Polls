@@ -8083,12 +8083,13 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 }
 
 @media (max-width: 860px) {
-  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-body {
-    overflow-y: visible;
-  }
-
+  /* Let the whole dialog (header + body) scroll as one unit instead of pinning the header
+     and isolating scroll inside the body — see body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog
+     (unconditional overflow-y: auto). The body must stop stretching/scrolling on its own so the
+     dialog's own scrollbar takes over and the header/bloc-bar scrolls away with the rest. */
   .lpo-ps-hero-chart-body {
-    overflow-y: auto;
+    flex: 0 0 auto;
+    overflow: visible;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap {
@@ -8268,7 +8269,10 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 /* Keep in sync with HERO_CHART_COMPACT_MQ (PollSummaryHeroPartiesChartPopup.tsx / PollSummaryKnessetSeatMap.tsx):
    landscape phones (short height, wide width) get the same in-flow mobile treatment as portrait phones. */
 @media (max-width: 768px), (max-height: 500px) {
-  /* Portrait/landscape phone: fixed-size map, stats grid below (860px layout), scroll body only. */
+  /* Portrait/landscape phone: fixed-size viewport window, the whole dialog (header incl. the
+     bloc bar + body) scrolls as ONE unit — nothing is pinned/frozen. The seat map ("hero" view)
+     is reachable a bit sooner by scrolling the header itself out of the way, instead of the
+     header eating a fixed chunk of the (especially short, in landscape) viewport forever. */
   .lpo-ps-hero-chart-overlay {
     padding: 0.12rem 0.4rem 0.2rem;
   }
@@ -8291,23 +8295,19 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     gap: 0.45rem;
     position: relative;
     z-index: 2;
+    flex-shrink: 0;
   }
 
   .lpo-ps-hero-chart-dialog-heading {
     gap: 0.35rem;
   }
 
-  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-body {
-    overflow-y: visible;
-  }
-
+  /* Body no longer scrolls independently — the dialog itself is the single scroll container
+     (see the unconditional `body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog` rule). */
   .lpo-ps-hero-chart-body {
-    overflow-x: hidden;
-    overflow-y: auto;
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 0 0 auto;
+    overflow: visible;
     padding: 0 0.2rem 0.15rem;
-    -webkit-overflow-scrolling: touch;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap {
