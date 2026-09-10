@@ -777,11 +777,8 @@ export function PollSummaryPanel({
   const bgText = narrativeBackground.trim()
 
   const [trendFocus, setTrendFocus] = useState<TrendFocus | null>(null)
-  const {
-    open: heroPartiesChartOpen,
-    setOpen: setHeroPartiesChartOpen,
-    setDeferRotateHint,
-  } = useHeroPartiesChartOverlay()
+  const { open: heroPartiesChartOpen, setOpen: setHeroPartiesChartOpen } =
+    useHeroPartiesChartOverlay()
 
   const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
   const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
@@ -797,9 +794,6 @@ export function PollSummaryPanel({
     [filteredRows],
   )
 
-  useEffect(() => {
-    setDeferRotateHint(heroPartiesChartOpen)
-  }, [heroPartiesChartOpen, setDeferRotateHint])
   /** Cross-outlet column order: Opposition → Arabs → Coalition; seats desc within bloc. */
   const unifiedPartyOrder = useMemo(() => {
     if (!heroAvgChips) return []

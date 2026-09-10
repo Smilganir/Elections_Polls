@@ -846,14 +846,6 @@ export function KnessetStatsLeftStack({
         onToggleFocus={onToggleFocus}
         layoutSlot="lpo-ps-knesset-stat-slot--military-breakdown"
       />
-      <EducationBars
-        rows={educationStats.education}
-        title={t.knessetStatsEducationLabel}
-        t={t}
-        mapFilters={mapFilters}
-        onToggleFocus={onToggleFocus}
-        layoutSlot="lpo-ps-knesset-stat-slot--education"
-      />
       <SectorBars
         rows={sectorStats.sector}
         title={t.knessetStatsSectorLabel}
@@ -861,6 +853,14 @@ export function KnessetStatsLeftStack({
         mapFilters={mapFilters}
         onToggleFocus={onToggleFocus}
         layoutSlot="lpo-ps-knesset-stat-slot--sector"
+      />
+      <EducationBars
+        rows={educationStats.education}
+        title={t.knessetStatsEducationLabel}
+        t={t}
+        mapFilters={mapFilters}
+        onToggleFocus={onToggleFocus}
+        layoutSlot="lpo-ps-knesset-stat-slot--education"
       />
     </div>
   )

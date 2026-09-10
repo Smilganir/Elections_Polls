@@ -37,6 +37,7 @@ import {
 import { computePartySwingSeats } from '../lib/knessetPartySwingSeats'
 import type { Segment } from '../types/data'
 import { KnessetStatsLeftStack, KnessetStatsRightStack } from './PollSummaryKnessetDemographics'
+import { RotatePortraitHint } from './RotatePortraitHint'
 
 /**
  * Keep in sync with HERO_CHART_COMPACT_MQ in PollSummaryHeroPartiesChartPopup.tsx and the
@@ -396,22 +397,12 @@ function PartySwingSeatsOverlay({
         dir="ltr"
         aria-label={t.knessetMapSwingTitle}
       >
-        <div className="lpo-ps-knesset-swing-header">
+        <div className="lpo-ps-knesset-swing-stack">
           <p className="lpo-ps-knesset-swing-title">{t.knessetMapSwingTitle}</p>
-          <div className="lpo-ps-knesset-swing-labels-row">
-            {showOut ? (
-              <p className="lpo-ps-knesset-swing-group-label">{t.knessetMapSwingOutLabel}</p>
-            ) : null}
-            {showOut && showIn ? <div className="lpo-ps-knesset-swing-divider" aria-hidden /> : null}
-            {showIn ? (
-              <p className="lpo-ps-knesset-swing-group-label">{t.knessetMapSwingInLabel}</p>
-            ) : null}
-          </div>
-        </div>
-        <div className="lpo-ps-knesset-swing-portraits-row">
           <div className="lpo-ps-knesset-swing-groups">
             {showOut ? (
               <div className="lpo-ps-knesset-swing-group" aria-label={t.knessetMapSwingOutAria}>
+                <p className="lpo-ps-knesset-swing-group-label">{t.knessetMapSwingOutLabel}</p>
                 <div className="lpo-ps-knesset-swing-portraits">
                   {swing.nextOut.map((seat) => (
                     <SwingSeatPortrait
@@ -434,6 +425,7 @@ function PartySwingSeatsOverlay({
             {showOut && showIn ? <div className="lpo-ps-knesset-swing-divider" aria-hidden /> : null}
             {showIn ? (
               <div className="lpo-ps-knesset-swing-group" aria-label={t.knessetMapSwingInAria}>
+                <p className="lpo-ps-knesset-swing-group-label">{t.knessetMapSwingInLabel}</p>
                 <div className="lpo-ps-knesset-swing-portraits">
                   {swing.atRiskIn.map((seat) => (
                     <SwingSeatPortrait
@@ -554,6 +546,7 @@ export function PollSummaryKnessetSeatMap({
   stageOverlay?: ReactNode
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
+  const statsRowRef = useRef<HTMLDivElement>(null)
   const [members, setMembers] = useState<KnessetMemberRow[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
@@ -604,11 +597,15 @@ export function PollSummaryKnessetSeatMap({
     }
 
     const dialog = wrap.closest('.lpo-ps-hero-chart-dialog') as HTMLElement | null
+    const overlay = dialog?.closest('.lpo-ps-hero-chart-overlay') as HTMLElement | null
 
     const updateSwingLayout = () => {
       const isMobileLayout = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
-      const portalTarget = isMobileLayout && dialog ? dialog : wrap
+      // Desktop: portal to the overlay and use fixed viewport coords so the stack is never
+      // clipped by scale-shell / dialog overflow when sitting above the filter row.
+      const portalTarget = isMobileLayout ? (dialog ?? wrap) : (overlay ?? dialog ?? wrap)
       const wrapRect = wrap.getBoundingClientRect()
+      const portalOriginRect = portalTarget.getBoundingClientRect()
       const resetBtn = wrap.querySelector(
         '.lpo-ps-knesset-filters-reset',
       ) as HTMLElement | null
@@ -626,11 +623,23 @@ export function PollSummaryKnessetSeatMap({
       const stageRect = mapStage.getBoundingClientRect()
       const stageTop = stageRect.top - wrapRect.top
       const stageWidth = stageRect.width
-      const faceSize = Math.round(Math.max(22, Math.min(40, stageWidth * 0.0355 * 1.55)))
+      const mapSeatEl = mapStage.querySelector(
+        '.lpo-ps-knesset-seat:not(.lpo-ps-knesset-seat--swing)',
+      ) as HTMLElement | null
+      const mapSeatSize = mapSeatEl?.getBoundingClientRect().width ?? stageWidth * 0.0355
+      const faceSize = isMobileLayout
+        ? Math.round(mapSeatSize)
+        : Math.round(Math.max(22, Math.min(40, stageWidth * 0.0355 * 1.55)))
 
       portalTarget.style.setProperty('--lpo-ps-knesset-swing-face-size', `${faceSize}px`)
 
       if (isMobileLayout && dialog) {
+        overlay?.style.removeProperty('--lpo-ps-knesset-swing-fixed-top')
+        overlay?.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+        overlay?.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+        portalTarget.style.removeProperty('--lpo-ps-knesset-swing-anchor-top')
+        wrap.style.removeProperty('--lpo-ps-knesset-swing-stack-gap')
+
         const dialogRect = dialog.getBoundingClientRect()
         const panelHeight = faceSize + 36
         const top = stageRect.top - dialogRect.top - panelHeight - 4
@@ -642,20 +651,101 @@ export function PollSummaryKnessetSeatMap({
         return
       }
 
+      dialog?.style.removeProperty('--lpo-ps-knesset-swing-fixed-top')
+      dialog?.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+      dialog?.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+
       wrap.style.setProperty('--lpo-ps-knesset-swing-stage-top', `${stageTop}px`)
 
-      const portraitTop = stageTop + stageRect.height * 0.045
-      wrap.style.setProperty('--lpo-ps-knesset-swing-portraits-top', `${portraitTop}px`)
-      if (resetBtn) {
-        const labelTop = resetBtn.getBoundingClientRect().top - wrapRect.top
-        wrap.style.setProperty('--lpo-ps-knesset-swing-top', `${labelTop}px`)
+      const rootFontSize =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+      const groupGap = 0.1 * rootFontSize
+      const arrowHeight = 0.62 * rootFontSize
+      const stackGap = 0.2 * rootFontSize
+
+      portalTarget.style.setProperty('--lpo-ps-knesset-swing-stack-gap', `${stackGap}px`)
+
+      const clearDesktopSwingCoords = () => {
+        portalTarget.style.removeProperty('--lpo-ps-knesset-swing-anchor-top')
+        portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-top')
+        portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+        portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+      }
+
+      if (resetBtn && !isMobileLayout) {
+        const resetRect = resetBtn.getBoundingClientRect()
+        const clearance = 0.15 * rootFontSize
+        const stackCeiling = resetRect.top - clearance
+
+        const swingStack = portalTarget.querySelector(
+          '.lpo-ps-knesset-swing-stack',
+        ) as HTMLElement | null
+        const stackH =
+          swingStack?.getBoundingClientRect().height ??
+          2.15 * rootFontSize + faceSize + groupGap + arrowHeight + stackGap
+
+        const applyFixedTop = (viewportTop: number) => {
+          portalTarget.style.setProperty(
+            '--lpo-ps-knesset-swing-fixed-top',
+            `${viewportTop - portalOriginRect.top}px`,
+          )
+        }
+
+        // Wing stacks sit in the side gutter — can use vertical space from dialog top
+        // through the header's side margins (not the wrap top, which is the filter row).
+        const floor = (dialog?.getBoundingClientRect().top ?? portalOriginRect.top) + 8
+
+        // Stack bottom aligns just above איפוס מסננים (viewport coords → overlay-local fixed).
+        let fixedTop = Math.max(floor, stackCeiling - stackH)
+        applyFixedTop(fixedTop)
+
+        const wingInset = wrapRect.width * 0.09
+        if (partySwing?.side === 'right') {
+          portalTarget.style.setProperty(
+            '--lpo-ps-knesset-swing-fixed-right',
+            `${portalOriginRect.right - wrapRect.right + wingInset}px`,
+          )
+          portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+        } else {
+          portalTarget.style.setProperty(
+            '--lpo-ps-knesset-swing-fixed-left',
+            `${wrapRect.left + wingInset - portalOriginRect.left}px`,
+          )
+          portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+        }
+
+        if (swingStack) {
+          const stackBottom = swingStack.getBoundingClientRect().bottom
+          if (stackBottom > stackCeiling) {
+            fixedTop = Math.max(floor, fixedTop - (stackBottom - stackCeiling))
+            applyFixedTop(fixedTop)
+          }
+        }
+
+        wrap.style.removeProperty('--lpo-ps-knesset-swing-top')
+        wrap.style.removeProperty('--lpo-ps-knesset-swing-portraits-top')
+      } else if (resetBtn && isMobileLayout) {
+        clearDesktopSwingCoords()
+      } else {
+        clearDesktopSwingCoords()
+        const portraitTop = stageTop + stageRect.height * 0.045
+        wrap.style.setProperty('--lpo-ps-knesset-swing-portraits-top', `${portraitTop}px`)
       }
     }
 
     updateSwingLayout()
+    const remeasureSwing = () => {
+      requestAnimationFrame(() => {
+        updateSwingLayout()
+        requestAnimationFrame(updateSwingLayout)
+      })
+    }
+    if (partySwing) remeasureSwing()
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateSwingLayout) : null
     ro?.observe(wrap)
     if (dialog) ro?.observe(dialog)
+    const filtersResetBtn = wrap.querySelector('.lpo-ps-knesset-filters-reset')
+    if (filtersResetBtn) ro?.observe(filtersResetBtn)
     window.addEventListener('resize', updateSwingLayout)
     // The mobile/compact dialog scrolls as a single unit (header + body), so the swing panel's
     // fixed-pixel offset (measured from the dialog's own bounding rect) must be recomputed as the
@@ -725,6 +815,7 @@ export function PollSummaryKnessetSeatMap({
       ) : (
         <>
           <div
+            ref={statsRowRef}
             className={`lpo-ps-knesset-map-row${showStats ? ' lpo-ps-knesset-map-row--with-stats' : ''}`}
             dir="ltr"
           >
@@ -797,6 +888,7 @@ export function PollSummaryKnessetSeatMap({
                 document.body,
               )
             : null}
+          {showStats ? <RotatePortraitHint locale={locale} statsRowRef={statsRowRef} /> : null}
         </>
       )}
     </div>
