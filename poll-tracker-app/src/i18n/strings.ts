@@ -117,6 +117,11 @@ export type UiStrings = {
   knessetMapTooltipProfessional: string
   knessetMapTooltipEducation: string
   knessetMapTooltipMilitary: string
+  knessetMapTooltipSector: string
+  knessetMapTooltipCity: string
+  knessetMapTooltipSubIdentity: string
+  knessetMapTooltipFunFact: string
+  knessetMapTooltipPreRole: string
   knessetMapTooltipNoInfo: string
   knessetMapTooltipUnknownName: string
   knessetMapGenderMale: string
@@ -124,6 +129,7 @@ export type UiStrings = {
   knessetStatsNewLabel: string
   knessetStatsGenderLabel: string
   knessetStatsAgeLabel: string
+  knessetStatsPeripheryLabel: string
   knessetStatsKnessetYearsLabel: string
   /** {label} {value} — demographic chart caption with mean (aria) */
   knessetStatsCaptionWithMean: string
@@ -140,6 +146,7 @@ export type UiStrings = {
   knessetStatsMilNotServed: string
   knessetStatsMilUnknown: string
   knessetStatsEducationLabel: string
+  knessetStatsSectorLabel: string
   knessetStatsEduTorah: string
   knessetStatsEduHighSchool: string
   knessetStatsEduBa: string
@@ -334,6 +341,11 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipProfessional: 'Professional experience',
     knessetMapTooltipEducation: 'Education',
     knessetMapTooltipMilitary: 'Military / national service',
+    knessetMapTooltipSector: 'Sector',
+    knessetMapTooltipCity: 'City',
+    knessetMapTooltipSubIdentity: 'Sub-identity',
+    knessetMapTooltipFunFact: 'Fun fact',
+    knessetMapTooltipPreRole: 'Pre-Knesset role',
     knessetMapTooltipNoInfo: 'No information',
     knessetMapTooltipUnknownName: 'Unknown candidate',
     knessetMapGenderMale: 'Male',
@@ -341,6 +353,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsNewLabel: 'New MKs',
     knessetStatsGenderLabel: 'Women',
     knessetStatsAgeLabel: 'Age',
+    knessetStatsPeripheryLabel: 'Periphery grade',
     knessetStatsKnessetYearsLabel: 'Knesset tenure',
     knessetStatsCaptionWithMean: '{label} · avg {value}',
     knessetStatsMeanWord: 'avg',
@@ -355,6 +368,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilNotServed: 'Did not serve',
     knessetStatsMilUnknown: 'No information',
     knessetStatsEducationLabel: 'Education',
+    knessetStatsSectorLabel: 'Sector',
     knessetStatsEduTorah: 'Torah',
     knessetStatsEduHighSchool: 'High school',
     knessetStatsEduBa: "Bachelor's",
@@ -537,6 +551,11 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipProfessional: 'ניסיון מקצועי',
     knessetMapTooltipEducation: 'השכלה',
     knessetMapTooltipMilitary: 'שירות צבאי/לאומי',
+    knessetMapTooltipSector: 'מגזר',
+    knessetMapTooltipCity: 'עיר',
+    knessetMapTooltipSubIdentity: 'תת-זהות',
+    knessetMapTooltipFunFact: 'עובדה מעניינת',
+    knessetMapTooltipPreRole: 'תפקיד קדם-כנסת',
     knessetMapTooltipNoInfo: 'אין מידע',
     knessetMapTooltipUnknownName: 'מועמד/ת לא ידוע/ה',
     knessetMapGenderMale: 'זכר',
@@ -551,6 +570,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilNotServed: 'לא שירתו',
     knessetStatsMilUnknown: 'אין מידע',
     knessetStatsAgeLabel: 'גיל',
+    knessetStatsPeripheryLabel: 'ציון פריפריה',
     knessetStatsKnessetYearsLabel: 'ותק בכנסת',
     knessetStatsCaptionWithMean: '{label} · ממוצע {value}',
     knessetStatsMeanWord: 'ממוצע',
@@ -558,6 +578,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsVsK25Party: 'לעומת כ"כ25 (מפלגה)',
     knessetStatsVsK25Bloc: 'לעומת כ"כ25 (גוש)',
     knessetStatsEducationLabel: 'השכלה',
+    knessetStatsSectorLabel: 'מגזר',
     knessetStatsEduTorah: 'תורנית',
     knessetStatsEduHighSchool: 'תיכונית',
     knessetStatsEduBa: 'תואר ראשון',

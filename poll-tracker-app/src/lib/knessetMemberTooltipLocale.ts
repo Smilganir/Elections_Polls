@@ -10,6 +10,11 @@ export type MemberEnTooltipProfile = {
   professional: string
   military: string
   education: string
+  sector: string
+  city: string
+  subIdentity: string
+  preKnessetRole: string
+  funFact: string
 }
 
 const nameCache = new Map<string, string>()
@@ -198,6 +203,11 @@ function profileCacheKey(member: KnessetMemberRow): string {
     member.professionalExperience,
     member.militaryService,
     member.education,
+    member.sector,
+    member.city,
+    member.subIdentity,
+    member.preKnessetRole,
+    member.funFact,
   ].join('|')
 }
 
@@ -214,24 +224,45 @@ export async function resolveMemberEnTooltip(
   if (inflight) return inflight
 
   const promise = (async () => {
-    const [name, professional, military, education] = await Promise.all([
-      resolveEnglishName(member),
-      member.professionalExperience.trim()
-        ? translateHebrewOnline(member.professionalExperience, noInfoLabel)
-        : Promise.resolve(''),
-      member.militaryService.trim()
-        ? translateHebrewOnline(member.militaryService, noInfoLabel)
-        : Promise.resolve(''),
-      member.education.trim()
-        ? translateHebrewOnline(member.education, noInfoLabel)
-        : Promise.resolve(''),
-    ])
+    const [name, professional, military, education, sector, city, subIdentity, preKnessetRole, funFact] =
+      await Promise.all([
+        resolveEnglishName(member),
+        member.professionalExperience.trim()
+          ? translateHebrewOnline(member.professionalExperience, noInfoLabel)
+          : Promise.resolve(''),
+        member.militaryService.trim()
+          ? translateHebrewOnline(member.militaryService, noInfoLabel)
+          : Promise.resolve(''),
+        member.education.trim()
+          ? translateHebrewOnline(member.education, noInfoLabel)
+          : Promise.resolve(''),
+        member.sector.trim()
+          ? translateHebrewOnline(member.sector, noInfoLabel)
+          : Promise.resolve(''),
+        member.city.trim()
+          ? translateHebrewOnline(member.city, noInfoLabel)
+          : Promise.resolve(''),
+        member.subIdentity.trim()
+          ? translateHebrewOnline(member.subIdentity, noInfoLabel)
+          : Promise.resolve(''),
+        member.preKnessetRole.trim()
+          ? translateHebrewOnline(member.preKnessetRole, noInfoLabel)
+          : Promise.resolve(''),
+        member.funFact.trim()
+          ? translateHebrewOnline(member.funFact, noInfoLabel)
+          : Promise.resolve(''),
+      ])
 
     const profile: MemberEnTooltipProfile = {
       name: name || memberHebrewName(member) || unknownNameLabel,
       professional,
       military,
       education,
+      sector,
+      city,
+      subIdentity,
+      preKnessetRole,
+      funFact,
     }
     profileCache.set(key, profile)
     return profile

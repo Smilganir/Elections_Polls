@@ -31,6 +31,18 @@ export type KnessetMemberRow = {
   education: string
   /** Column N — שירות צבאי/לאומי */
   militaryService: string
+  /** Column V — ציון פריפריה (1-10) */
+  peripheryGrade: string
+  /** Column S — עיר */
+  city: string
+  /** Column W — מגזר */
+  sector: string
+  /** Column X — תת-זהות */
+  subIdentity: string
+  /** Column AD — עובדה מעניינת */
+  funFact: string
+  /** Column Y — תפקיד קדם-כנסת 1 (קטגוריה) */
+  preKnessetRole: string
 }
 
 /** Hebrew sheet list name → canonical unpivot party key. */
@@ -115,6 +127,12 @@ const HEADER_PROFESSIONAL = 'ניסיון מקצועי'
 const HEADER_KNESSET_YEARS = 'ותק בכנסת (שנים)'
 const HEADER_EDUCATION = 'השכלה'
 const HEADER_MILITARY = 'שירות צבאי/לאומי'
+const HEADER_PERIPHERY_GRADE = 'ציון פריפריה (1-10)'
+const HEADER_CITY = 'עיר'
+const HEADER_SECTOR = 'מגזר'
+const HEADER_SUB_IDENTITY = 'תת-זהות'
+const HEADER_FUN_FACT = 'עובדה מעניינת'
+const HEADER_PRE_KNESSET_ROLE = 'תפקיד קדם-כנסת 1 (קטגוריה)'
 
 function headerIndex(headers: readonly string[], name: string): number {
   return headers.findIndex((h) => h.trim() === name)
@@ -194,6 +212,12 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
     const knessetYears = cell(cols, headers, HEADER_KNESSET_YEARS, 11)
     const education = cell(cols, headers, HEADER_EDUCATION, 12)
     const militaryService = cell(cols, headers, HEADER_MILITARY, 13)
+    const peripheryGrade = cell(cols, headers, HEADER_PERIPHERY_GRADE, 21)
+    const city = cell(cols, headers, HEADER_CITY, 18)
+    const sector = cell(cols, headers, HEADER_SECTOR, 22)
+    const subIdentity = cell(cols, headers, HEADER_SUB_IDENTITY, 23)
+    const funFact = cell(cols, headers, HEADER_FUN_FACT, 29)
+    const preKnessetRole = cell(cols, headers, HEADER_PRE_KNESSET_ROLE, 24)
 
     return {
       partyHeb,
@@ -209,6 +233,12 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
       knessetYears,
       education,
       militaryService,
+      peripheryGrade,
+      city,
+      sector,
+      subIdentity,
+      funFact,
+      preKnessetRole,
     }
   })
 }

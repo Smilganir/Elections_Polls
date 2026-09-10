@@ -88,21 +88,29 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
     }
 
     const measure = () => {
-      const cached = lockedLayoutRef.current
-      if (cached) {
-        applyLayout(cached.viewport, cached.naturalHeight, cached.scale)
-        return true
-      }
-
       const width = viewport.clientWidth
       const height = viewport.clientHeight
       const naturalHeight = stage.offsetHeight
       if (width <= 0 || height <= 0 || naturalHeight <= 0) return false
 
-      const locked = { width, height }
+      // Keep the first viewport lock (avoids rescale on dialog scroll) but always
+      // remeasure content height — stats/map load async and grow the stage.
+      const locked = lockedLayoutRef.current?.viewport ?? { width, height }
       const widthScale = locked.width / HERO_CHART_STAGE_WIDTH_PX
       const heightScale = locked.height / naturalHeight
       const nextScale = Math.min(widthScale, heightScale)
+
+      const cached = lockedLayoutRef.current
+      if (
+        cached &&
+        cached.viewport.width === locked.width &&
+        cached.viewport.height === locked.height &&
+        cached.naturalHeight === naturalHeight &&
+        Math.abs(cached.scale - nextScale) < 0.0001
+      ) {
+        return true
+      }
+
       applyLayout(locked, naturalHeight, nextScale)
       return true
     }
@@ -120,10 +128,16 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
       if (frame < 12) requestAnimationFrame(settleMeasure)
     }
 
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(measure)
+    })
+    resizeObserver.observe(stage)
+
     requestAnimationFrame(settleMeasure)
     window.addEventListener('resize', onWindowResize)
 
     return () => {
+      resizeObserver.disconnect()
       window.removeEventListener('resize', onWindowResize)
     }
   }, [])

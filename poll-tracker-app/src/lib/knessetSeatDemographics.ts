@@ -10,6 +10,9 @@ export type KnessetMapFocus =
   | { kind: 'age'; value: AgeBinId }
   | { kind: 'knessetYears'; value: KnessetYearsBinId }
   | { kind: 'education'; value: EducationBucket }
+  | { kind: 'sector'; value: SectorBucket }
+  | { kind: 'preRole'; value: string }
+  | { kind: 'periphery'; value: PeripheryBinId }
   | null
 
 export type KnessetMapFocusItem = Exclude<KnessetMapFocus, null>
@@ -32,6 +35,9 @@ export function mapFocusEquals(a: KnessetMapFocus, b: KnessetMapFocus): boolean 
   if (a.kind === 'age' && b.kind === 'age') return a.value === b.value
   if (a.kind === 'knessetYears' && b.kind === 'knessetYears') return a.value === b.value
   if (a.kind === 'education' && b.kind === 'education') return a.value === b.value
+  if (a.kind === 'sector' && b.kind === 'sector') return a.value === b.value
+  if (a.kind === 'preRole' && b.kind === 'preRole') return a.value === b.value
+  if (a.kind === 'periphery' && b.kind === 'periphery') return a.value === b.value
   return false
 }
 
@@ -43,7 +49,10 @@ export function isDemographicFocus(focus: KnessetMapFocus): boolean {
     focus.kind === 'military' ||
     focus.kind === 'age' ||
     focus.kind === 'knessetYears' ||
-    focus.kind === 'education'
+    focus.kind === 'education' ||
+    focus.kind === 'sector' ||
+    focus.kind === 'preRole' ||
+    focus.kind === 'periphery'
   )
 }
 
@@ -107,6 +116,18 @@ function memberMatchesDemographic(
   }
   if (focus.kind === 'education') {
     return classifyEducation(member.education) === focus.value
+  }
+  if (focus.kind === 'sector') {
+    return classifySector(member.sector) === focus.value
+  }
+  if (focus.kind === 'preRole') {
+    return normalizePreKnessetRole(member.preKnessetRole) === focus.value
+  }
+  if (focus.kind === 'periphery') {
+    const grade = parseMemberPeripheryGrade(member.peripheryGrade)
+    if (grade == null) return false
+    const bin = PERIPHERY_BIN_DEFS.find((d) => grade >= d.min && grade < d.max)
+    return bin?.id === focus.value
   }
   return false
 }
@@ -174,6 +195,26 @@ export function partyKeysMatchingFilters(
 export const EDUCATION_BUCKETS = ['torah', 'highschool', 'ba', 'ma', 'phd'] as const
 export type EducationBucket = (typeof EDUCATION_BUCKETS)[number]
 
+/** Column W — מגזר (sheet taxonomy). */
+export const SECTOR_BUCKETS = [
+  'secular',
+  'traditional',
+  'religious',
+  'haredi',
+  'arab',
+  'druze',
+] as const
+export type SectorBucket = (typeof SECTOR_BUCKETS)[number]
+
+const SECTOR_HEBREW: Record<SectorBucket, string> = {
+  secular: 'חילוני',
+  traditional: 'מסורתי',
+  religious: 'דתי',
+  haredi: 'חרדי',
+  arab: 'ערבי',
+  druze: 'דרוזי',
+}
+
 /** Column N — שירות צבאי/לאומי breakdown (sheet taxonomy). */
 export const MILITARY_SERVICE_BUCKETS = [
   'regular',
@@ -212,6 +253,23 @@ export const KNESSET_YEARS_BIN_DEFS = [
 
 export type KnessetYearsBinId = (typeof KNESSET_YEARS_BIN_DEFS)[number]['id']
 
+/** Column V — ציון פריפריה (1-10); integer score bins. */
+export const PERIPHERY_BIN_DEFS = [
+  { id: '0', min: 0, max: 1, optional: true },
+  { id: '1', min: 1, max: 2, optional: false },
+  { id: '2', min: 2, max: 3, optional: true },
+  { id: '3', min: 3, max: 4, optional: false },
+  { id: '4', min: 4, max: 5, optional: false },
+  { id: '5', min: 5, max: 6, optional: false },
+  { id: '6', min: 6, max: 7, optional: false },
+  { id: '7', min: 7, max: 8, optional: false },
+  { id: '8', min: 8, max: 9, optional: false },
+  { id: '9', min: 9, max: 10, optional: false },
+  { id: '10', min: 10, max: 11, optional: false },
+] as const
+
+export type PeripheryBinId = (typeof PERIPHERY_BIN_DEFS)[number]['id']
+
 export type KnessetAgeBin = {
   id: AgeBinId
   count: number
@@ -219,6 +277,11 @@ export type KnessetAgeBin = {
 
 export type KnessetYearsBin = {
   id: KnessetYearsBinId
+  count: number
+}
+
+export type KnessetPeripheryBin = {
+  id: PeripheryBinId
   count: number
 }
 
@@ -234,6 +297,18 @@ export type KnessetMilitaryServiceShare = {
   share: number
 }
 
+export type KnessetSectorShare = {
+  bucket: SectorBucket
+  count: number
+  share: number
+}
+
+export type KnessetPreRoleShare = {
+  key: string
+  count: number
+  share: number
+}
+
 export type KnessetDemographics = {
   memberCount: number
   newPct: number | null
@@ -245,11 +320,18 @@ export type KnessetDemographics = {
   avgKnessetYears: number | null
   ageBins: KnessetAgeBin[]
   knessetYearsBins: KnessetYearsBin[]
+  peripheryBins: KnessetPeripheryBin[]
+  /** Mean periphery grade (0–10) among members with a known score. */
+  avgPeripheryGrade: number | null
   education: KnessetEducationShare[]
   militaryService: KnessetMilitaryServiceShare[]
+  sector: KnessetSectorShare[]
+  preRole: KnessetPreRoleShare[]
 }
 
-const UNKNOWN_EDU = /^(אין מידע|\-|,|\s)*$/
+const UNKNOWN_FIELD = /^(אין מידע|\-|,|\s)*$/
+
+const UNKNOWN_EDU = UNKNOWN_FIELD
 
 export function classifyEducation(raw: string): EducationBucket | null {
   const t = raw.trim()
@@ -262,7 +344,61 @@ export function classifyEducation(raw: string): EducationBucket | null {
   return null
 }
 
-const UNKNOWN_MILITARY = /^(אין מידע|\-|,|\s)*$/
+export function classifySector(raw: string): SectorBucket | null {
+  const t = raw.trim()
+  if (!t || UNKNOWN_FIELD.test(t) || t.startsWith('אין מידע')) return null
+  const entry = (Object.entries(SECTOR_HEBREW) as [SectorBucket, string][]).find(
+    ([, label]) => label === t,
+  )
+  return entry?.[0] ?? null
+}
+
+export function sectorHebrewLabel(bucket: SectorBucket): string {
+  return SECTOR_HEBREW[bucket]
+}
+
+const SECTOR_ENGLISH: Record<SectorBucket, string> = {
+  secular: 'Secular',
+  traditional: 'Traditional',
+  religious: 'Religious',
+  haredi: 'Haredi',
+  arab: 'Arab',
+  druze: 'Druze',
+}
+
+const PRE_ROLE_ENGLISH: Record<string, string> = {
+  'חברה אזרחית': 'Civil society',
+  'ניסיון בשלטון המקומי': 'Local government',
+  'עובדי מדינה': 'Civil servants',
+  'צמחו במנגנון הפוליטי': 'Political machine',
+  'עסקו בחינוך': 'Education',
+  'אנשי ביטחון': 'Security',
+  'ניסיון עסקי': 'Business',
+  'הוסמכו כעורכי דין': 'Legal',
+  'עסקו בתקשורת': 'Media',
+  דת: 'Religion',
+  'וועדי עובדים': 'Labor unions',
+  בריאות: 'Health',
+  אחר: 'Other',
+  אקדמאי: 'Academic',
+}
+
+export function sectorChartLabel(bucket: SectorBucket, locale: 'en' | 'he'): string {
+  return locale === 'he' ? sectorHebrewLabel(bucket) : SECTOR_ENGLISH[bucket]
+}
+
+export function preKnessetRoleChartLabel(key: string, locale: 'en' | 'he'): string {
+  if (locale === 'he') return key
+  return PRE_ROLE_ENGLISH[key] ?? key
+}
+
+export function normalizePreKnessetRole(raw: string): string | null {
+  const t = raw.trim()
+  if (!t || UNKNOWN_FIELD.test(t) || t.startsWith('אין מידע')) return null
+  return t
+}
+
+const UNKNOWN_MILITARY = UNKNOWN_FIELD
 
 const MILITARY_NATIONAL = /שירות\s*לאומי/
 
@@ -327,6 +463,18 @@ export function parseMemberKnessetYears(raw: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null
 }
 
+export function parseMemberPeripheryGrade(raw: string): number | null {
+  const t = raw.trim()
+  if (!t || UNKNOWN_FIELD.test(t) || t.startsWith('אין מידע')) return null
+  const n = Number.parseFloat(t)
+  if (!Number.isFinite(n) || n < 0 || n > 10) return null
+  return n
+}
+
+export function peripheryBinLabel(id: string): string {
+  return id
+}
+
 export function knessetYearsBinLabel(id: string): string {
   if (id === '30') return '30+'
   const start = Number(id)
@@ -378,14 +526,21 @@ export function summarizeProjectedKnesset(
   for (const def of AGE_BIN_DEFS) ageCounts.set(def.id, 0)
   const knessetYearsCounts = new Map<KnessetYearsBinId, number>()
   for (const def of KNESSET_YEARS_BIN_DEFS) knessetYearsCounts.set(def.id, 0)
+  const peripheryCounts = new Map<PeripheryBinId, number>()
+  for (const def of PERIPHERY_BIN_DEFS) peripheryCounts.set(def.id, 0)
   const eduCounts = new Map<EducationBucket, number>()
   for (const b of EDUCATION_BUCKETS) eduCounts.set(b, 0)
+  const sectorCounts = new Map<SectorBucket, number>()
+  for (const b of SECTOR_BUCKETS) sectorCounts.set(b, 0)
+  const preRoleCounts = new Map<string, number>()
   const militaryCounts = new Map<MilitaryServiceBucket, number>()
   for (const b of MILITARY_SERVICE_BUCKETS) militaryCounts.set(b, 0)
   let ageSum = 0
   let ageCount = 0
   let knessetYearsSum = 0
   let knessetYearsCount = 0
+  let peripherySum = 0
+  let peripheryCount = 0
 
   for (const m of members) {
     if (m.seniority === 'new' || m.seniority === 'veteran') {
@@ -422,11 +577,27 @@ export function summarizeProjectedKnesset(
       if (bin) knessetYearsCounts.set(bin.id, (knessetYearsCounts.get(bin.id) ?? 0) + 1)
     }
 
+    const peripheryGrade = parseMemberPeripheryGrade(m.peripheryGrade)
+    if (peripheryGrade != null) {
+      peripherySum += peripheryGrade
+      peripheryCount++
+      const bin = PERIPHERY_BIN_DEFS.find((d) => peripheryGrade >= d.min && peripheryGrade < d.max)
+      if (bin) peripheryCounts.set(bin.id, (peripheryCounts.get(bin.id) ?? 0) + 1)
+    }
+
     const edu = classifyEducation(m.education)
     if (edu) eduCounts.set(edu, (eduCounts.get(edu) ?? 0) + 1)
+
+    const sector = classifySector(m.sector)
+    if (sector) sectorCounts.set(sector, (sectorCounts.get(sector) ?? 0) + 1)
+
+    const preRole = normalizePreKnessetRole(m.preKnessetRole)
+    if (preRole) preRoleCounts.set(preRole, (preRoleCounts.get(preRole) ?? 0) + 1)
   }
 
   const eduTotal = EDUCATION_BUCKETS.reduce((s, b) => s + (eduCounts.get(b) ?? 0), 0)
+  const sectorTotal = SECTOR_BUCKETS.reduce((s, b) => s + (sectorCounts.get(b) ?? 0), 0)
+  const preRoleTotal = [...preRoleCounts.values()].reduce((s, n) => s + n, 0)
 
   const ageBins: KnessetAgeBin[] = AGE_BIN_DEFS.filter((def) => {
     const count = ageCounts.get(def.id) ?? 0
@@ -438,6 +609,11 @@ export function summarizeProjectedKnesset(
     return !def.optional || count > 0
   }).map((def) => ({ id: def.id, count: knessetYearsCounts.get(def.id) ?? 0 }))
 
+  const peripheryBins: KnessetPeripheryBin[] = PERIPHERY_BIN_DEFS.filter((def) => {
+    const count = peripheryCounts.get(def.id) ?? 0
+    return !def.optional || count > 0
+  }).map((def) => ({ id: def.id, count: peripheryCounts.get(def.id) ?? 0 }))
+
   return {
     memberCount: members.length,
     newPct: ratio(newCount, seniorityKnown),
@@ -447,6 +623,8 @@ export function summarizeProjectedKnesset(
     avgKnessetYears: knessetYearsCount > 0 ? knessetYearsSum / knessetYearsCount : null,
     ageBins,
     knessetYearsBins,
+    peripheryBins,
+    avgPeripheryGrade: peripheryCount > 0 ? peripherySum / peripheryCount : null,
     education: EDUCATION_BUCKETS.map((bucket) => {
       const count = eduCounts.get(bucket) ?? 0
       return { bucket, count, share: eduTotal > 0 ? count / eduTotal : 0 }
@@ -459,6 +637,17 @@ export function summarizeProjectedKnesset(
         share: members.length > 0 ? count / members.length : 0,
       }
     }),
+    sector: SECTOR_BUCKETS.map((bucket) => {
+      const count = sectorCounts.get(bucket) ?? 0
+      return { bucket, count, share: sectorTotal > 0 ? count / sectorTotal : 0 }
+    }),
+    preRole: [...preRoleCounts.entries()]
+      .map(([key, count]) => ({
+        key,
+        count,
+        share: preRoleTotal > 0 ? count / preRoleTotal : 0,
+      }))
+      .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key, 'he')),
   }
 }
 

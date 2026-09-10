@@ -78,6 +78,42 @@ function memberTooltipDetailRows(
   if (knessetYears) {
     rows.push({ label: t.knessetMapTooltipKnessetYears, value: knessetYears })
   }
+  if (member.sector.trim()) {
+    rows.push({
+      label: t.knessetMapTooltipSector,
+      value:
+        locale === 'en'
+          ? enProfile?.sector || '…'
+          : memberTooltipFieldValue(member.sector, locale, t.knessetMapTooltipNoInfo),
+    })
+  }
+  if (member.city.trim()) {
+    rows.push({
+      label: t.knessetMapTooltipCity,
+      value:
+        locale === 'en'
+          ? enProfile?.city || '…'
+          : memberTooltipFieldValue(member.city, locale, t.knessetMapTooltipNoInfo),
+    })
+  }
+  if (member.subIdentity.trim()) {
+    rows.push({
+      label: t.knessetMapTooltipSubIdentity,
+      value:
+        locale === 'en'
+          ? enProfile?.subIdentity || '…'
+          : memberTooltipFieldValue(member.subIdentity, locale, t.knessetMapTooltipNoInfo),
+    })
+  }
+  if (member.preKnessetRole.trim()) {
+    rows.push({
+      label: t.knessetMapTooltipPreRole,
+      value:
+        locale === 'en'
+          ? enProfile?.preKnessetRole || '…'
+          : memberTooltipFieldValue(member.preKnessetRole, locale, t.knessetMapTooltipNoInfo),
+    })
+  }
   if (member.professionalExperience.trim()) {
     rows.push({
       label: t.knessetMapTooltipProfessional,
@@ -107,6 +143,15 @@ function memberTooltipDetailRows(
         locale === 'en'
           ? enProfile?.education || '…'
           : memberTooltipFieldValue(member.education, locale, t.knessetMapTooltipNoInfo),
+    })
+  }
+  if (member.funFact.trim()) {
+    rows.push({
+      label: t.knessetMapTooltipFunFact,
+      value:
+        locale === 'en'
+          ? enProfile?.funFact || '…'
+          : memberTooltipFieldValue(member.funFact, locale, t.knessetMapTooltipNoInfo),
     })
   }
   return rows
@@ -214,6 +259,14 @@ function KnessetSeatTooltip({
               {displayParty(tooltip.seat.partyKey)}
             </span>
           </p>
+          {member ? (
+            <MemberTooltipDetails
+              member={member}
+              locale={locale}
+              t={t}
+              enProfile={enProfile}
+            />
+          ) : null}
         </div>
         {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
           <img
@@ -226,14 +279,6 @@ function KnessetSeatTooltip({
           />
         ) : null}
       </div>
-      {member ? (
-        <MemberTooltipDetails
-          member={member}
-          locale={locale}
-          t={t}
-          enProfile={enProfile}
-        />
-      ) : null}
     </div>
   )
 }
@@ -427,6 +472,7 @@ export function PollSummaryKnessetSeatMap({
                 <KnessetStatsLeftStack
                   seats={seats}
                   mergeArabsWithOpposition={mergeArabsWithOpposition}
+                  locale={locale}
                   t={t}
                   mapFilters={activeFilters}
                   onToggleFocus={handleToggleFilter}

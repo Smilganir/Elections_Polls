@@ -2,10 +2,14 @@ import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import {
   knessetYearsBinLabel,
+  peripheryBinLabel,
+  preKnessetRoleChartLabel,
+  sectorChartLabel,
   type EducationBucket,
   type KnessetMapFilters,
   type KnessetMapFocusItem,
   type MilitaryServiceBucket,
+  type SectorBucket,
 } from '../lib/knessetSeatDemographics'
 
 function ageBinLabel(id: string): string {
@@ -35,6 +39,7 @@ export function mapFilterLabel(
   filter: KnessetMapFocusItem,
   t: UiStrings,
   displayParty: (partyKey: string) => string,
+  locale: AppLocale = 'he',
 ): string {
   if (filter.kind === 'party') return displayParty(filter.partyKey)
   if (filter.kind === 'segment') {
@@ -51,7 +56,11 @@ export function mapFilterLabel(
   }
   if (filter.kind === 'age') return ageBinLabel(filter.value)
   if (filter.kind === 'knessetYears') return knessetYearsBinLabel(filter.value)
-  return educationLabel(filter.value, t)
+  if (filter.kind === 'periphery') return peripheryBinLabel(filter.value)
+  if (filter.kind === 'education') return educationLabel(filter.value, t)
+  if (filter.kind === 'sector') return sectorChartLabel(filter.value as SectorBucket, locale)
+  if (filter.kind === 'preRole') return preKnessetRoleChartLabel(filter.value, locale)
+  return ''
 }
 
 export function PollSummaryKnessetFiltersPane({
@@ -84,7 +93,7 @@ export function PollSummaryKnessetFiltersPane({
     <div className="lpo-ps-knesset-filters-pane" role="region" aria-label={t.knessetMapActiveFiltersAria}>
       <ul className="lpo-ps-knesset-filters-list">
         {filters.map((filter) => {
-          const label = mapFilterLabel(filter, t, displayParty)
+          const label = mapFilterLabel(filter, t, displayParty, locale)
           return (
             <li key={filterKey(filter)}>
               <button
@@ -120,5 +129,8 @@ function filterKey(filter: KnessetMapFocusItem): string {
   if (filter.kind === 'military') return `military:${filter.value}`
   if (filter.kind === 'age') return `age:${filter.value}`
   if (filter.kind === 'knessetYears') return `knessetYears:${filter.value}`
-  return `education:${filter.value}`
+  if (filter.kind === 'periphery') return `periphery:${filter.value}`
+  if (filter.kind === 'education') return `education:${filter.value}`
+  if (filter.kind === 'sector') return `sector:${filter.value}`
+  return `preRole:${filter.value}`
 }

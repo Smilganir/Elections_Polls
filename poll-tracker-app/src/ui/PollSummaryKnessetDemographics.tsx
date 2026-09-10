@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { UiStrings } from '../i18n/strings'
 import type { KnessetFilledSeat } from '../lib/knessetSeatAllocation'
+import type { AppLocale } from '../i18n/localeContext'
 import type {
   AgeBinId,
   EducationBucket,
@@ -9,6 +10,8 @@ import type {
   KnessetMapFocusItem,
   KnessetYearsBinId,
   MilitaryServiceBucket,
+  PeripheryBinId,
+  SectorBucket,
 } from '../lib/knessetSeatDemographics'
 import {
   chartStatsExcludingKind,
@@ -18,6 +21,8 @@ import {
   formatPctLabel,
   knessetYearsBinLabel,
   militaryServedPctOfAll,
+  peripheryBinLabel,
+  sectorChartLabel,
   summarizeProjectedKnesset,
 } from '../lib/knessetSeatDemographics'
 import {
@@ -294,6 +299,40 @@ function AgeHistogram({
   )
 }
 
+function PeripheryHistogram({
+  bins,
+  title,
+  avgValue,
+  t,
+  mapFilters,
+  onToggleFocus,
+  layoutSlot,
+}: {
+  bins: KnessetDemographics['peripheryBins']
+  title: string
+  avgValue: number | null
+  t: UiStrings
+  mapFilters: KnessetMapFilters
+  onToggleFocus: (next: KnessetMapFocusItem) => void
+  layoutSlot?: string
+}) {
+  return (
+    <DemographicHistogram
+      bins={bins}
+      label={title}
+      avgValue={avgValue}
+      k25DeltaPct={null}
+      k25Scope={null}
+      t={t}
+      mapFilters={mapFilters}
+      onToggleFocus={onToggleFocus}
+      focusKind="periphery"
+      tickLabel={peripheryBinLabel}
+      layoutSlot={layoutSlot}
+    />
+  )
+}
+
 function KnessetYearsHistogram({
   bins,
   title,
@@ -353,7 +392,7 @@ function DemographicHistogram({
   t: UiStrings
   mapFilters: KnessetMapFilters
   onToggleFocus: (next: KnessetMapFocusItem) => void
-  focusKind: 'age' | 'knessetYears'
+  focusKind: 'age' | 'knessetYears' | 'periphery'
   tickLabel: (id: string) => string
   layoutSlot?: string
 }) {
@@ -376,7 +415,9 @@ function DemographicHistogram({
           const focus: KnessetMapFocusItem =
             focusKind === 'age'
               ? { kind: 'age', value: bin.id as AgeBinId }
-              : { kind: 'knessetYears', value: bin.id as KnessetYearsBinId }
+              : focusKind === 'periphery'
+                ? { kind: 'periphery', value: bin.id as PeripheryBinId }
+                : { kind: 'knessetYears', value: bin.id as KnessetYearsBinId }
           const active = filtersInclude(mapFilters, focus)
           return (
             <button
@@ -537,6 +578,91 @@ function EducationBars({
   )
 }
 
+function CategoryBars({
+  rows,
+  title,
+  mapFilters,
+  onToggleFocus,
+  layoutSlot,
+  focusForRow,
+  labelForRow,
+}: {
+  rows: readonly { key: string; count: number; share: number }[]
+  title: string
+  mapFilters: KnessetMapFilters
+  onToggleFocus: (next: KnessetMapFocusItem) => void
+  layoutSlot?: string
+  focusForRow: (key: string) => KnessetMapFocusItem
+  labelForRow: (key: string) => string
+}) {
+  const known = rows.reduce((s, r) => s + r.count, 0)
+  if (known <= 0) return null
+
+  return (
+    <figure className={`lpo-ps-knesset-edu-fig${layoutSlot ? ` ${layoutSlot}` : ''}`}>
+      <figcaption className="lpo-ps-knesset-stats-caption">{title}</figcaption>
+      <ul className="lpo-ps-knesset-edu-list" dir="ltr">
+        {rows.map((row) => {
+          if (row.count <= 0) return null
+          const focus = focusForRow(row.key)
+          const active = filtersInclude(mapFilters, focus)
+          return (
+            <li key={row.key}>
+              <button
+                type="button"
+                className={`lpo-ps-knesset-edu-row lpo-ps-knesset-stat-hit${
+                  active ? ' lpo-ps-knesset-stat-hit--active' : ''
+                }`}
+                aria-pressed={active}
+                onClick={() => onToggleFocus(focus)}
+              >
+                <span className="lpo-ps-knesset-edu-name">{labelForRow(row.key)}</span>
+                <div className="lpo-ps-knesset-edu-track">
+                  <div
+                    className="lpo-ps-knesset-edu-fill"
+                    style={{ width: `${row.share * 100}%` }}
+                  />
+                </div>
+                <span className="lpo-ps-knesset-edu-pct" dir="ltr">
+                  {formatPctLabel(row.share)}
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </figure>
+  )
+}
+
+function SectorBars({
+  rows,
+  title,
+  locale,
+  mapFilters,
+  onToggleFocus,
+  layoutSlot,
+}: {
+  rows: KnessetDemographics['sector']
+  title: string
+  locale: AppLocale
+  mapFilters: KnessetMapFilters
+  onToggleFocus: (next: KnessetMapFocusItem) => void
+  layoutSlot?: string
+}) {
+  return (
+    <CategoryBars
+      rows={rows.map((row) => ({ key: row.bucket, count: row.count, share: row.share }))}
+      title={title}
+      mapFilters={mapFilters}
+      onToggleFocus={onToggleFocus}
+      layoutSlot={layoutSlot}
+      focusForRow={(key) => ({ kind: 'sector', value: key as SectorBucket })}
+      labelForRow={(key) => sectorChartLabel(key as SectorBucket, locale)}
+    />
+  )
+}
+
 function donutAria(label: string, portion: number, t: UiStrings): string {
   return t.knessetStatsDonutAria
     .replace(/\{label\}/g, label)
@@ -568,6 +694,10 @@ export function KnessetStatsRightStack({
   )
   const knessetYearsStats = useMemo(
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'knessetYears'),
+    [seats, mapFilters, mergeArabsWithOpposition],
+  )
+  const peripheryStats = useMemo(
+    () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'periphery'),
     [seats, mapFilters, mergeArabsWithOpposition],
   )
 
@@ -637,6 +767,15 @@ export function KnessetStatsRightStack({
         onToggleFocus={onToggleFocus}
         layoutSlot="lpo-ps-knesset-stat-slot--age"
       />
+      <PeripheryHistogram
+        bins={peripheryStats.peripheryBins}
+        title={t.knessetStatsPeripheryLabel}
+        avgValue={peripheryStats.avgPeripheryGrade}
+        t={t}
+        mapFilters={mapFilters}
+        onToggleFocus={onToggleFocus}
+        layoutSlot="lpo-ps-knesset-stat-slot--periphery"
+      />
     </div>
   )
 }
@@ -644,12 +783,14 @@ export function KnessetStatsRightStack({
 export function KnessetStatsLeftStack({
   seats,
   mergeArabsWithOpposition,
+  locale,
   t,
   mapFilters,
   onToggleFocus,
 }: {
   seats: readonly KnessetFilledSeat[]
   mergeArabsWithOpposition: boolean
+  locale: AppLocale
   t: UiStrings
 } & ChartFocusProps) {
   const militaryStats = useMemo(
@@ -660,7 +801,10 @@ export function KnessetStatsLeftStack({
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'education'),
     [seats, mapFilters, mergeArabsWithOpposition],
   )
-
+  const sectorStats = useMemo(
+    () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'sector'),
+    [seats, mapFilters, mergeArabsWithOpposition],
+  )
   const k25Resolve = resolveKnesset25Baseline(mapFilters, mergeArabsWithOpposition)
   const k25 = k25Resolve?.slice
   const k25Scope = k25Resolve?.scope ?? null
@@ -709,6 +853,14 @@ export function KnessetStatsLeftStack({
         mapFilters={mapFilters}
         onToggleFocus={onToggleFocus}
         layoutSlot="lpo-ps-knesset-stat-slot--education"
+      />
+      <SectorBars
+        rows={sectorStats.sector}
+        title={t.knessetStatsSectorLabel}
+        locale={locale}
+        mapFilters={mapFilters}
+        onToggleFocus={onToggleFocus}
+        layoutSlot="lpo-ps-knesset-stat-slot--sector"
       />
     </div>
   )
