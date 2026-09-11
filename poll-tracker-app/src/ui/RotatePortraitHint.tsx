@@ -3,16 +3,11 @@ import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 
-/** Short-edge cap — same family as LPO portrait-mobile behavior (LatestPollsOverviewPage). */
-const MOBILE_SHORT_EDGE_PX = 768
-/**
- * Landscape-on-mobile media queries. UAs differ on which axis updates first after
- * orientationchange, so match either short side in landscape.
- */
-const LANDSCAPE_MOBILE_MQS = [
-  `(max-height: ${MOBILE_SHORT_EDGE_PX}px) and (orientation: landscape)`,
-  `(max-width: ${MOBILE_SHORT_EDGE_PX}px) and (orientation: landscape)`,
-] as const
+/** Bump when hint eligibility / persistence rules change so users aren't stuck on old dismiss flags. */
+const STORAGE_KEY = 'lpo-ps-portrait-hint-dismissed-v2'
+/** Phone landscape cap — below typical laptop window heights (e.g. 720px). */
+const PHONE_LANDSCAPE_MAX_HEIGHT_PX = 500
+const PHONE_LANDSCAPE_MQ = `(max-height: ${PHONE_LANDSCAPE_MAX_HEIGHT_PX}px) and (orientation: landscape) and (pointer: coarse)`
 
 function viewportSize(): { w: number; h: number } {
   const vv = window.visualViewport
@@ -22,30 +17,48 @@ function viewportSize(): { w: number; h: number } {
   }
 }
 
-function isLandscapeOrientation(): boolean {
-  const type = window.screen?.orientation?.type
-  if (type) return type.startsWith('landscape')
+function isCoarsePointer(): boolean {
+  try {
+    return window.matchMedia('(pointer: coarse)').matches
+  } catch {
+    return false
+  }
+}
+
+function isViewportLandscape(): boolean {
   const { w, h } = viewportSize()
   return w > h
 }
 
-function isMobileShortEdge(): boolean {
-  const { w, h } = viewportSize()
-  return Math.min(w, h) <= MOBILE_SHORT_EDGE_PX
-}
-
-function isNarrowLandscape(): boolean {
+function isPhoneLandscape(): boolean {
   if (typeof window === 'undefined') return false
-  if (!isLandscapeOrientation()) return false
+  if (!isCoarsePointer()) return false
 
   try {
-    if (LANDSCAPE_MOBILE_MQS.some((q) => window.matchMedia(q).matches)) return true
+    if (window.matchMedia(PHONE_LANDSCAPE_MQ).matches) return true
   } catch {
     /* fall through */
   }
 
-  // Android Chrome can lag orientation media queries; shortest-edge landscape fallback.
-  return isMobileShortEdge()
+  // Android Chrome can lag orientation media queries; viewport fallback only.
+  const { h } = viewportSize()
+  return isViewportLandscape() && h <= PHONE_LANDSCAPE_MAX_HEIGHT_PX
+}
+
+function wasDismissed(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function persistDismissed(): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, '1')
+  } catch {
+    /* quota / privacy mode */
+  }
 }
 
 function RotateToPortraitGlyph({ className }: { className?: string }) {
@@ -85,8 +98,7 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
   const t = UI[locale]
   const [open, setOpen] = useState(false)
   const [statsRowVisible, setStatsRowVisible] = useState(false)
-  /** Dismissed for the current landscape stint only — cleared when returning to portrait. */
-  const dismissedThisLandscapeRef = useRef(false)
+  const dismissedRef = useRef(typeof window !== 'undefined' ? wasDismissed() : false)
   const openRef = useRef(false)
 
   const closeOverlay = useCallback(() => {
@@ -94,8 +106,9 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
     openRef.current = false
   }, [])
 
-  const dismissForThisLandscape = useCallback(() => {
-    dismissedThisLandscapeRef.current = true
+  const dismissAndPersist = useCallback(() => {
+    persistDismissed()
+    dismissedRef.current = true
     closeOverlay()
   }, [closeOverlay])
 
@@ -118,16 +131,19 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
   const syncViewport = useCallback(() => {
     if (typeof window === 'undefined') return
 
-    const narrowLandscape = isNarrowLandscape()
-
-    // Each portrait return clears dismiss so the hint can show on the next landscape rotate.
-    if (!narrowLandscape) {
-      dismissedThisLandscapeRef.current = false
+    if (dismissedRef.current || wasDismissed()) {
       if (openRef.current) closeOverlay()
       return
     }
 
-    const shouldShow = statsRowVisible && !dismissedThisLandscapeRef.current
+    const phoneLandscape = isPhoneLandscape()
+
+    if (!phoneLandscape) {
+      if (openRef.current) closeOverlay()
+      return
+    }
+
+    const shouldShow = statsRowVisible
 
     if (shouldShow && !openRef.current) {
       openRef.current = true
@@ -138,16 +154,19 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
   }, [closeOverlay, statsRowVisible])
 
   useEffect(() => {
+    dismissedRef.current = wasDismissed()
     syncViewport()
 
-    const mqs = LANDSCAPE_MOBILE_MQS.map((q) => window.matchMedia(q))
+    const mqs = [
+      window.matchMedia(PHONE_LANDSCAPE_MQ),
+      window.matchMedia('(pointer: coarse)'),
+    ]
     const onMqChange = () => syncViewport()
     mqs.forEach((mq) => mq.addEventListener('change', onMqChange))
 
     window.addEventListener('resize', syncViewport)
     window.visualViewport?.addEventListener('resize', syncViewport)
     window.visualViewport?.addEventListener('scroll', syncViewport)
-    window.screen?.orientation?.addEventListener('change', onMqChange)
 
     const orientTimeouts: ReturnType<typeof setTimeout>[] = []
     const onOrientationChange = () => {
@@ -167,7 +186,6 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
       window.removeEventListener('resize', syncViewport)
       window.visualViewport?.removeEventListener('resize', syncViewport)
       window.visualViewport?.removeEventListener('scroll', syncViewport)
-      window.screen?.orientation?.removeEventListener('change', onMqChange)
       window.removeEventListener('orientationchange', onOrientationChange)
       clearTimeout(mountTimeout)
       orientTimeouts.forEach(clearTimeout)
@@ -193,7 +211,7 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
 
   return createPortal(
     <div className="lpo-rotate-hint-overlay" dir={dir} role="presentation">
-      <div className="lpo-rotate-hint-scrim" aria-hidden onClick={dismissForThisLandscape} />
+      <div className="lpo-rotate-hint-scrim" aria-hidden onClick={dismissAndPersist} />
       <div
         className="lpo-rotate-hint-dialog"
         role="dialog"
@@ -204,7 +222,7 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
         <h2 id="lpo-rotate-hint-heading" className="lpo-rotate-hint-title">
           {t.rotatePortraitTitle}
         </h2>
-        <button type="button" className="lpo-rotate-hint-btn" onClick={dismissForThisLandscape}>
+        <button type="button" className="lpo-rotate-hint-btn" onClick={dismissAndPersist}>
           {t.rotatePortraitDismiss}
         </button>
       </div>
