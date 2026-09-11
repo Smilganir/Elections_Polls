@@ -236,8 +236,9 @@ const HERO_CHART_TOUCH_ZOOM_MIN = 1
 const HERO_CHART_TOUCH_ZOOM_MAX = 3
 
 /**
- * In-dialog pinch/pan for compact (phone) hero chart. Browser pinch-zoom is blocked on the
- * overlay (touch-action: manipulation); this transform is independent of scale-to-fit.
+ * In-dialog pinch/pan for compact (phone) hero chart. Browser page pinch-zoom is blocked on the
+ * overlay (touch-action: manipulation); the viewport uses pan-y so one-finger vertical scroll
+ * passes through at scale 1. touchmove preventDefault only during pinch or zoomed pan.
  */
 function HeroChartHemicycleTouchZoom({
   children,
@@ -246,6 +247,7 @@ function HeroChartHemicycleTouchZoom({
   children: React.ReactNode
   enabled: boolean
 }) {
+  const viewportRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const gestureRef = useRef({
     scale: 1,
@@ -276,6 +278,22 @@ function HeroChartHemicycleTouchZoom({
       panStartY: 0,
     }
     setTransform({ scale: 1, panX: 0, panY: 0 })
+  }, [enabled])
+
+  useEffect(() => {
+    if (!enabled) return
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    const onTouchMove = (e: TouchEvent) => {
+      const g = gestureRef.current
+      if (e.touches.length >= 2 || g.scale > 1) {
+        e.preventDefault()
+      }
+    }
+
+    viewport.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => viewport.removeEventListener('touchmove', onTouchMove)
   }, [enabled])
 
   const syncTransform = () => {
@@ -366,7 +384,7 @@ function HeroChartHemicycleTouchZoom({
   if (!enabled) return <>{children}</>
 
   return (
-    <div className="lpo-ps-hero-chart-touch-zoom-viewport">
+    <div ref={viewportRef} className="lpo-ps-hero-chart-touch-zoom-viewport">
       <div
         ref={innerRef}
         className="lpo-ps-hero-chart-touch-zoom-inner"

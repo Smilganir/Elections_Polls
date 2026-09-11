@@ -8527,7 +8527,8 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
   .lpo-ps-hero-chart-touch-zoom-viewport {
     overflow: hidden;
-    touch-action: none;
+    /* pan-y: native one-finger vertical scroll at scale 1; pinch/zoomed-pan via touchmove preventDefault */
+    touch-action: pan-y;
     width: 100%;
     flex: 0 0 auto;
   }
