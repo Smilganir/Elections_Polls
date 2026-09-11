@@ -58,14 +58,36 @@ type TooltipState = {
 }
 
 const TOOLTIP_VIEWPORT_MARGIN = 12
+const TOOLTIP_TOP_MARGIN = 8
+const TOOLTIP_ANCHOR_GAP = 10
+const TOOLTIP_MAX_HEIGHT_CAP = 820
 /** Matches CSS max-width: min(20rem, 92vw) — used before layout measure. */
 const TOOLTIP_LAYOUT_WIDTH_PX = 320
+
+type TooltipDetailRow = { label: string; value: string; clamp?: boolean }
+
+type TooltipVerticalLayout = {
+  placement: TooltipPlacement
+  top: number
+  maxHeight?: number
+  pinTop?: boolean
+}
 
 function viewportWidth(): { left: number; width: number } {
   const vv = window.visualViewport
   return {
     left: vv?.offsetLeft ?? 0,
     width: vv?.width ?? window.innerWidth,
+  }
+}
+
+function viewportVerticalBounds(): { minTop: number; maxBottom: number } {
+  const vv = window.visualViewport
+  const offsetTop = vv?.offsetTop ?? 0
+  const height = vv?.height ?? window.innerHeight
+  return {
+    minTop: offsetTop + TOOLTIP_TOP_MARGIN,
+    maxBottom: offsetTop + height - TOOLTIP_VIEWPORT_MARGIN,
   }
 }
 
@@ -88,13 +110,58 @@ function tooltipPlacement(clientY: number): TooltipPlacement {
   const overlayTop = Number.parseFloat(raw) || 88
   if (clientY < overlayTop + 100) return 'below'
 
-  const vv = window.visualViewport
-  const minTop = (vv?.offsetTop ?? 0) + TOOLTIP_VIEWPORT_MARGIN
-  const spaceAbove = clientY - minTop
-  // Tall member cards need room above; top-arc seats open downward.
-  if (spaceAbove < 280) return 'below'
+  const { minTop, maxBottom } = viewportVerticalBounds()
+  const spaceAbove = clientY - minTop - TOOLTIP_ANCHOR_GAP
+  const spaceBelow = maxBottom - clientY - TOOLTIP_ANCHOR_GAP
+  return spaceAbove >= spaceBelow ? 'above' : 'below'
+}
 
-  return 'above'
+/** After measure: flip below, pin top, or cap height so name/photo never clip. */
+function resolveTooltipVerticalLayout(
+  anchorY: number,
+  preferred: TooltipPlacement,
+  cardHeight: number,
+): TooltipVerticalLayout {
+  const { minTop, maxBottom } = viewportVerticalBounds()
+  const gap = TOOLTIP_ANCHOR_GAP
+  const spaceAbove = Math.max(0, anchorY - minTop - gap)
+  const spaceBelow = Math.max(0, maxBottom - anchorY - gap)
+
+  let placement = preferred
+  const fitsAbove = cardHeight <= spaceAbove
+  const fitsBelow = cardHeight <= spaceBelow
+
+  if (placement === 'above' && !fitsAbove) {
+    placement = fitsBelow || spaceBelow >= spaceAbove ? 'below' : 'above'
+  } else if (placement === 'below' && !fitsBelow) {
+    placement = fitsAbove || spaceAbove >= spaceBelow ? 'above' : 'below'
+  }
+
+  const available = placement === 'above' ? spaceAbove : spaceBelow
+  const maxHeight = Math.min(TOOLTIP_MAX_HEIGHT_CAP, available)
+  const effectiveHeight = Math.min(cardHeight, maxHeight)
+
+  if (placement === 'above') {
+    const cardTop = anchorY - effectiveHeight - gap
+    if (cardTop < minTop) {
+      const pinnedMaxHeight = Math.min(
+        TOOLTIP_MAX_HEIGHT_CAP,
+        Math.max(0, anchorY - minTop - gap),
+      )
+      return {
+        placement: 'above',
+        top: minTop,
+        maxHeight: pinnedMaxHeight > 0 ? pinnedMaxHeight : maxHeight,
+        pinTop: true,
+      }
+    }
+  }
+
+  return {
+    placement,
+    top: anchorY,
+    maxHeight: cardHeight > available ? maxHeight : undefined,
+  }
 }
 
 function genderLabel(
@@ -121,8 +188,8 @@ function memberTooltipDetailRows(
   locale: AppLocale,
   t: UiStrings,
   enProfile: MemberEnTooltipProfile | null,
-): { label: string; value: string }[] {
-  const rows: { label: string; value: string }[] = []
+): TooltipDetailRow[] {
+  const rows: TooltipDetailRow[] = []
   if (member.age.trim()) rows.push({ label: t.knessetMapTooltipAge, value: member.age.trim() })
   const gender = genderLabel(member.gender, locale, t)
   if (gender) rows.push({ label: t.knessetMapTooltipGender, value: gender })
@@ -169,6 +236,7 @@ function memberTooltipDetailRows(
   if (member.professionalExperience.trim()) {
     rows.push({
       label: t.knessetMapTooltipProfessional,
+      clamp: true,
       value:
         locale === 'en'
           ? enProfile?.professional || '…'
@@ -182,6 +250,7 @@ function memberTooltipDetailRows(
   if (member.militaryService.trim()) {
     rows.push({
       label: t.knessetMapTooltipMilitary,
+      clamp: true,
       value:
         locale === 'en'
           ? enProfile?.military || '…'
@@ -200,6 +269,7 @@ function memberTooltipDetailRows(
   if (member.funFact.trim()) {
     rows.push({
       label: t.knessetMapTooltipFunFact,
+      clamp: true,
       value:
         locale === 'en'
           ? enProfile?.funFact || '…'
@@ -223,14 +293,19 @@ function MemberTooltipDetails({
   const detailRows = memberTooltipDetailRows(member, locale, t, enProfile)
   if (!detailRows.length) return null
   return (
-    <dl className="lpo-ps-knesset-tooltip-details">
+    <div className="lpo-ps-knesset-tooltip-details">
       {detailRows.map((row) => (
-        <div key={row.label} className="lpo-ps-knesset-tooltip-detail-row">
-          <dt className="lpo-ps-knesset-tooltip-detail-label">{row.label}</dt>
-          <dd className="lpo-ps-knesset-tooltip-detail-value">{row.value}</dd>
-        </div>
+        <p
+          key={row.label}
+          className={`lpo-ps-knesset-tooltip-detail-row${
+            row.clamp ? ' lpo-ps-knesset-tooltip-detail-row--clamp' : ''
+          }`}
+        >
+          <span className="lpo-ps-knesset-tooltip-detail-label">{row.label}:</span>
+          <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
+        </p>
       ))}
-    </dl>
+    </div>
   )
 }
 
@@ -280,11 +355,34 @@ function KnessetSeatTooltip({
 
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [left, setLeft] = useState(tooltip.x)
+  const [verticalLayout, setVerticalLayout] = useState<TooltipVerticalLayout>(() => ({
+    placement: tooltip.placement,
+    top: tooltip.y,
+  }))
 
   useLayoutEffect(() => {
     setLeft(tooltip.x)
     const el = tooltipRef.current
     if (!el) return
+
+    el.style.maxHeight = ''
+    const cardHeight = el.scrollHeight
+    const nextVertical = resolveTooltipVerticalLayout(
+      tooltip.y,
+      tooltip.placement,
+      cardHeight,
+    )
+    setVerticalLayout((prev) => {
+      if (
+        prev.placement === nextVertical.placement &&
+        prev.top === nextVertical.top &&
+        prev.maxHeight === nextVertical.maxHeight &&
+        prev.pinTop === nextVertical.pinTop
+      ) {
+        return prev
+      }
+      return nextVertical
+    })
 
     const applyHorizontalClamp = () => {
       const width = Math.max(el.offsetWidth, el.scrollWidth, TOOLTIP_LAYOUT_WIDTH_PX)
@@ -298,59 +396,69 @@ function KnessetSeatTooltip({
     return () => cancelAnimationFrame(raf)
   }, [tooltip.x, tooltip.y, tooltip.placement, tooltip.seat, memberName, enProfile, locale, t])
 
+  const placementClass = verticalLayout.pinTop
+    ? 'above-pin'
+    : verticalLayout.placement
+
   return (
     <div
       ref={tooltipRef}
-      className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${tooltip.placement}${
+      className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${placementClass}${
         locale === 'he' ? ' lpo-ps-knesset-tooltip--rtl' : ' lpo-ps-knesset-tooltip--ltr'
       }`}
-      style={{ left, top: tooltip.y }}
+      style={{
+        left,
+        top: verticalLayout.top,
+        maxHeight: verticalLayout.maxHeight,
+      }}
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       role="tooltip"
     >
       <div className="lpo-ps-knesset-tooltip-header">
-        <div className="lpo-ps-knesset-tooltip-header-text">
-          {tooltip.seat.kind === 'member' ? (
-            <p className="lpo-ps-knesset-tooltip-name">{memberName}</p>
-          ) : (
-            <p className="lpo-ps-knesset-tooltip-name">{displayParty(tooltip.seat.partyKey)}</p>
-          )}
-          <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
-          <p className="lpo-ps-knesset-tooltip-meta">
-            <span
-              className="lpo-ps-knesset-tooltip-segment"
-              style={{ color: SEGMENT_COLORS[tooltip.seat.segment] }}
-            >
-              {segLabel(tooltip.seat.segment)}
-            </span>
-            <span
-              className="lpo-ps-knesset-tooltip-party"
-              style={{
-                color: PARTY_COLOR_MAP[tooltip.seat.partyKey] ?? tooltip.seat.ringColor,
-              }}
-            >
-              {displayParty(tooltip.seat.partyKey)}
-            </span>
-          </p>
+        <div className="lpo-ps-knesset-tooltip-main">
+          <div className="lpo-ps-knesset-tooltip-header-text">
+            {tooltip.seat.kind === 'member' ? (
+              <p className="lpo-ps-knesset-tooltip-name">{memberName}</p>
+            ) : (
+              <p className="lpo-ps-knesset-tooltip-name">{displayParty(tooltip.seat.partyKey)}</p>
+            )}
+            <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
+            <p className="lpo-ps-knesset-tooltip-meta">
+              <span
+                className="lpo-ps-knesset-tooltip-segment"
+                style={{ color: SEGMENT_COLORS[tooltip.seat.segment] }}
+              >
+                {segLabel(tooltip.seat.segment)}
+              </span>
+              <span
+                className="lpo-ps-knesset-tooltip-party"
+                style={{
+                  color: PARTY_COLOR_MAP[tooltip.seat.partyKey] ?? tooltip.seat.ringColor,
+                }}
+              >
+                {displayParty(tooltip.seat.partyKey)}
+              </span>
+            </p>
+          </div>
+          {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
+            <img
+              className="lpo-ps-knesset-tooltip-portrait"
+              src={tooltip.seat.member.portraitImageUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+          ) : null}
+          {member ? (
+            <MemberTooltipDetails
+              member={member}
+              locale={locale}
+              t={t}
+              enProfile={enProfile}
+            />
+          ) : null}
         </div>
-        {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
-          <img
-            className="lpo-ps-knesset-tooltip-portrait"
-            src={tooltip.seat.member.portraitImageUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-          />
-        ) : null}
-        {member ? (
-          <MemberTooltipDetails
-            member={member}
-            locale={locale}
-            t={t}
-            enProfile={enProfile}
-          />
-        ) : null}
       </div>
     </div>
   )

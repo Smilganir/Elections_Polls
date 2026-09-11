@@ -215,6 +215,165 @@ function HeroChartScaleFit({ children }: { children: React.ReactNode }) {
   return <HeroChartScaleFitStage>{children}</HeroChartScaleFitStage>
 }
 
+function useHeroChartCompact(): boolean {
+  const getCompact = () =>
+    typeof window !== 'undefined' && window.matchMedia(HERO_CHART_COMPACT_MQ).matches
+
+  const [compact, setCompact] = useState(getCompact)
+
+  useEffect(() => {
+    const mq = window.matchMedia(HERO_CHART_COMPACT_MQ)
+    const sync = () => setCompact(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  return compact
+}
+
+const HERO_CHART_TOUCH_ZOOM_MIN = 1
+const HERO_CHART_TOUCH_ZOOM_MAX = 3
+
+/**
+ * In-dialog pinch/pan for compact (phone) hero chart. Browser pinch-zoom is blocked on the
+ * overlay (touch-action: manipulation); this transform is independent of scale-to-fit.
+ */
+function HeroChartHemicycleTouchZoom({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode
+  enabled: boolean
+}) {
+  const innerRef = useRef<HTMLDivElement>(null)
+  const gestureRef = useRef({
+    scale: 1,
+    panX: 0,
+    panY: 0,
+    pointers: new Map<number, { x: number; y: number }>(),
+    pinchDist: 0,
+    pinchScale: 1,
+    panOriginX: 0,
+    panOriginY: 0,
+    panStartX: 0,
+    panStartY: 0,
+  })
+  const [transform, setTransform] = useState({ scale: 1, panX: 0, panY: 0 })
+
+  useEffect(() => {
+    if (!enabled) return
+    gestureRef.current = {
+      scale: 1,
+      panX: 0,
+      panY: 0,
+      pointers: new Map(),
+      pinchDist: 0,
+      pinchScale: 1,
+      panOriginX: 0,
+      panOriginY: 0,
+      panStartX: 0,
+      panStartY: 0,
+    }
+    setTransform({ scale: 1, panX: 0, panY: 0 })
+  }, [enabled])
+
+  const syncTransform = () => {
+    const g = gestureRef.current
+    setTransform({ scale: g.scale, panX: g.panX, panY: g.panY })
+  }
+
+  const pointerDistance = () => {
+    const pts = [...gestureRef.current.pointers.values()]
+    if (pts.length < 2) return 0
+    return Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
+  }
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!enabled) return
+    const g = gestureRef.current
+    innerRef.current?.setPointerCapture(e.pointerId)
+    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (g.pointers.size === 1) {
+      g.panOriginX = e.clientX
+      g.panOriginY = e.clientY
+      g.panStartX = g.panX
+      g.panStartY = g.panY
+    } else if (g.pointers.size === 2) {
+      g.pinchDist = pointerDistance()
+      g.pinchScale = g.scale
+    }
+  }
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!enabled || !gestureRef.current.pointers.has(e.pointerId)) return
+    const g = gestureRef.current
+    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    if (g.pointers.size >= 2) {
+      const dist = pointerDistance()
+      if (g.pinchDist > 0 && dist > 0) {
+        const nextScale = Math.min(
+          HERO_CHART_TOUCH_ZOOM_MAX,
+          Math.max(HERO_CHART_TOUCH_ZOOM_MIN, g.pinchScale * (dist / g.pinchDist)),
+        )
+        g.scale = nextScale
+      }
+    } else if (g.pointers.size === 1 && g.scale > 1) {
+      g.panX = g.panStartX + (e.clientX - g.panOriginX)
+      g.panY = g.panStartY + (e.clientY - g.panOriginY)
+    }
+
+    syncTransform()
+  }
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!enabled) return
+    const g = gestureRef.current
+    g.pointers.delete(e.pointerId)
+    try {
+      innerRef.current?.releasePointerCapture(e.pointerId)
+    } catch {
+      /* already released */
+    }
+    if (g.pointers.size === 1) {
+      const remaining = [...g.pointers.values()][0]
+      g.panOriginX = remaining.x
+      g.panOriginY = remaining.y
+      g.panStartX = g.panX
+      g.panStartY = g.panY
+    } else if (g.pointers.size === 2) {
+      g.pinchDist = pointerDistance()
+      g.pinchScale = g.scale
+    } else if (g.pointers.size === 0 && g.scale <= 1.02) {
+      g.scale = 1
+      g.panX = 0
+      g.panY = 0
+      syncTransform()
+    }
+  }
+
+  if (!enabled) return <>{children}</>
+
+  return (
+    <div className="lpo-ps-hero-chart-touch-zoom-viewport">
+      <div
+        ref={innerRef}
+        className="lpo-ps-hero-chart-touch-zoom-inner"
+        style={{
+          transform: `translate(${transform.panX}px, ${transform.panY}px) scale(${transform.scale})`,
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function formatChipNum(n: number): string {
   const r = Math.round(n * 10) / 10
   return Number.isInteger(r) ? String(r) : r.toFixed(1)
@@ -501,6 +660,7 @@ export function PollSummaryHeroPartiesChartPopup({
 }) {
   useEffect(() => {
     if (!open) return
+    const headingMeta = document.querySelector('.lpo-ps-heading-meta')
     const syncGrid = document.querySelector('.dashboard-heading-sync-grid')
     const scrollY = window.scrollY
     const prevHtmlOverflow = document.documentElement.style.overflow
@@ -542,10 +702,13 @@ export function PollSummaryHeroPartiesChartPopup({
       const rootFontSize =
         parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
       const isMobile = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
-      const insetPx = (isMobile ? 0.3 : 0.5) * rootFontSize
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight
-      const overlayTop = syncGrid
-        ? Math.ceil(syncGrid.getBoundingClientRect().bottom)
+      const insetPx = (isMobile ? 0.15 : 0.5) * rootFontSize
+      const gapPx = isMobile ? 2 : 4
+      // Layout frame from layout viewport — ignore visualViewport pinch-zoom scale jumps.
+      const viewportHeight = window.innerHeight
+      const anchorEl = headingMeta ?? syncGrid
+      const overlayTop = anchorEl
+        ? Math.ceil(anchorEl.getBoundingClientRect().bottom) + gapPx
         : Math.ceil(5.5 * rootFontSize)
       const dialogHeight = Math.max(0, Math.floor(viewportHeight - overlayTop - insetPx))
 
@@ -560,13 +723,19 @@ export function PollSummaryHeroPartiesChartPopup({
       measureLandscapeStageHeight(dialogHeight)
     }
 
+    const onVisualViewportResize = () => {
+      const vv = window.visualViewport
+      if (vv && Math.abs(vv.scale - 1) > 0.01) return
+      applyLayout()
+    }
+
     applyLayout()
     document.documentElement.classList.add('lpo-ps-hero-chart-open')
     document.body.classList.add('lpo-ps-hero-chart-open')
     document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
     window.addEventListener('resize', applyLayout)
-    window.visualViewport?.addEventListener('resize', applyLayout)
+    window.visualViewport?.addEventListener('resize', onVisualViewportResize)
 
     const headerEl = document.querySelector('.lpo-ps-hero-chart-dialog-header')
     const filtersEl = document.querySelector('.lpo-ps-knesset-filters-slot')
@@ -581,6 +750,14 @@ export function PollSummaryHeroPartiesChartPopup({
             if (dialogHeight > 0) measureLandscapeStageHeight(dialogHeight)
           })
         : null
+    const layoutRo =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            applyLayout()
+          })
+        : null
+    if (headingMeta) layoutRo?.observe(headingMeta)
+    else if (syncGrid) layoutRo?.observe(syncGrid)
     if (headerEl) landscapeRo?.observe(headerEl)
     if (filtersEl) landscapeRo?.observe(filtersEl)
 
@@ -598,8 +775,9 @@ export function PollSummaryHeroPartiesChartPopup({
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-dialog-height')
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-landscape-stage-height')
       window.removeEventListener('resize', applyLayout)
-      window.visualViewport?.removeEventListener('resize', applyLayout)
+      window.visualViewport?.removeEventListener('resize', onVisualViewportResize)
       landscapeRo?.disconnect()
+      layoutRo?.disconnect()
       window.scrollTo(0, scrollY)
     }
   }, [open])
@@ -609,6 +787,7 @@ export function PollSummaryHeroPartiesChartPopup({
     [changedParties],
   )
 
+  const heroChartCompact = useHeroChartCompact()
   const [mapFilters, setMapFilters] = useState<KnessetMapFilters>([])
   const [matchingPartyKeys, setMatchingPartyKeys] = useState<ReadonlySet<string> | null>(null)
 
@@ -655,6 +834,10 @@ export function PollSummaryHeroPartiesChartPopup({
     String(windowDays),
   )
 
+  const chartTitle = heroChartCompact
+    ? t.pollSummaryHeroPartiesChartTitleCompact
+    : t.pollSummaryHeroPartiesChartTitle
+
   if (!open) return null
 
   return createPortal(
@@ -673,7 +856,7 @@ export function PollSummaryHeroPartiesChartPopup({
           <div className="lpo-ps-hero-chart-dialog-heading">
             <h2 className="lpo-ps-hero-chart-dialog-title">
               <span className="lpo-ps-hero-chart-dialog-title-main">
-                {t.pollSummaryHeroPartiesChartTitle}
+                {chartTitle}
               </span>
               <span className="lpo-ps-hero-chart-dialog-title-window">{windowSuffix}</span>
             </h2>
@@ -729,6 +912,7 @@ export function PollSummaryHeroPartiesChartPopup({
           </button>
         </header>
         <div className="lpo-ps-hero-chart-body">
+          <HeroChartHemicycleTouchZoom enabled={heroChartCompact}>
           <div className="lpo-ps-hero-chart-hemicycle-wrap">
             <div className="lpo-ps-knesset-filters-slot">
               <PollSummaryKnessetFiltersPane
@@ -852,6 +1036,7 @@ export function PollSummaryHeroPartiesChartPopup({
               }
             />
           </div>
+          </HeroChartHemicycleTouchZoom>
         </div>
         </HeroChartScaleFit>
         <footer className="lpo-ps-hero-chart-dialog-footer">

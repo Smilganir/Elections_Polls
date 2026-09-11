@@ -1620,41 +1620,62 @@ export function LatestPollsOverviewPage() {
               </div>
             </div>
             </div>
-            <h2 dir={locale === 'he' ? 'rtl' : 'ltr'}>
-            {t.titleLatest}
-            <strong>
-              {showPollSummary && heroPartiesChartOpen
-                ? t.titleElectionPollsHeroChart
-                : t.titleElectionPolls}
-            </strong>
-            {t.titleOverview}
-          </h2>
-            <div className="dashboard-heading-actions">
-            <div className="dashboard-heading-actions-stack">
-              {showPollSummary ? (
-                <button
-                  type="button"
-                  className="lpo-ps-nav-btn"
-                  onClick={() => setShowPollSummary(false)}
-                  aria-label={t.pollSummaryCloseAria}
+            <div className="dashboard-heading-title-col">
+              <h2 dir={locale === 'he' ? 'rtl' : 'ltr'}>
+                {t.titleLatest}
+                <strong>
+                  {showPollSummary && heroPartiesChartOpen
+                    ? t.titleElectionPollsHeroChart
+                    : t.titleElectionPolls}
+                </strong>
+                {t.titleOverview}
+              </h2>
+              {!loading && showPollSummary ? (
+                <p
+                  className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title"
+                  dir={pollSummaryLastPollDateDisplay ? 'ltr' : locale === 'he' ? 'rtl' : 'ltr'}
                 >
-                  {t.pollSummaryPartiesDetailBtn}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="lpo-ps-nav-btn"
-                  onClick={() => setShowPollSummary(true)}
-                  aria-label={t.pollSummaryOpenAria.replace(
-                    /\{n\}/g,
-                    String(pollSummaryWindowDays),
-                  )}
-                >
-                  {t.pollSummaryOpenBtn}
-                </button>
-              )}
+                  <span
+                    className="lpo-ps-heading-subtitle-line"
+                    dir={pollSummaryLastPollDateDisplay ? 'ltr' : locale === 'he' ? 'rtl' : 'ltr'}
+                  >
+                    {pollSummaryLastPollDateDisplay ? (
+                      <>
+                        <span className="lpo-ps-subtitle-last-poll">
+                          {t.pollSummaryLastPollDate.replace(
+                            /\{date\}/g,
+                            pollSummaryLastPollDateDisplay,
+                          )}
+                        </span>
+                        <span className="lpo-ps-heading-subtitle-sep" aria-hidden="true">
+                          {' · '}
+                        </span>
+                      </>
+                    ) : null}
+                    <span dir={locale === 'he' ? 'rtl' : 'ltr'}>
+                      {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
+                    </span>
+                  </span>
+                </p>
+              ) : null}
             </div>
-            </div>
+            {!showPollSummary ? (
+              <div className="dashboard-heading-actions">
+                <div className="dashboard-heading-actions-stack">
+                  <button
+                    type="button"
+                    className="lpo-ps-nav-btn"
+                    onClick={() => setShowPollSummary(true)}
+                    aria-label={t.pollSummaryOpenAria.replace(
+                      /\{n\}/g,
+                      String(pollSummaryWindowDays),
+                    )}
+                  >
+                    {t.pollSummaryOpenBtn}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
           {!loading && showPollSummary ? (
             <div className="lpo-ps-heading-meta" dir="ltr">
@@ -1663,32 +1684,6 @@ export function LatestPollsOverviewPage() {
                 combineArabsWithOpposition={combineArabsWithOpposition}
                 setCombineArabsWithOpposition={setCombineArabsWithOpposition}
               />
-              <p
-                className="lpo-ps-subtitle lpo-ps-subtitle--under-page-title"
-                dir={pollSummaryLastPollDateDisplay ? 'ltr' : locale === 'he' ? 'rtl' : 'ltr'}
-              >
-                <span
-                  className="lpo-ps-heading-subtitle-line"
-                  dir={pollSummaryLastPollDateDisplay ? 'ltr' : locale === 'he' ? 'rtl' : 'ltr'}
-                >
-                  {pollSummaryLastPollDateDisplay ? (
-                    <>
-                      <span className="lpo-ps-subtitle-last-poll">
-                        {t.pollSummaryLastPollDate.replace(
-                          /\{date\}/g,
-                          pollSummaryLastPollDateDisplay,
-                        )}
-                      </span>
-                      <span className="lpo-ps-heading-subtitle-sep" aria-hidden="true">
-                        {' · '}
-                      </span>
-                    </>
-                  ) : null}
-                  <span dir={locale === 'he' ? 'rtl' : 'ltr'}>
-                    {t.pollSummarySubtitle.replace(/\{n\}/g, String(pollSummaryWindowDays))}
-                  </span>
-                </span>
-              </p>
               <div className="lpo-ps-window-days-row">
                 <PollSummaryWindowDaysStepper
                   t={t}
@@ -1697,6 +1692,16 @@ export function LatestPollsOverviewPage() {
                   onChange={setPollSummaryWindowDays}
                 />
               </div>
+              {!heroPartiesChartOpen ? (
+                <button
+                  type="button"
+                  className="lpo-ps-nav-btn lpo-ps-heading-meta-nav"
+                  onClick={() => setShowPollSummary(false)}
+                  aria-label={t.pollSummaryCloseAria}
+                >
+                  {t.pollSummaryPartiesDetailBtn}
+                </button>
+              ) : null}
             </div>
           ) : null}
           {!loading && !showPollSummary ? (

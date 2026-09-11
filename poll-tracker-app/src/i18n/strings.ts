@@ -77,6 +77,8 @@ export type UiStrings = {
   /** Open cross-outlet average party bar chart (hero) */
   pollSummaryHeroPartiesChartOpenAria: string
   pollSummaryHeroPartiesChartTitle: string
+  /** Shorter dialog title on compact (mobile) viewports */
+  pollSummaryHeroPartiesChartTitleCompact: string
   pollSummaryHeroPartiesChartCloseAria: string
   /** Appended to chart popup title; {n} = rolling window days */
   pollSummaryHeroPartiesChartWindowSuffix: string
@@ -305,6 +307,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartOpenAria:
       'Show cross-outlet party averages with Knesset seat map and bar chart',
     pollSummaryHeroPartiesChartTitle: 'Cross-outlet party averages',
+    pollSummaryHeroPartiesChartTitleCompact: 'Party averages across outlets',
     pollSummaryHeroPartiesChartCloseAria: 'Close party breakdown',
     pollSummaryHeroPartiesChartWindowSuffix: ' · {n}-day window',
     pollSummaryLastPollDate: 'Last poll: {date}',
@@ -520,6 +523,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroPartiesChartOpenAria:
       'הצג ממוצע מנדטים לפי מפלגה עם מפת 120 מושבים וגרף מנדטים',
     pollSummaryHeroPartiesChartTitle: 'ממוצע מנדטים לפי מפלגה בין הערוצים',
+    pollSummaryHeroPartiesChartTitleCompact: 'ממוצע לפי מפלגה בין הערוצים',
     pollSummaryHeroPartiesChartCloseAria: 'סגור פירוט מפלגות',
     pollSummaryHeroPartiesChartWindowSuffix: ' · חלון {n} ימים',
     pollSummaryLastPollDate: 'סקר אחרון: {date}',
@@ -568,7 +572,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipEducation: 'השכלה',
     knessetMapTooltipMilitary: 'שירות צבאי/לאומי',
     knessetMapTooltipSector: 'מגזר',
-    knessetMapTooltipCity: 'עיר',
+    knessetMapTooltipCity: 'יישוב',
     knessetMapTooltipSubIdentity: 'תת-זהות',
     knessetMapTooltipFunFact: 'עובדה מעניינת',
     knessetMapTooltipPreRole: 'תפקיד קדם-כנסת',
