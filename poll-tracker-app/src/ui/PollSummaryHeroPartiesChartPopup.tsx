@@ -24,7 +24,6 @@ import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
 import { AppFooter } from './AppFooter'
 
 const HERO_CHART_SCALE_BAND_MIN_PX = 769
-const HERO_CHART_SCALE_BAND_MAX_PX = 1439
 const HERO_CHART_STAGE_WIDTH_PX = 1440
 /** Below this scale the hemicycle becomes unreadable — prefer vertical scroll instead. */
 const HERO_CHART_SCALE_MIN = 0.58
@@ -92,8 +91,7 @@ function useHeroChartScaleBandActive(): boolean {
   const getActive = () => {
     if (typeof window === 'undefined') return false
     const width = window.innerWidth
-    const inWidthBand =
-      width >= HERO_CHART_SCALE_BAND_MIN_PX && width <= HERO_CHART_SCALE_BAND_MAX_PX
+    const inWidthBand = width >= HERO_CHART_SCALE_BAND_MIN_PX
     const isCompact = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
     const browserZoomed = isHeroChartBrowserZoomed()
     return inWidthBand && !isCompact && !browserZoomed
@@ -102,9 +100,7 @@ function useHeroChartScaleBandActive(): boolean {
   const [active, setActive] = useState(getActive)
 
   useEffect(() => {
-    const widthQuery = window.matchMedia(
-      `(min-width: ${HERO_CHART_SCALE_BAND_MIN_PX}px) and (max-width: ${HERO_CHART_SCALE_BAND_MAX_PX}px)`,
-    )
+    const widthQuery = window.matchMedia(`(min-width: ${HERO_CHART_SCALE_BAND_MIN_PX}px)`)
     const compactQuery = window.matchMedia(HERO_CHART_COMPACT_MQ)
     const desktopQuery = window.matchMedia(HERO_CHART_DESKTOP_LAYOUT_MQ)
     const sync = () => setActive(getActive())
@@ -184,7 +180,7 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
 
       // Lock width only (avoids rescale on dialog scroll); height tracks dialog space.
       const lockedWidth = lockedLayoutRef.current?.lockedWidth ?? width
-      const widthScale = lockedWidth / HERO_CHART_STAGE_WIDTH_PX
+      const widthScale = Math.min(1, lockedWidth / HERO_CHART_STAGE_WIDTH_PX)
       const widthFittedHeight = naturalHeight * widthScale
 
       let nextScale = widthScale
