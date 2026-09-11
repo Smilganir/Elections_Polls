@@ -57,73 +57,44 @@ type TooltipState = {
   placement: TooltipPlacement
 }
 
-const TOOLTIP_VIEWPORT_MARGIN = 10
-const TOOLTIP_ANCHOR_GAP = 10
-/** Conservative first guess — swing-seat tooltips near the dialog top can exceed 200px. */
-const TOOLTIP_ESTIMATED_HEIGHT = 240
+const TOOLTIP_VIEWPORT_MARGIN = 12
+/** Matches CSS max-width: min(20rem, 92vw) — used before layout measure. */
+const TOOLTIP_LAYOUT_WIDTH_PX = 320
 
-function viewportBounds() {
+function viewportWidth(): { left: number; width: number } {
   const vv = window.visualViewport
   return {
-    top: vv?.offsetTop ?? 0,
     left: vv?.offsetLeft ?? 0,
     width: vv?.width ?? window.innerWidth,
-    height: vv?.height ?? window.innerHeight,
   }
 }
 
-function tooltipPlacement(
-  clientY: number,
-  estimatedHeight = TOOLTIP_ESTIMATED_HEIGHT,
-): TooltipPlacement {
-  const vp = viewportBounds()
-  const minTop = vp.top + TOOLTIP_VIEWPORT_MARGIN
-  const maxBottom = vp.top + vp.height - TOOLTIP_VIEWPORT_MARGIN
-  const gap = TOOLTIP_ANCHOR_GAP
-
-  const spaceAbove = clientY - minTop - gap
-  const spaceBelow = maxBottom - clientY - gap
-  const fitsAbove = spaceAbove >= estimatedHeight
-  const fitsBelow = spaceBelow >= estimatedHeight
-
-  if (fitsAbove && (spaceAbove >= spaceBelow || !fitsBelow)) return 'above'
-  if (fitsBelow) return 'below'
-  return spaceBelow >= spaceAbove ? 'below' : 'above'
-}
-
-function clampTooltipLayout(
-  anchorX: number,
-  anchorY: number,
-  placement: TooltipPlacement,
-  size: { width: number; height: number },
-): { x: number; y: number; placement: TooltipPlacement } {
-  const vp = viewportBounds()
+/** Keep the card fully inside the viewport; anchor stays on the seat (translate -50%). */
+function clampTooltipX(anchorX: number, tooltipWidth: number): number {
+  const vp = viewportWidth()
   const margin = TOOLTIP_VIEWPORT_MARGIN
-  const gap = TOOLTIP_ANCHOR_GAP
-  const minTop = vp.top + margin
-  const maxBottom = vp.top + vp.height - margin
-  const halfW = size.width / 2
+  const width = Math.max(tooltipWidth, TOOLTIP_LAYOUT_WIDTH_PX)
+  const halfW = width / 2
+  const minX = vp.left + margin + halfW
+  const maxX = vp.left + vp.width - margin - halfW
+  if (minX > maxX) return vp.left + vp.width / 2
+  return Math.max(minX, Math.min(anchorX, maxX))
+}
 
-  let nextPlacement = placement
-  const aboveTop = anchorY - size.height - gap
-  const belowBottom = anchorY + gap + size.height
-  const fitsAbove = aboveTop >= minTop
-  const fitsBelow = belowBottom <= maxBottom
-
-  if (nextPlacement === 'above' && !fitsAbove && fitsBelow) {
-    nextPlacement = 'below'
-  } else if (nextPlacement === 'below' && !fitsBelow && fitsAbove) {
-    nextPlacement = 'above'
-  } else if (!fitsAbove && !fitsBelow) {
-    nextPlacement = anchorY - minTop >= maxBottom - anchorY ? 'above' : 'below'
-  }
-
-  const x = Math.max(
-    vp.left + margin + halfW,
-    Math.min(anchorX, vp.left + vp.width - margin - halfW),
+function tooltipPlacement(clientY: number): TooltipPlacement {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(
+    '--lpo-ps-hero-chart-overlay-top',
   )
+  const overlayTop = Number.parseFloat(raw) || 88
+  if (clientY < overlayTop + 100) return 'below'
 
-  return { x, y: anchorY, placement: nextPlacement }
+  const vv = window.visualViewport
+  const minTop = (vv?.offsetTop ?? 0) + TOOLTIP_VIEWPORT_MARGIN
+  const spaceAbove = clientY - minTop
+  // Tall member cards need room above; top-arc seats open downward.
+  if (spaceAbove < 280) return 'below'
+
+  return 'above'
 }
 
 function genderLabel(
@@ -278,7 +249,6 @@ function KnessetSeatTooltip({
   rankLabel: (seat: KnessetFilledSeat) => string
   segLabel: (segment: Segment) => string
 }) {
-  const tooltipRef = useRef<HTMLDivElement>(null)
   const member = tooltip.seat.kind === 'member' ? tooltip.seat.member : null
   const [enProfile, setEnProfile] = useState<MemberEnTooltipProfile | null>(null)
 
@@ -308,47 +278,33 @@ function KnessetSeatTooltip({
         : memberHebrewName(tooltip.seat.member)
       : ''
 
-  const [resolved, setResolved] = useState(() => ({
-    x: tooltip.x,
-    y: tooltip.y,
-    placement: tooltip.placement,
-  }))
-
-  const resolvedForAnchor =
-    resolved.x === tooltip.x && resolved.y === tooltip.y
-
-  const displayLayout = resolvedForAnchor
-    ? resolved
-    : { x: tooltip.x, y: tooltip.y, placement: tooltip.placement }
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const [left, setLeft] = useState(tooltip.x)
 
   useLayoutEffect(() => {
+    setLeft(tooltip.x)
     const el = tooltipRef.current
     if (!el) return
-    const rect = el.getBoundingClientRect()
-    if (rect.width <= 0 || rect.height <= 0) return
-    const renderedPlacement: TooltipPlacement = el.classList.contains(
-      'lpo-ps-knesset-tooltip--below',
-    )
-      ? 'below'
-      : 'above'
-    const next = clampTooltipLayout(
-      tooltip.x,
-      tooltip.y,
-      renderedPlacement,
-      { width: rect.width, height: rect.height },
-    )
-    setResolved((prev) =>
-      prev.x === next.x && prev.y === next.y && prev.placement === next.placement ? prev : next,
-    )
+
+    const applyHorizontalClamp = () => {
+      const width = Math.max(el.offsetWidth, el.scrollWidth, TOOLTIP_LAYOUT_WIDTH_PX)
+      if (width < 120) return
+      const next = clampTooltipX(tooltip.x, width)
+      setLeft((prev) => (prev === next ? prev : next))
+    }
+
+    applyHorizontalClamp()
+    const raf = requestAnimationFrame(applyHorizontalClamp)
+    return () => cancelAnimationFrame(raf)
   }, [tooltip.x, tooltip.y, tooltip.placement, tooltip.seat, memberName, enProfile, locale, t])
 
   return (
     <div
       ref={tooltipRef}
-      className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${displayLayout.placement}${
+      className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${tooltip.placement}${
         locale === 'he' ? ' lpo-ps-knesset-tooltip--rtl' : ' lpo-ps-knesset-tooltip--ltr'
       }`}
-      style={{ left: displayLayout.x, top: displayLayout.y }}
+      style={{ left, top: tooltip.y }}
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       role="tooltip"
     >
@@ -870,12 +826,15 @@ export function PollSummaryKnessetSeatMap({
     )
   }, [seats, activeFilters, mergeArabsWithOpposition, onMatchingPartyKeysChange])
 
-  const updateTooltipPos = (e: React.MouseEvent, seat: KnessetFilledSeat) => {
+  const updateTooltipPos = (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = rect.width > 0 ? rect.left + rect.width / 2 : e.clientX
+    const y = rect.height > 0 ? rect.top + rect.height / 2 : e.clientY
     setTooltip({
       seat,
-      x: e.clientX,
-      y: e.clientY,
-      placement: tooltipPlacement(e.clientY),
+      x,
+      y,
+      placement: tooltipPlacement(y),
     })
   }
 
@@ -975,6 +934,7 @@ export function PollSummaryKnessetSeatMap({
           {tooltip
             ? createPortal(
                 <KnessetSeatTooltip
+                  key={tooltip.seat.slot.id}
                   tooltip={tooltip}
                   locale={locale}
                   t={t}

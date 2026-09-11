@@ -7983,6 +7983,14 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   text-align: start;
 }
 
+/* Narrow hero chart: keep full card width so horizontal clamp math is stable. */
+@media (max-width: 768px), (max-height: 500px) {
+  .lpo-ps-knesset-tooltip {
+    width: min(20rem, 92vw);
+    box-sizing: border-box;
+  }
+}
+
 .lpo-ps-knesset-tooltip--rtl {
   direction: rtl;
 }
