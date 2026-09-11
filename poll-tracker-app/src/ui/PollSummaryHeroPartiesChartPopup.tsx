@@ -69,14 +69,33 @@ function isHeroChartDesktopLayout(): boolean {
   return typeof window !== 'undefined' && window.matchMedia(HERO_CHART_DESKTOP_LAYOUT_MQ).matches
 }
 
-function isHeroChartBrowserZoomed(): boolean {
-  if (!isHeroChartDesktopLayout()) return false
+/** Sticky browser-zoom flag (hysteresis) — set above 1.05, clear at or below 1.005. */
+let heroChartBrowserZoomSticky = false
+
+function updateHeroChartBrowserZoomSticky(): boolean {
+  if (!isHeroChartDesktopLayout()) {
+    heroChartBrowserZoomSticky = false
+    return false
+  }
   const vv = window.visualViewport
-  return Boolean(vv && vv.scale > 1.01)
+  if (!vv) {
+    heroChartBrowserZoomSticky = false
+    return false
+  }
+  if (vv.scale > 1.05) {
+    heroChartBrowserZoomSticky = true
+  } else if (vv.scale <= 1.005) {
+    heroChartBrowserZoomSticky = false
+  }
+  return heroChartBrowserZoomSticky
+}
+
+function resetHeroChartBrowserZoomSticky(): void {
+  heroChartBrowserZoomSticky = false
 }
 
 function syncHeroChartBrowserZoomClass(): void {
-  const zoomed = isHeroChartBrowserZoomed()
+  const zoomed = updateHeroChartBrowserZoomSticky()
   document.documentElement.classList.toggle('lpo-ps-hero-chart-open--browser-zoom', zoomed)
   document.body.classList.toggle('lpo-ps-hero-chart-open--browser-zoom', zoomed)
 }
@@ -93,8 +112,7 @@ function useHeroChartScaleBandActive(): boolean {
     const width = window.innerWidth
     const inWidthBand = width >= HERO_CHART_SCALE_BAND_MIN_PX
     const isCompact = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
-    const browserZoomed = isHeroChartBrowserZoomed()
-    return inWidthBand && !isCompact && !browserZoomed
+    return inWidthBand && !isCompact
   }
 
   const [active, setActive] = useState(getActive)
@@ -102,20 +120,15 @@ function useHeroChartScaleBandActive(): boolean {
   useEffect(() => {
     const widthQuery = window.matchMedia(`(min-width: ${HERO_CHART_SCALE_BAND_MIN_PX}px)`)
     const compactQuery = window.matchMedia(HERO_CHART_COMPACT_MQ)
-    const desktopQuery = window.matchMedia(HERO_CHART_DESKTOP_LAYOUT_MQ)
     const sync = () => setActive(getActive())
     sync()
     widthQuery.addEventListener('change', sync)
     compactQuery.addEventListener('change', sync)
-    desktopQuery.addEventListener('change', sync)
     window.addEventListener('resize', sync)
-    window.visualViewport?.addEventListener('resize', sync)
     return () => {
       widthQuery.removeEventListener('change', sync)
       compactQuery.removeEventListener('change', sync)
-      desktopQuery.removeEventListener('change', sync)
       window.removeEventListener('resize', sync)
-      window.visualViewport?.removeEventListener('resize', sync)
     }
   }, [])
 
@@ -174,11 +187,12 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
 
     const measure = () => {
       const width = viewport.clientWidth
-      const availableHeight = heroChartScaleFitAvailableHeight(viewport)
+      const availableHeight =
+        lockedLayoutRef.current?.availableHeight ?? heroChartScaleFitAvailableHeight(viewport)
       const naturalHeight = stage.offsetHeight
       if (width <= 0 || availableHeight <= 0 || naturalHeight <= 0) return false
 
-      // Lock width only (avoids rescale on dialog scroll); height tracks dialog space.
+      // Lock width + height (avoids rescale/oscillation when scroll mode toggles dialog height).
       const lockedWidth = lockedLayoutRef.current?.lockedWidth ?? width
       const widthScale = Math.min(1, lockedWidth / HERO_CHART_STAGE_WIDTH_PX)
       const widthFittedHeight = naturalHeight * widthScale
@@ -820,8 +834,9 @@ export function PollSummaryHeroPartiesChartPopup({
       const vv = window.visualViewport
       // Desktop browser zoom: use visual viewport height so the dialog frame tracks zoom.
       // Mobile pinch-zoom: still ignored here (compact layout + touch-zoom handle pan).
+      const browserZoomed = updateHeroChartBrowserZoomSticky()
       let viewportHeight = window.innerHeight
-      if (isHeroChartDesktopLayout() && vv && vv.scale > 1.01) {
+      if (browserZoomed && vv) {
         viewportHeight = vv.height
       }
       const anchorEl = headingMeta ?? syncGrid
@@ -890,6 +905,7 @@ export function PollSummaryHeroPartiesChartPopup({
     })
 
     return () => {
+      resetHeroChartBrowserZoomSticky()
       document.documentElement.classList.remove('lpo-ps-hero-chart-open')
       document.body.classList.remove('lpo-ps-hero-chart-open')
       document.documentElement.classList.remove('lpo-ps-hero-chart-open--browser-zoom')

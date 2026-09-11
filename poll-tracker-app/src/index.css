@@ -6423,7 +6423,7 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   padding: 0 0.35rem 0.35rem;
 }
 
-/* Scale-to-fit: laptop/desktop (min-width 769px; JS omits wrapper in compact/browser-zoom). */
+/* Scale-to-fit: laptop/desktop (min-width 769px; JS omits wrapper in compact layout only). */
 @media (min-width: 769px) {
   .lpo-ps-hero-chart-scale-viewport {
     flex: 1 1 auto;
