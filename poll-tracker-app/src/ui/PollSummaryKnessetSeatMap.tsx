@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import type { UiStrings } from '../i18n/strings'
 import { buildKnessetFilledSeats, type KnessetFilledSeat } from '../lib/knessetSeatAllocation'
-import { PARTY_COLOR_MAP, PARTY_ICON_MAP, SEGMENT_COLORS } from '../config/mappings'
+import { PARTY_COLOR_MAP, SEGMENT_COLORS } from '../config/mappings'
 import {
   fetchKnessetMembers,
   memberSeatImageUrl,
