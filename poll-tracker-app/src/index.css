@@ -5936,30 +5936,37 @@ body.lpo-ps-hero-chart-open .page-content {
   overscroll-behavior: none;
 }
 
-/* Laptop/desktop browser zoom (Ctrl/Cmd +/-): scroll the overlay + dialog as one unit.
-   Keep in sync with HERO_CHART_DESKTOP_LAYOUT_MQ in PollSummaryHeroPartiesChartPopup.tsx.
-   Mobile compact + pinch-zoom paths are unchanged. */
+/* Laptop/desktop overflow scroll: browser zoom (Ctrl/Cmd +/-) or short-laptop scale floor.
+   Grow the dialog and scroll the overlay as one unit — wheel events reach the overlay, not a
+   hidden inner viewport. Keep in sync with HERO_CHART_DESKTOP_LAYOUT_MQ in
+   PollSummaryHeroPartiesChartPopup.tsx. Mobile compact + pinch-zoom paths are unchanged. */
 @media (min-width: 769px) and (min-height: 501px) {
-  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-overlay {
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-overlay,
+  body.lpo-ps-hero-chart-open--height-scroll .lpo-ps-hero-chart-overlay {
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 
-  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-dialog {
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-dialog,
+  body.lpo-ps-hero-chart-open--height-scroll .lpo-ps-hero-chart-dialog {
     height: auto;
     min-height: var(--lpo-ps-hero-chart-dialog-height);
     max-height: none;
     overflow: visible;
   }
 
-  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-body {
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-body,
+  body.lpo-ps-hero-chart-open--height-scroll .lpo-ps-hero-chart-body {
     flex: 0 0 auto;
     overflow: visible;
   }
 
   body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-scale-viewport,
-  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-scale-viewport--locked {
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-scale-viewport--locked,
+  body.lpo-ps-hero-chart-open--height-scroll .lpo-ps-hero-chart-scale-viewport,
+  body.lpo-ps-hero-chart-open--height-scroll .lpo-ps-hero-chart-scale-viewport--locked,
+  body.lpo-ps-hero-chart-open--height-scroll .lpo-ps-hero-chart-scale-viewport--scrollable {
     flex: 0 0 auto;
     height: auto;
     max-height: none;
@@ -6443,15 +6450,6 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-  }
-
-  /* Short viewports in the scale band: overlay can scroll when dialog content exceeds the frame. */
-  @media (max-height: 860px) {
-    body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-overlay {
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-    }
   }
 
   .lpo-ps-hero-chart-scale-shell {

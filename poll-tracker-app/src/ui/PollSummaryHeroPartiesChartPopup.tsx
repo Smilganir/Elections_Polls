@@ -82,6 +82,12 @@ function syncHeroChartBrowserZoomClass(): void {
   document.body.classList.toggle('lpo-ps-hero-chart-open--browser-zoom', zoomed)
 }
 
+/** Short laptop: scale floor hit — grow dialog and scroll the overlay (same UX as browser zoom). */
+function syncHeroChartHeightScrollClass(scrollable: boolean): void {
+  document.documentElement.classList.toggle('lpo-ps-hero-chart-open--height-scroll', scrollable)
+  document.body.classList.toggle('lpo-ps-hero-chart-open--height-scroll', scrollable)
+}
+
 function useHeroChartScaleBandActive(): boolean {
   const getActive = () => {
     if (typeof window === 'undefined') return false
@@ -152,7 +158,8 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
       scrollable: boolean,
     ) => {
       const shellHeight = Math.max(0, Math.ceil(naturalHeight * nextScale))
-      const viewportHeight = scrollable ? availableHeight : shellHeight
+      // When scrollable, overlay-scroll mode shows the full scaled stage (no inner clip).
+      const viewportHeight = shellHeight
 
       lockedLayoutRef.current = {
         lockedWidth,
@@ -237,8 +244,13 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
     return () => {
       resizeObserver.disconnect()
       window.removeEventListener('resize', onWindowResize)
+      syncHeroChartHeightScrollClass(false)
     }
   }, [])
+
+  useEffect(() => {
+    syncHeroChartHeightScrollClass(Boolean(lockedViewport?.scrollable))
+  }, [lockedViewport?.scrollable])
 
   return (
     <div
@@ -247,11 +259,11 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
         lockedViewport ? ' lpo-ps-hero-chart-scale-viewport--locked' : ''
       }${lockedViewport?.scrollable ? ' lpo-ps-hero-chart-scale-viewport--scrollable' : ''}`}
       style={
-        lockedViewport
+        lockedViewport && !lockedViewport.scrollable
           ? {
               height: lockedViewport.height,
               maxHeight: lockedViewport.height,
-              minHeight: lockedViewport.scrollable ? 0 : lockedViewport.height,
+              minHeight: lockedViewport.height,
             }
           : undefined
       }
@@ -886,6 +898,8 @@ export function PollSummaryHeroPartiesChartPopup({
       document.body.classList.remove('lpo-ps-hero-chart-open')
       document.documentElement.classList.remove('lpo-ps-hero-chart-open--browser-zoom')
       document.body.classList.remove('lpo-ps-hero-chart-open--browser-zoom')
+      document.documentElement.classList.remove('lpo-ps-hero-chart-open--height-scroll')
+      document.body.classList.remove('lpo-ps-hero-chart-open--height-scroll')
       document.documentElement.style.overflow = prevHtmlOverflow
       document.body.style.overflow = prevBodyOverflow
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-overlay-top')
