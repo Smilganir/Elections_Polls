@@ -14,6 +14,7 @@ import { buildKnessetFilledSeats, type KnessetFilledSeat } from '../lib/knessetS
 import { PARTY_COLOR_MAP, PARTY_ICON_MAP, SEGMENT_COLORS } from '../config/mappings'
 import {
   fetchKnessetMembers,
+  memberSeatImageUrl,
   membersByPartyKey,
   segmentLabel,
   type KnessetMemberRow,
@@ -37,6 +38,7 @@ import {
 import { computePartySwingSeats } from '../lib/knessetPartySwingSeats'
 import type { Segment } from '../types/data'
 import { KnessetStatsLeftStack, KnessetStatsRightStack } from './PollSummaryKnessetDemographics'
+import { KnessetSeatEmptyPortraitIcon } from './KnessetSeatEmptyPortraitIcon'
 import { RotatePortraitHint } from './RotatePortraitHint'
 
 /**
@@ -548,6 +550,26 @@ function positionMobileSwingOverBlocBar(
   return true
 }
 
+function SeatPortraitMedia({ seat }: { seat: KnessetFilledSeat }) {
+  if (seat.kind === 'member') {
+    const memberImage = memberSeatImageUrl(seat.member)
+    if (memberImage) {
+      return (
+        <img
+          className="lpo-ps-knesset-seat-img"
+          src={memberImage}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
+      )
+    }
+  }
+
+  return <KnessetSeatEmptyPortraitIcon />
+}
+
 function SwingSeatPortrait({
   seat,
   locale,
@@ -566,7 +588,6 @@ function SwingSeatPortrait({
   const isMember = seat.kind === 'member'
   const isPlaceholder = seat.kind === 'placeholder'
   const ring = seat.ringColor
-  const partyIcon = PARTY_ICON_MAP[seat.partyKey]
 
   return (
     <button
@@ -584,29 +605,7 @@ function SwingSeatPortrait({
         isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
       }
     >
-      {isMember && seat.member.imageUrl ? (
-        <img
-          className="lpo-ps-knesset-seat-img"
-          src={seat.member.imageUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-        />
-      ) : (
-        <>
-          {partyIcon ? (
-            <img
-              className="lpo-ps-knesset-seat-party-icon"
-              src={partyIcon}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-          ) : null}
-          <span className="lpo-ps-knesset-seat-empty-portrait" aria-hidden />
-        </>
-      )}
+      <SeatPortraitMedia seat={seat} />
     </button>
   )
 }
@@ -717,7 +716,6 @@ function SeatPortrait({
   const isMember = seat.kind === 'member'
   const isPlaceholder = seat.kind === 'placeholder'
   const ring = seat.ringColor
-  const partyIcon = PARTY_ICON_MAP[seat.partyKey]
 
   return (
     <button
@@ -741,29 +739,7 @@ function SeatPortrait({
         isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
       }
     >
-      {isMember && seat.member.imageUrl ? (
-        <img
-          className="lpo-ps-knesset-seat-img"
-          src={seat.member.imageUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-        />
-      ) : (
-        <>
-          {partyIcon ? (
-            <img
-              className="lpo-ps-knesset-seat-party-icon"
-              src={partyIcon}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-          ) : null}
-          <span className="lpo-ps-knesset-seat-empty-portrait" aria-hidden />
-        </>
-      )}
+      <SeatPortraitMedia seat={seat} />
     </button>
   )
 }

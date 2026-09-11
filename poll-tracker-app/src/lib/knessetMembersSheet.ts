@@ -191,6 +191,11 @@ export function pickMemberPortraitUrl(cols: readonly string[], headers: readonly
   return pickMemberImageUrl(cols, headers)
 }
 
+/** Hemicycle / swing seat face — transparent cutout when available, else wiki portrait. */
+export function memberSeatImageUrl(member: KnessetMemberRow): string {
+  return member.imageUrl || member.portraitImageUrl
+}
+
 export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
   const lines = csv.split(/\r?\n/).filter((l) => l.trim())
   if (lines.length < 2) return []

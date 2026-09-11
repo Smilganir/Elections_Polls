@@ -5958,7 +5958,7 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   );
   min-height: var(
     --lpo-ps-hero-chart-dialog-height,
-    min(920px, calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem))
+    calc(100vh - var(--lpo-ps-hero-chart-overlay-top, 5.5rem) - 0.5rem)
   );
   max-height: var(
     --lpo-ps-hero-chart-dialog-height,
@@ -6383,26 +6383,40 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
 /* Scale-to-fit: 769–1439px band only (JS omits wrapper outside this range). */
 @media (min-width: 769px) and (max-width: 1439px) {
-  body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-scale-viewport {
-    overflow-y: visible;
-  }
-
   .lpo-ps-hero-chart-scale-viewport {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     touch-action: manipulation;
   }
 
-  /* Lock height after first measure so page/dialog scroll does not re-stretch scale. */
+  /* Exact-fit stage: fixed shell height, no inner scroll. */
   .lpo-ps-hero-chart-scale-viewport--locked {
     flex: 0 0 auto;
     min-height: 0;
+  }
+
+  /* Short laptops: width-driven scale hits the floor — scroll inside the stage viewport. */
+  .lpo-ps-hero-chart-scale-viewport--scrollable {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Short viewports in the scale band: overlay can scroll when dialog content exceeds the frame. */
+  @media (max-height: 860px) {
+    body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-overlay {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
   .lpo-ps-hero-chart-scale-shell {
@@ -7738,13 +7752,14 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
 .lpo-ps-knesset-seat-empty-portrait {
   position: absolute;
-  inset: 18% 22% 8%;
-  border-radius: 50% 50% 42% 42%;
-  background:
-    linear-gradient(180deg, rgba(210, 218, 228, 0.55) 0%, rgba(210, 218, 228, 0.55) 100%) top / 100% 58% no-repeat,
-    linear-gradient(180deg, rgba(180, 190, 202, 0.4) 0%, rgba(180, 190, 202, 0.4) 100%) bottom / 78% 42% no-repeat;
-  background-position: top center, bottom center;
-  opacity: 0.9;
+  inset: 14% 20% 8%;
+  display: block;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   pointer-events: none;
 }
 

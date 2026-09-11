@@ -26,6 +26,21 @@ import { AppFooter } from './AppFooter'
 const HERO_CHART_SCALE_BAND_MIN_PX = 769
 const HERO_CHART_SCALE_BAND_MAX_PX = 1439
 const HERO_CHART_STAGE_WIDTH_PX = 1440
+/** Below this scale the hemicycle becomes unreadable — prefer vertical scroll instead. */
+const HERO_CHART_SCALE_MIN = 0.58
+
+function heroChartScaleFitAvailableHeight(viewport: HTMLElement): number {
+  const dialog = viewport.closest('.lpo-ps-hero-chart-dialog')
+  if (!(dialog instanceof HTMLElement)) return viewport.clientHeight
+
+  const footer = dialog.querySelector('.lpo-ps-hero-chart-dialog-footer')
+  const footerHeight = footer instanceof HTMLElement ? footer.offsetHeight : 0
+  const styles = getComputedStyle(dialog)
+  const padY =
+    (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0)
+
+  return Math.max(0, dialog.clientHeight - footerHeight - padY)
+}
 
 /**
  * "Compact" viewports get the in-flow, scrollable, non-scaled mobile layout instead of the
@@ -81,17 +96,19 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const lockedLayoutRef = useRef<{
-    viewport: { width: number; height: number }
+    lockedWidth: number
+    availableHeight: number
     naturalHeight: number
     scale: number
+    scrollable: boolean
   } | null>(null)
   const [scale, setScale] = useState(1)
   const [shellSize, setShellSize] = useState<{ width: number; height: number } | null>(
     null,
   )
   const [lockedViewport, setLockedViewport] = useState<{
-    width: number
     height: number
+    scrollable: boolean
   } | null>(null)
 
   useEffect(() => {
@@ -100,48 +117,67 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
     if (!viewport || !stage) return
 
     const applyLayout = (
-      locked: { width: number; height: number },
+      lockedWidth: number,
+      availableHeight: number,
       naturalHeight: number,
       nextScale: number,
+      scrollable: boolean,
     ) => {
+      const shellHeight = Math.max(0, Math.ceil(naturalHeight * nextScale))
+      const viewportHeight = scrollable ? availableHeight : shellHeight
+
       lockedLayoutRef.current = {
-        viewport: locked,
+        lockedWidth,
+        availableHeight,
         naturalHeight,
         scale: nextScale,
+        scrollable,
       }
-      setLockedViewport(locked)
+      setLockedViewport({ height: viewportHeight, scrollable })
       setScale(nextScale)
       setShellSize({
         width: Math.max(0, Math.ceil(HERO_CHART_STAGE_WIDTH_PX * nextScale)),
-        height: Math.max(0, Math.ceil(naturalHeight * nextScale)),
+        height: shellHeight,
       })
     }
 
     const measure = () => {
       const width = viewport.clientWidth
-      const height = viewport.clientHeight
+      const availableHeight = heroChartScaleFitAvailableHeight(viewport)
       const naturalHeight = stage.offsetHeight
-      if (width <= 0 || height <= 0 || naturalHeight <= 0) return false
+      if (width <= 0 || availableHeight <= 0 || naturalHeight <= 0) return false
 
-      // Keep the first viewport lock (avoids rescale on dialog scroll) but always
-      // remeasure content height — stats/map load async and grow the stage.
-      const locked = lockedLayoutRef.current?.viewport ?? { width, height }
-      const widthScale = locked.width / HERO_CHART_STAGE_WIDTH_PX
-      const heightScale = locked.height / naturalHeight
-      const nextScale = Math.min(widthScale, heightScale)
+      // Lock width only (avoids rescale on dialog scroll); height tracks dialog space.
+      const lockedWidth = lockedLayoutRef.current?.lockedWidth ?? width
+      const widthScale = lockedWidth / HERO_CHART_STAGE_WIDTH_PX
+      const widthFittedHeight = naturalHeight * widthScale
+
+      let nextScale = widthScale
+      let scrollable = false
+
+      if (widthFittedHeight > availableHeight) {
+        const heightScale = availableHeight / naturalHeight
+        if (heightScale >= HERO_CHART_SCALE_MIN) {
+          nextScale = heightScale
+        } else {
+          nextScale = HERO_CHART_SCALE_MIN
+          scrollable = naturalHeight * nextScale > availableHeight + 1
+        }
+      }
 
       const cached = lockedLayoutRef.current
       if (
         cached &&
-        cached.viewport.width === locked.width &&
-        cached.viewport.height === locked.height &&
+        cached.lockedWidth === lockedWidth &&
+        cached.availableHeight === availableHeight &&
         cached.naturalHeight === naturalHeight &&
+        cached.scrollable === scrollable &&
         Math.abs(cached.scale - nextScale) < 0.0001
       ) {
         return true
       }
 
-      applyLayout(locked, naturalHeight, nextScale)
+      applyLayout(lockedWidth, availableHeight, naturalHeight, nextScale, scrollable)
       return true
     }
 
@@ -162,6 +198,10 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
       requestAnimationFrame(measure)
     })
     resizeObserver.observe(stage)
+    const dialog = viewport.closest('.lpo-ps-hero-chart-dialog')
+    if (dialog instanceof HTMLElement) resizeObserver.observe(dialog)
+    const footer = dialog?.querySelector('.lpo-ps-hero-chart-dialog-footer')
+    if (footer instanceof HTMLElement) resizeObserver.observe(footer)
 
     requestAnimationFrame(settleMeasure)
     window.addEventListener('resize', onWindowResize)
@@ -177,10 +217,14 @@ function HeroChartScaleFitStage({ children }: { children: React.ReactNode }) {
       ref={viewportRef}
       className={`lpo-ps-hero-chart-scale-viewport${
         lockedViewport ? ' lpo-ps-hero-chart-scale-viewport--locked' : ''
-      }`}
+      }${lockedViewport?.scrollable ? ' lpo-ps-hero-chart-scale-viewport--scrollable' : ''}`}
       style={
         lockedViewport
-          ? { height: lockedViewport.height, maxHeight: lockedViewport.height }
+          ? {
+              height: lockedViewport.height,
+              maxHeight: lockedViewport.height,
+              minHeight: lockedViewport.scrollable ? 0 : lockedViewport.height,
+            }
           : undefined
       }
     >
