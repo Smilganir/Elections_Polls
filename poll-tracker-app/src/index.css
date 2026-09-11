@@ -5936,6 +5936,41 @@ body.lpo-ps-hero-chart-open .page-content {
   overscroll-behavior: none;
 }
 
+/* Laptop/desktop browser zoom (Ctrl/Cmd +/-): scroll the overlay + dialog as one unit.
+   Keep in sync with HERO_CHART_DESKTOP_LAYOUT_MQ in PollSummaryHeroPartiesChartPopup.tsx.
+   Mobile compact + pinch-zoom paths are unchanged. */
+@media (min-width: 769px) and (min-height: 501px) {
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-overlay {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-dialog {
+    height: auto;
+    min-height: var(--lpo-ps-hero-chart-dialog-height);
+    max-height: none;
+    overflow: visible;
+  }
+
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-body {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-scale-viewport,
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-scale-viewport--locked {
+    flex: 0 0 auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  body.lpo-ps-hero-chart-open--browser-zoom .lpo-ps-hero-chart-scale-shell {
+    height: auto;
+  }
+}
+
 body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-overlay {
   overscroll-behavior: contain;
   /* Block browser pinch-zoom so it cannot fight scale-to-fit / dialog layout. */

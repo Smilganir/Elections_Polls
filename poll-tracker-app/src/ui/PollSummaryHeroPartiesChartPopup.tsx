@@ -60,6 +60,28 @@ export const HERO_CHART_COMPACT_MQ = '(max-width: 768px), (max-height: 500px)'
  */
 export const HERO_CHART_LANDSCAPE_COMPACT_MQ = '(max-height: 500px) and (min-width: 601px)'
 
+/**
+ * Laptop/desktop hero chart layout (not compact phone). Keep in sync with the
+ * `@media (min-width: 769px) and (min-height: 501px)` block in index.css.
+ */
+export const HERO_CHART_DESKTOP_LAYOUT_MQ = '(min-width: 769px) and (min-height: 501px)'
+
+function isHeroChartDesktopLayout(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(HERO_CHART_DESKTOP_LAYOUT_MQ).matches
+}
+
+function isHeroChartBrowserZoomed(): boolean {
+  if (!isHeroChartDesktopLayout()) return false
+  const vv = window.visualViewport
+  return Boolean(vv && vv.scale > 1.01)
+}
+
+function syncHeroChartBrowserZoomClass(): void {
+  const zoomed = isHeroChartBrowserZoomed()
+  document.documentElement.classList.toggle('lpo-ps-hero-chart-open--browser-zoom', zoomed)
+  document.body.classList.toggle('lpo-ps-hero-chart-open--browser-zoom', zoomed)
+}
+
 function useHeroChartScaleBandActive(): boolean {
   const getActive = () => {
     if (typeof window === 'undefined') return false
@@ -67,7 +89,8 @@ function useHeroChartScaleBandActive(): boolean {
     const inWidthBand =
       width >= HERO_CHART_SCALE_BAND_MIN_PX && width <= HERO_CHART_SCALE_BAND_MAX_PX
     const isCompact = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
-    return inWidthBand && !isCompact
+    const browserZoomed = isHeroChartBrowserZoomed()
+    return inWidthBand && !isCompact && !browserZoomed
   }
 
   const [active, setActive] = useState(getActive)
@@ -77,15 +100,20 @@ function useHeroChartScaleBandActive(): boolean {
       `(min-width: ${HERO_CHART_SCALE_BAND_MIN_PX}px) and (max-width: ${HERO_CHART_SCALE_BAND_MAX_PX}px)`,
     )
     const compactQuery = window.matchMedia(HERO_CHART_COMPACT_MQ)
+    const desktopQuery = window.matchMedia(HERO_CHART_DESKTOP_LAYOUT_MQ)
     const sync = () => setActive(getActive())
     sync()
     widthQuery.addEventListener('change', sync)
     compactQuery.addEventListener('change', sync)
+    desktopQuery.addEventListener('change', sync)
     window.addEventListener('resize', sync)
+    window.visualViewport?.addEventListener('resize', sync)
     return () => {
       widthQuery.removeEventListener('change', sync)
       compactQuery.removeEventListener('change', sync)
+      desktopQuery.removeEventListener('change', sync)
       window.removeEventListener('resize', sync)
+      window.visualViewport?.removeEventListener('resize', sync)
     }
   }, [])
 
@@ -781,8 +809,13 @@ export function PollSummaryHeroPartiesChartPopup({
       const isMobile = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
       const insetPx = (isMobile ? 0.15 : 0.5) * rootFontSize
       const gapPx = isMobile ? 2 : 4
-      // Layout frame from layout viewport — ignore visualViewport pinch-zoom scale jumps.
-      const viewportHeight = window.innerHeight
+      const vv = window.visualViewport
+      // Desktop browser zoom: use visual viewport height so the dialog frame tracks zoom.
+      // Mobile pinch-zoom: still ignored here (compact layout + touch-zoom handle pan).
+      let viewportHeight = window.innerHeight
+      if (isHeroChartDesktopLayout() && vv && vv.scale > 1.01) {
+        viewportHeight = vv.height
+      }
       const anchorEl = headingMeta ?? syncGrid
       const overlayTop = anchorEl
         ? Math.ceil(anchorEl.getBoundingClientRect().bottom) + gapPx
@@ -798,9 +831,14 @@ export function PollSummaryHeroPartiesChartPopup({
         `${dialogHeight}px`,
       )
       measureLandscapeStageHeight(dialogHeight)
+      syncHeroChartBrowserZoomClass()
     }
 
     const onVisualViewportResize = () => {
+      if (isHeroChartDesktopLayout()) {
+        applyLayout()
+        return
+      }
       const vv = window.visualViewport
       if (vv && Math.abs(vv.scale - 1) > 0.01) return
       applyLayout()
@@ -846,6 +884,8 @@ export function PollSummaryHeroPartiesChartPopup({
     return () => {
       document.documentElement.classList.remove('lpo-ps-hero-chart-open')
       document.body.classList.remove('lpo-ps-hero-chart-open')
+      document.documentElement.classList.remove('lpo-ps-hero-chart-open--browser-zoom')
+      document.body.classList.remove('lpo-ps-hero-chart-open--browser-zoom')
       document.documentElement.style.overflow = prevHtmlOverflow
       document.body.style.overflow = prevBodyOverflow
       document.documentElement.style.removeProperty('--lpo-ps-hero-chart-overlay-top')
