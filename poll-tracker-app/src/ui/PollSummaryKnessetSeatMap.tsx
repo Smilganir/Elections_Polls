@@ -464,6 +464,13 @@ function KnessetSeatTooltip({
   )
 }
 
+function clearMobileSwingCoords(target: HTMLElement) {
+  target.style.removeProperty('--lpo-ps-knesset-swing-fixed-top')
+  target.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+  target.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+  target.style.removeProperty('--lpo-ps-knesset-swing-wing-seg-width')
+}
+
 /** Mobile portrait: float swing stack over header bloc bar, aligned to opp/coal segments. */
 function positionMobileSwingOverBlocBar(
   dialog: HTMLElement,
@@ -475,11 +482,11 @@ function positionMobileSwingOverBlocBar(
     '.lpo-ps-hero-chart-bloc-bar .lpo-ps-bar-track',
   ) as HTMLElement | null
 
-  dialog.style.removeProperty('--lpo-ps-knesset-swing-wing-seg-width')
+  clearMobileSwingCoords(portalTarget)
 
   if (!barTrack || !partySwing) return false
 
-  const dialogRect = dialog.getBoundingClientRect()
+  const portalRect = portalTarget.getBoundingClientRect()
   const swingStack = portalTarget.querySelector(
     '.lpo-ps-knesset-swing-stack',
   ) as HTMLElement | null
@@ -491,7 +498,7 @@ function positionMobileSwingOverBlocBar(
   const trackRect = barTrack.getBoundingClientRect()
   const mapStage = dialog.querySelector('.lpo-ps-knesset-map-stage') as HTMLElement | null
   const mapStageTop = mapStage
-    ? mapStage.getBoundingClientRect().top - dialogRect.top
+    ? mapStage.getBoundingClientRect().top - portalRect.top
     : null
 
   // Sit a bit lower over the bloc bar, but never overlap the hemicycle stage.
@@ -499,7 +506,7 @@ function positionMobileSwingOverBlocBar(
   const extraDropPx = 34
   let top =
     trackRect.top -
-    dialogRect.top -
+    portalRect.top -
     stackH +
     Math.round(trackRect.height * 0.1) +
     extraDropPx
@@ -508,11 +515,11 @@ function positionMobileSwingOverBlocBar(
     top = Math.min(top, maxTop)
   }
 
-  dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-top', `${top}px`)
+  portalTarget.style.setProperty('--lpo-ps-knesset-swing-fixed-top', `${top}px`)
 
   const anchorW =
     swingAnchor?.getBoundingClientRect().width ??
-    Math.min(dialogRect.width * 0.34, 7.35 * 16)
+    Math.min(portalRect.width * 0.34, 7.35 * 16)
 
   if (partySwing.side === 'right') {
     const coalSeg = dialog.querySelector(
@@ -520,22 +527,22 @@ function positionMobileSwingOverBlocBar(
     ) as HTMLElement | null
     if (!coalSeg) return false
     const segRect = coalSeg.getBoundingClientRect()
-    dialog.style.setProperty('--lpo-ps-knesset-swing-wing-seg-width', `${segRect.width}px`)
+    portalTarget.style.setProperty('--lpo-ps-knesset-swing-wing-seg-width', `${segRect.width}px`)
     const centerX = segRect.left + segRect.width * 0.68
-    const right = dialogRect.right - (centerX + anchorW / 2)
-    dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-right', `${Math.max(4, right)}px`)
-    dialog.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+    const right = portalRect.right - (centerX + anchorW / 2)
+    portalTarget.style.setProperty('--lpo-ps-knesset-swing-fixed-right', `${Math.max(4, right)}px`)
+    portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
   } else {
     const oppSeg = dialog.querySelector(
       '.lpo-ps-hero-chart-bloc-bar .lpo-ps-seg--opp',
     ) as HTMLElement | null
     if (!oppSeg) return false
     const segRect = oppSeg.getBoundingClientRect()
-    dialog.style.setProperty('--lpo-ps-knesset-swing-wing-seg-width', `${segRect.width}px`)
+    portalTarget.style.setProperty('--lpo-ps-knesset-swing-wing-seg-width', `${segRect.width}px`)
     const centerX = segRect.left + segRect.width * 0.32
-    const left = centerX - anchorW / 2 - dialogRect.left
-    dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-left', `${Math.max(4, left)}px`)
-    dialog.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+    const left = centerX - anchorW / 2 - portalRect.left
+    portalTarget.style.setProperty('--lpo-ps-knesset-swing-fixed-left', `${Math.max(4, left)}px`)
+    portalTarget.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
   }
 
   return true
@@ -836,12 +843,18 @@ export function PollSummaryKnessetSeatMap({
 
     const dialog = wrap.closest('.lpo-ps-hero-chart-dialog') as HTMLElement | null
     const overlay = dialog?.closest('.lpo-ps-hero-chart-overlay') as HTMLElement | null
+    const touchZoomInner = wrap.closest(
+      '.lpo-ps-hero-chart-touch-zoom-inner',
+    ) as HTMLElement | null
 
     const updateSwingLayout = () => {
       const isMobileLayout = window.matchMedia(HERO_CHART_COMPACT_MQ).matches
       // Desktop: portal to the overlay and use fixed viewport coords so the stack is never
       // clipped by scale-shell / dialog overflow when sitting above the filter row.
-      const portalTarget = isMobileLayout ? (dialog ?? wrap) : (overlay ?? dialog ?? wrap)
+      // Mobile: portal into touch-zoom-inner so pinch/pan transform applies to swing wings too.
+      const portalTarget = isMobileLayout
+        ? (touchZoomInner ?? wrap)
+        : (overlay ?? dialog ?? wrap)
       const wrapRect = wrap.getBoundingClientRect()
       const portalOriginRect = portalTarget.getBoundingClientRect()
       const resetBtn = wrap.querySelector(
@@ -875,6 +888,7 @@ export function PollSummaryKnessetSeatMap({
         overlay?.style.removeProperty('--lpo-ps-knesset-swing-fixed-top')
         overlay?.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
         overlay?.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+        if (dialog) clearMobileSwingCoords(dialog)
         portalTarget.style.removeProperty('--lpo-ps-knesset-swing-anchor-top')
         wrap.style.removeProperty('--lpo-ps-knesset-swing-stack-gap')
 
@@ -882,6 +896,7 @@ export function PollSummaryKnessetSeatMap({
         return
       }
 
+      if (touchZoomInner) clearMobileSwingCoords(touchZoomInner)
       dialog?.style.removeProperty('--lpo-ps-knesset-swing-fixed-top')
       dialog?.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
       dialog?.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
@@ -992,6 +1007,8 @@ export function PollSummaryKnessetSeatMap({
       dialog?.removeEventListener('scroll', updateSwingLayout)
       dialogBody?.removeEventListener('scroll', updateSwingLayout)
       dialog?.classList.remove('lpo-ps-hero-chart-dialog--swing-mobile')
+      if (touchZoomInner) clearMobileSwingCoords(touchZoomInner)
+      if (dialog) clearMobileSwingCoords(dialog)
     }
   }, [loadError, members, partySwing])
 

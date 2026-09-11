@@ -278,6 +278,7 @@ function HeroChartHemicycleTouchZoom({
       panStartY: 0,
     }
     setTransform({ scale: 1, panX: 0, panY: 0 })
+    viewportRef.current?.classList.remove('lpo-ps-hero-chart-touch-zoom-viewport--zoomed')
   }, [enabled])
 
   useEffect(() => {
@@ -299,6 +300,10 @@ function HeroChartHemicycleTouchZoom({
   const syncTransform = () => {
     const g = gestureRef.current
     setTransform({ scale: g.scale, panX: g.panX, panY: g.panY })
+    viewportRef.current?.classList.toggle(
+      'lpo-ps-hero-chart-touch-zoom-viewport--zoomed',
+      g.scale > 1.02 || g.panX !== 0 || g.panY !== 0,
+    )
   }
 
   const pointerDistance = () => {

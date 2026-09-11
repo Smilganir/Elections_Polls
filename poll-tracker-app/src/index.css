@@ -8010,14 +8010,20 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 /* Keep in sync with HERO_CHART_COMPACT_MQ (PollSummaryHeroPartiesChartPopup.tsx / PollSummaryKnessetSeatMap.tsx):
    landscape phones (short height, wide width) get the same in-flow mobile treatment as portrait phones. */
 @media (max-width: 768px), (max-height: 500px) {
-  /* Portaled to .lpo-ps-hero-chart-dialog on mobile — floats over header bloc bar segments. */
+  /* Portaled to .lpo-ps-hero-chart-touch-zoom-inner on mobile — pinch-zooms with the map. */
   .lpo-ps-hero-chart-dialog--swing-mobile {
     --lpo-ps-knesset-swing-wing-max-width: 7.35rem;
   }
 
+  /* Body above header (z-index: 2) so wing stacks can overlap the bloc bar. */
+  .lpo-ps-hero-chart-dialog--swing-mobile .lpo-ps-hero-chart-body {
+    position: relative;
+    z-index: 3;
+  }
+
   .lpo-ps-hero-chart-dialog--swing-mobile .lpo-ps-knesset-swing-anchor {
     position: absolute;
-    z-index: 100;
+    z-index: 1000;
     top: var(--lpo-ps-knesset-swing-fixed-top, auto);
     bottom: auto;
     height: auto;
@@ -8526,14 +8532,20 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   }
 
   .lpo-ps-hero-chart-touch-zoom-viewport {
-    overflow: hidden;
+    /* Visible at scale 1 so swing wings (negative top inside inner) can sit over the bloc bar. */
+    overflow: visible;
     /* pan-y: native one-finger vertical scroll at scale 1; pinch/zoomed-pan via touchmove preventDefault */
     touch-action: pan-y;
     width: 100%;
     flex: 0 0 auto;
   }
 
+  .lpo-ps-hero-chart-touch-zoom-viewport--zoomed {
+    overflow: hidden;
+  }
+
   .lpo-ps-hero-chart-touch-zoom-inner {
+    position: relative;
     transform-origin: center top;
     will-change: transform;
   }
