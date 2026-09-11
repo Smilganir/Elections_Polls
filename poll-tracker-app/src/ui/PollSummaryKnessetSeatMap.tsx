@@ -464,6 +464,83 @@ function KnessetSeatTooltip({
   )
 }
 
+/** Mobile portrait: float swing stack over header bloc bar, aligned to opp/coal segments. */
+function positionMobileSwingOverBlocBar(
+  dialog: HTMLElement,
+  portalTarget: HTMLElement,
+  partySwing: { side: 'left' | 'right' } | null | undefined,
+  faceSize: number,
+): boolean {
+  const barTrack = dialog.querySelector(
+    '.lpo-ps-hero-chart-bloc-bar .lpo-ps-bar-track',
+  ) as HTMLElement | null
+
+  dialog.style.removeProperty('--lpo-ps-knesset-swing-wing-seg-width')
+
+  if (!barTrack || !partySwing) return false
+
+  const dialogRect = dialog.getBoundingClientRect()
+  const swingStack = portalTarget.querySelector(
+    '.lpo-ps-knesset-swing-stack',
+  ) as HTMLElement | null
+  const swingAnchor = portalTarget.querySelector(
+    '.lpo-ps-knesset-swing-anchor',
+  ) as HTMLElement | null
+
+  const stackH = swingStack?.getBoundingClientRect().height ?? faceSize + 36
+  const trackRect = barTrack.getBoundingClientRect()
+  const mapStage = dialog.querySelector('.lpo-ps-knesset-map-stage') as HTMLElement | null
+  const mapStageTop = mapStage
+    ? mapStage.getBoundingClientRect().top - dialogRect.top
+    : null
+
+  // Sit a bit lower over the bloc bar, but never overlap the hemicycle stage.
+  const mapClearancePx = 8
+  const extraDropPx = 34
+  let top =
+    trackRect.top -
+    dialogRect.top -
+    stackH +
+    Math.round(trackRect.height * 0.1) +
+    extraDropPx
+  if (mapStageTop != null) {
+    const maxTop = mapStageTop - stackH - mapClearancePx
+    top = Math.min(top, maxTop)
+  }
+
+  dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-top', `${top}px`)
+
+  const anchorW =
+    swingAnchor?.getBoundingClientRect().width ??
+    Math.min(dialogRect.width * 0.34, 7.35 * 16)
+
+  if (partySwing.side === 'right') {
+    const coalSeg = dialog.querySelector(
+      '.lpo-ps-hero-chart-bloc-bar .lpo-ps-seg--coal',
+    ) as HTMLElement | null
+    if (!coalSeg) return false
+    const segRect = coalSeg.getBoundingClientRect()
+    dialog.style.setProperty('--lpo-ps-knesset-swing-wing-seg-width', `${segRect.width}px`)
+    const centerX = segRect.left + segRect.width * 0.68
+    const right = dialogRect.right - (centerX + anchorW / 2)
+    dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-right', `${Math.max(4, right)}px`)
+    dialog.style.removeProperty('--lpo-ps-knesset-swing-fixed-left')
+  } else {
+    const oppSeg = dialog.querySelector(
+      '.lpo-ps-hero-chart-bloc-bar .lpo-ps-seg--opp',
+    ) as HTMLElement | null
+    if (!oppSeg) return false
+    const segRect = oppSeg.getBoundingClientRect()
+    dialog.style.setProperty('--lpo-ps-knesset-swing-wing-seg-width', `${segRect.width}px`)
+    const centerX = segRect.left + segRect.width * 0.32
+    const left = centerX - anchorW / 2 - dialogRect.left
+    dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-left', `${Math.max(4, left)}px`)
+    dialog.style.removeProperty('--lpo-ps-knesset-swing-fixed-right')
+  }
+
+  return true
+}
+
 function SwingSeatPortrait({
   seat,
   locale,
@@ -801,14 +878,7 @@ export function PollSummaryKnessetSeatMap({
         portalTarget.style.removeProperty('--lpo-ps-knesset-swing-anchor-top')
         wrap.style.removeProperty('--lpo-ps-knesset-swing-stack-gap')
 
-        const dialogRect = dialog.getBoundingClientRect()
-        const panelHeight = faceSize + 36
-        const top = stageRect.top - dialogRect.top - panelHeight - 4
-        const inset = Math.max(6, dialogRect.width * 0.015)
-
-        dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-top', `${top}px`)
-        dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-left', `${inset}px`)
-        dialog.style.setProperty('--lpo-ps-knesset-swing-fixed-right', `${inset}px`)
+        positionMobileSwingOverBlocBar(dialog, portalTarget, partySwing, faceSize)
         return
       }
 
@@ -907,6 +977,8 @@ export function PollSummaryKnessetSeatMap({
     if (dialog) ro?.observe(dialog)
     const filtersResetBtn = wrap.querySelector('.lpo-ps-knesset-filters-reset')
     if (filtersResetBtn) ro?.observe(filtersResetBtn)
+    const blocBarTrack = dialog?.querySelector('.lpo-ps-hero-chart-bloc-bar .lpo-ps-bar-track')
+    if (blocBarTrack) ro?.observe(blocBarTrack)
     window.addEventListener('resize', updateSwingLayout)
     // The mobile/compact dialog scrolls as a single unit (header + body), so the swing panel's
     // fixed-pixel offset (measured from the dialog's own bounding rect) must be recomputed as the

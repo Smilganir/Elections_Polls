@@ -289,19 +289,29 @@ function HeroChartHemicycleTouchZoom({
     return Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
   }
 
+  const capturePointer = (pointerId: number) => {
+    try {
+      innerRef.current?.setPointerCapture(pointerId)
+    } catch {
+      /* already captured or released */
+    }
+  }
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!enabled) return
     const g = gestureRef.current
-    innerRef.current?.setPointerCapture(e.pointerId)
     g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (g.pointers.size === 1) {
       g.panOriginX = e.clientX
       g.panOriginY = e.clientY
       g.panStartX = g.panX
       g.panStartY = g.panY
+      // Only capture when zoomed in (pan); never on a single-finger tap at scale 1.
+      if (g.scale > 1) capturePointer(e.pointerId)
     } else if (g.pointers.size === 2) {
       g.pinchDist = pointerDistance()
       g.pinchScale = g.scale
+      for (const pointerId of g.pointers.keys()) capturePointer(pointerId)
     }
   }
 
