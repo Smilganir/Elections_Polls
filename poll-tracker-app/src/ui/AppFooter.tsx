@@ -3,7 +3,7 @@ import { useLocale } from '../i18n/useLocale'
 import { UI } from '../i18n/strings'
 
 const VOTESMART_CREDIT_HE =
-  'בגרסה הקודמת נעשה שימוש בנתוני ״בוחרים חכ״ם״.'
+  'בגרסה הקודמת נעשה שימוש בנתוני ״בוחרים חכ״ם (VoteSmart)״.'
 
 const CANDIDATES_INFO_GROUPS: readonly { label: string; body: string }[] = [
   {

@@ -42,8 +42,6 @@ import { computePartySwingSeats } from '../lib/knessetPartySwingSeats'
 import type { Segment } from '../types/data'
 import { KnessetStatsLeftStack, KnessetStatsRightStack } from './PollSummaryKnessetDemographics'
 import { KnessetSeatEmptyPortraitIcon } from './KnessetSeatEmptyPortraitIcon'
-import { RotatePortraitHint } from './RotatePortraitHint'
-
 /**
  * Keep in sync with HERO_CHART_COMPACT_MQ in PollSummaryHeroPartiesChartPopup.tsx and the
  * `@media (max-width: 768px), (max-height: 500px)` blocks in index.css that style
@@ -798,7 +796,6 @@ export function PollSummaryKnessetSeatMap({
   stageOverlay?: ReactNode
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
-  const statsRowRef = useRef<HTMLDivElement>(null)
   const [members, setMembers] = useState<KnessetMemberRow[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
@@ -1075,7 +1072,6 @@ export function PollSummaryKnessetSeatMap({
       ) : (
         <>
           <div
-            ref={statsRowRef}
             className={`lpo-ps-knesset-map-row${showStats ? ' lpo-ps-knesset-map-row--with-stats' : ''}`}
             dir="ltr"
           >
@@ -1153,7 +1149,6 @@ export function PollSummaryKnessetSeatMap({
                 document.body,
               )
             : null}
-          {showStats ? <RotatePortraitHint locale={locale} statsRowRef={statsRowRef} /> : null}
         </>
       )}
     </div>

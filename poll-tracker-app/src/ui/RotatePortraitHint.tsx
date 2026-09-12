@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { AppLocale } from '../i18n/localeContext'
 import { UI } from '../i18n/strings'
 
-/** Bump when hint eligibility / persistence rules change so users aren't stuck on old dismiss flags. */
-const STORAGE_KEY = 'lpo-ps-portrait-hint-dismissed-v2'
 /** Phone landscape cap — below typical laptop window heights (e.g. 720px). */
 const PHONE_LANDSCAPE_MAX_HEIGHT_PX = 500
 const PHONE_LANDSCAPE_MQ = `(max-height: ${PHONE_LANDSCAPE_MAX_HEIGHT_PX}px) and (orientation: landscape) and (pointer: coarse)`
@@ -45,22 +43,6 @@ function isPhoneLandscape(): boolean {
   return isViewportLandscape() && h <= PHONE_LANDSCAPE_MAX_HEIGHT_PX
 }
 
-function wasDismissed(): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-function persistDismissed(): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, '1')
-  } catch {
-    /* quota / privacy mode */
-  }
-}
-
 function RotateToPortraitGlyph({ className }: { className?: string }) {
   const sw = 2.35
   return (
@@ -88,17 +70,10 @@ function RotateToPortraitGlyph({ className }: { className?: string }) {
   )
 }
 
-type Props = {
-  locale: AppLocale
-  /** The `.lpo-ps-knesset-map-row--with-stats` row — hint only when this is visible. */
-  statsRowRef: RefObject<HTMLElement | null>
-}
-
-export function RotatePortraitHint({ locale, statsRowRef }: Props) {
+export function RotatePortraitHint({ locale }: { locale: AppLocale }) {
   const t = UI[locale]
   const [open, setOpen] = useState(false)
-  const [statsRowVisible, setStatsRowVisible] = useState(false)
-  const dismissedRef = useRef(typeof window !== 'undefined' ? wasDismissed() : false)
+  const dismissedRef = useRef(false)
   const openRef = useRef(false)
 
   const closeOverlay = useCallback(() => {
@@ -106,55 +81,40 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
     openRef.current = false
   }, [])
 
-  const dismissAndPersist = useCallback(() => {
-    persistDismissed()
+  const dismissStint = useCallback(() => {
     dismissedRef.current = true
     closeOverlay()
   }, [closeOverlay])
 
-  useEffect(() => {
-    const el = statsRowRef.current
-    if (!el) {
-      setStatsRowVisible(false)
-      return
-    }
-
-    const scrollRoot = el.closest('.lpo-ps-hero-chart-dialog') as HTMLElement | null
-    const io = new IntersectionObserver(
-      ([entry]) => setStatsRowVisible(entry.isIntersecting),
-      { root: scrollRoot, threshold: 0.12 },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [statsRowRef])
-
   const syncViewport = useCallback(() => {
     if (typeof window === 'undefined') return
-
-    if (dismissedRef.current || wasDismissed()) {
-      if (openRef.current) closeOverlay()
-      return
-    }
 
     const phoneLandscape = isPhoneLandscape()
 
     if (!phoneLandscape) {
+      dismissedRef.current = false
       if (openRef.current) closeOverlay()
       return
     }
 
-    const shouldShow = statsRowVisible
+    if (dismissedRef.current) {
+      if (openRef.current) closeOverlay()
+      return
+    }
 
-    if (shouldShow && !openRef.current) {
+    if (!openRef.current) {
       openRef.current = true
       setOpen(true)
-    } else if (!shouldShow && openRef.current) {
-      closeOverlay()
     }
-  }, [closeOverlay, statsRowVisible])
+  }, [closeOverlay])
 
   useEffect(() => {
-    dismissedRef.current = wasDismissed()
+    try {
+      window.localStorage.removeItem('lpo-ps-portrait-hint-dismissed-v2')
+    } catch {
+      /* quota / privacy mode */
+    }
+
     syncViewport()
 
     const mqs = [
@@ -193,10 +153,6 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
   }, [syncViewport])
 
   useEffect(() => {
-    syncViewport()
-  }, [statsRowVisible, syncViewport])
-
-  useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -211,7 +167,7 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
 
   return createPortal(
     <div className="lpo-rotate-hint-overlay" dir={dir} role="presentation">
-      <div className="lpo-rotate-hint-scrim" aria-hidden onClick={dismissAndPersist} />
+      <div className="lpo-rotate-hint-scrim" aria-hidden onClick={dismissStint} />
       <div
         className="lpo-rotate-hint-dialog"
         role="dialog"
@@ -222,7 +178,7 @@ export function RotatePortraitHint({ locale, statsRowRef }: Props) {
         <h2 id="lpo-rotate-hint-heading" className="lpo-rotate-hint-title">
           {t.rotatePortraitTitle}
         </h2>
-        <button type="button" className="lpo-rotate-hint-btn" onClick={dismissAndPersist}>
+        <button type="button" className="lpo-rotate-hint-btn" onClick={dismissStint}>
           {t.rotatePortraitDismiss}
         </button>
       </div>

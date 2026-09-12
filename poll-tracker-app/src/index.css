@@ -9217,6 +9217,12 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     box-sizing: border-box;
   }
 
+  @media (max-width: 600px) {
+    .lpo-ps-hero-chart-dialog-heading .lpo-ps-hero-chart-bloc-summary--header {
+      width: 78%;
+    }
+  }
+
   .lpo-ps-hero-chart-dialog-heading .lpo-ps-hero-chart-outlets {
     flex-wrap: nowrap;
     justify-content: space-between;
