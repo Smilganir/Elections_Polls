@@ -771,6 +771,37 @@ function PollSummaryWindowDaysStepper({
   )
 }
 
+function DashboardHeadingLocaleToggle({
+  locale,
+  setLocale,
+  t,
+  className = 'locale-toggle dashboard-heading-locale-toggle',
+}: {
+  locale: AppLocale
+  setLocale: (locale: AppLocale) => void
+  t: UiStrings
+  className?: string
+}) {
+  return (
+    <div className={className} role="group" aria-label={t.localeToggleAria}>
+      <button
+        type="button"
+        className={`locale-toggle-btn${locale === 'en' ? ' active' : ''}`}
+        onClick={() => setLocale('en')}
+      >
+        EN
+      </button>
+      <button
+        type="button"
+        className={`locale-toggle-btn${locale === 'he' ? ' active' : ''}`}
+        onClick={() => setLocale('he')}
+      >
+        עב
+      </button>
+    </div>
+  )
+}
+
 function BlocArabsToggle({
   t,
   combineArabsWithOpposition,
@@ -1596,35 +1627,28 @@ export function LatestPollsOverviewPage() {
     lpoSwipeStartRef.current = null
   }, [])
 
+  /** Portrait phones: locale sits in the poll-summary meta row (left of Arabs toggle). */
+  const localeInPsMetaRow = isPortraitMobile && showPollSummary && !loading
+
   return (
     <section className="dashboard-frame">
       <div className="dashboard-heading dashboard-heading--lpo">
-        <div className="dashboard-heading-sync-grid" dir="ltr">
+        <div
+          className={`dashboard-heading-sync-grid${localeInPsMetaRow ? ' dashboard-heading-sync-grid--locale-in-meta' : ''}`}
+          dir="ltr"
+        >
           <div className="dashboard-heading-bar">
-            <div className="dashboard-heading-locale-slot">
-            <div className="dashboard-heading-left-stack" dir="ltr">
-              <div
-                className="locale-toggle dashboard-heading-locale-toggle"
-                role="group"
-                aria-label={t.localeToggleAria}
-              >
-                <button
-                  type="button"
-                  className={`locale-toggle-btn${locale === 'en' ? ' active' : ''}`}
-                  onClick={() => setLocale('en')}
-                >
-                  EN
-                </button>
-                <button
-                  type="button"
-                  className={`locale-toggle-btn${locale === 'he' ? ' active' : ''}`}
-                  onClick={() => setLocale('he')}
-                >
-                  עב
-                </button>
+            {!localeInPsMetaRow ? (
+              <div className="dashboard-heading-locale-slot">
+                <div className="dashboard-heading-left-stack" dir="ltr">
+                  <DashboardHeadingLocaleToggle
+                    locale={locale}
+                    setLocale={setLocale}
+                    t={t}
+                  />
+                </div>
               </div>
-            </div>
-            </div>
+            ) : null}
             <div className="dashboard-heading-title-col">
               <h2 dir={locale === 'he' ? 'rtl' : 'ltr'}>
                 {t.titleLatest}
@@ -1686,6 +1710,15 @@ export function LatestPollsOverviewPage() {
           </div>
           {!loading && showPollSummary ? (
             <div className="lpo-ps-heading-meta" dir="ltr">
+              {localeInPsMetaRow ? (
+                <div className="lpo-ps-heading-meta-locale">
+                  <DashboardHeadingLocaleToggle
+                    locale={locale}
+                    setLocale={setLocale}
+                    t={t}
+                  />
+                </div>
+              ) : null}
               <BlocArabsToggle
                 t={t}
                 combineArabsWithOpposition={combineArabsWithOpposition}

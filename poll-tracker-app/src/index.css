@@ -2662,6 +2662,31 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   }
 }
 
+/* Poll summary header: locale in meta row (left of Arabs toggle) on portrait phones only. */
+@media (max-width: 768px) and (orientation: portrait) {
+  .dashboard-heading--lpo .dashboard-heading-sync-grid--locale-in-meta:has(.lpo-ps-heading-meta) {
+    row-gap: 0.48rem;
+  }
+
+  .dashboard-heading--lpo .dashboard-heading-sync-grid--locale-in-meta .dashboard-heading-title-col {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-heading-meta-locale {
+    flex: 0 0 auto;
+    align-self: flex-end;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-bloc-arabs-toggle-wrap {
+    align-items: center;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-bloc-arabs-toggle-label {
+    text-align: center;
+  }
+
+}
+
 /* Tablet portrait / phone landscape (481–768px): 2 columns */
 @media (max-width: 768px) {
   .topbar-inner {
@@ -3666,6 +3691,47 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .dashboard-heading .lpo-ps-window-days-stepper input {
     padding: 0.34rem 0.1rem;
     font-size: 0.86rem;
+  }
+}
+
+/* Portrait poll-summary meta: label above stepper; stepper height matches Arabs toggle. */
+@media (max-width: 768px) and (orientation: portrait) {
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-window-days-label {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    width: auto;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-window-days-label span {
+    width: 100%;
+    font-size: 0.58rem;
+    line-height: 1.15;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-window-days-stepper {
+    width: 4rem;
+    border-radius: 0.35rem;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-window-days-step-btn {
+    min-width: 0;
+    min-height: 0;
+    padding: 0.18rem 0.22rem;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-window-days-step-btn svg.icon-pagination-chevron {
+    width: 11px;
+    height: 11px;
+  }
+
+  .dashboard-heading--lpo .lpo-ps-heading-meta .lpo-ps-window-days-stepper input {
+    padding: 0.18rem 0.06rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1;
   }
 }
 
