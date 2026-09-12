@@ -158,6 +158,8 @@ export type UiStrings = {
   knessetStatsMilNationalService: string
   knessetStatsMilNotServed: string
   knessetStatsMilUnknown: string
+  /** Military widget footnote — {count} = אין מידע candidates */
+  knessetStatsMilUnknownCaption: string
   knessetStatsEducationLabel: string
   knessetStatsSectorLabel: string
   knessetStatsEduTorah: string
@@ -390,6 +392,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilNationalService: 'National service',
     knessetStatsMilNotServed: 'Did not serve',
     knessetStatsMilUnknown: 'No information',
+    knessetStatsMilUnknownCaption: 'No information for {count} candidates',
     knessetStatsEducationLabel: 'Education',
     knessetStatsSectorLabel: 'Sector',
     knessetStatsEduTorah: 'Torah',
@@ -601,6 +604,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilNationalService: 'שירות לאומי',
     knessetStatsMilNotServed: 'לא שירתו',
     knessetStatsMilUnknown: 'אין מידע',
+    knessetStatsMilUnknownCaption: 'אין מידע על {count} מועמדים',
     knessetStatsAgeLabel: 'גיל',
     knessetStatsPeripheryLabel: 'ציון פריפריה',
     knessetStatsKnessetYearsLabel: 'ותק בכנסת',

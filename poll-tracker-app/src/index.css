@@ -7887,6 +7887,51 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   filter: grayscale(0.35);
 }
 
+.lpo-ps-knesset-seat--mil-unknown {
+  opacity: 0.4;
+  box-shadow:
+    0 0 0 1.35px var(--lpo-ps-knesset-ring, #9ca3af),
+    0 0 0 2.5px dashed color-mix(in srgb, #8fa3bc 55%, transparent);
+}
+
+.lpo-ps-knesset-seat-mil-unknown-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.72em;
+  height: 0.72em;
+  border-radius: 50%;
+  font-size: 0.48em;
+  font-weight: 800;
+  line-height: 1;
+  color: #c5d0de;
+  background: rgba(12, 18, 28, 0.92);
+  box-shadow: 0 0 0 1px rgba(143, 163, 188, 0.45);
+  pointer-events: none;
+}
+
+.lpo-ps-knesset-military-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.38rem;
+  width: 100%;
+}
+
+.lpo-ps-knesset-military-unknown-caption {
+  margin: 0;
+  width: 100%;
+  font-size: 0.54rem;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #6f8198;
+  text-align: center;
+}
+
 .lpo-ps-knesset-map--party-focus .lpo-ps-knesset-seat:not(.lpo-ps-knesset-seat--dimmed):hover,
 .lpo-ps-knesset-map--party-focus .lpo-ps-knesset-seat:not(.lpo-ps-knesset-seat--dimmed):focus-visible {
   opacity: 1;

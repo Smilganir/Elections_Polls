@@ -32,10 +32,11 @@ import {
 } from '../lib/knessetMemberTooltipLocale'
 import {
   partyKeysMatchingFilters,
-  seatMatchesFilters,
+  seatFilterVisualState,
   toggleMapFilter,
   type KnessetMapFilters,
   type KnessetMapFocusItem,
+  type KnessetSeatFilterVisualState,
 } from '../lib/knessetSeatDemographics'
 import { computePartySwingSeats } from '../lib/knessetPartySwingSeats'
 import type { Segment } from '../types/data'
@@ -723,7 +724,7 @@ function PartySwingSeatsOverlay({
 
 function SeatPortrait({
   seat,
-  dimmed,
+  visualState,
   locale,
   displayParty,
   onPointerEnter,
@@ -731,7 +732,7 @@ function SeatPortrait({
   onMove,
 }: {
   seat: KnessetFilledSeat
-  dimmed: boolean
+  visualState: KnessetSeatFilterVisualState
   locale: AppLocale
   displayParty: (partyKey: string) => string
   onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>) => void
@@ -747,7 +748,9 @@ function SeatPortrait({
       type="button"
       className={`lpo-ps-knesset-seat${
         isPlaceholder ? ' lpo-ps-knesset-seat--placeholder' : ''
-      }${dimmed ? ' lpo-ps-knesset-seat--dimmed' : ''}`}
+      }${visualState === 'dimmed' ? ' lpo-ps-knesset-seat--dimmed' : ''}${
+        visualState === 'milUnknown' ? ' lpo-ps-knesset-seat--mil-unknown' : ''
+      }`}
       style={
         {
           left: `${seat.slot.x}%`,
@@ -765,6 +768,9 @@ function SeatPortrait({
       }
     >
       <SeatPortraitMedia seat={seat} />
+      {visualState === 'milUnknown' ? (
+        <span className="lpo-ps-knesset-seat-mil-unknown-badge" aria-hidden="true">?</span>
+      ) : null}
     </button>
   )
 }
@@ -1094,7 +1100,11 @@ export function PollSummaryKnessetSeatMap({
                 <SeatPortrait
                   key={seat.slot.id}
                   seat={seat}
-                  dimmed={!seatMatchesFilters(seat, activeFilters, mergeArabsWithOpposition)}
+                  visualState={seatFilterVisualState(
+                    seat,
+                    activeFilters,
+                    mergeArabsWithOpposition,
+                  )}
                   locale={locale}
                   displayParty={displayParty}
                   onPointerEnter={(e) => updateTooltipPos(e, seat)}

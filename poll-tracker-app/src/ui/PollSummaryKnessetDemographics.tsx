@@ -808,37 +808,44 @@ export function KnessetStatsLeftStack({
   const k25 = k25Resolve?.slice
   const k25Scope = k25Resolve?.scope ?? null
   const militaryK25Pp = k25
-    ? knessetSharePpDelta(
-        militaryStats.servedPct,
-        k25.servedPctIdfEligible ?? k25.servedPctVerified ?? k25.servedPct,
-      )
+    ? knessetSharePpDelta(militaryStats.servedPct, k25.servedPct)
     : null
 
   return (
     <div className="lpo-ps-knesset-stats lpo-ps-knesset-stats--stage-left">
-      {militaryStats.servedPct != null ? (
-        <Doughnut
-          portion={militaryStats.servedPct}
-          label={t.knessetStatsMilitaryLabel}
-          aria={donutAria(t.knessetStatsMilitaryLabel, militaryStats.servedPct, t)}
-          k25DeltaPp={militaryK25Pp}
-          k25Scope={k25Scope}
+      <div className="lpo-ps-knesset-military-widget">
+        {militaryStats.servedPct != null ? (
+          <Doughnut
+            portion={militaryStats.servedPct}
+            label={t.knessetStatsMilitaryLabel}
+            aria={donutAria(t.knessetStatsMilitaryLabel, militaryStats.servedPct, t)}
+            k25DeltaPp={militaryK25Pp}
+            k25Scope={k25Scope}
+            t={t}
+            primaryFocus={{ kind: 'military', value: 'served' }}
+            complementFocus={{ kind: 'military', value: 'not_served' }}
+            mapFilters={mapFilters}
+            onToggleFocus={onToggleFocus}
+            layoutSlot="lpo-ps-knesset-stat-slot--military"
+          />
+        ) : null}
+        <MilitaryServiceBars
+          rows={militaryStats.militaryService}
+          title={t.knessetStatsMilitaryBreakdownLabel}
           t={t}
-          primaryFocus={{ kind: 'military', value: 'served' }}
-          complementFocus={{ kind: 'military', value: 'not_served' }}
           mapFilters={mapFilters}
           onToggleFocus={onToggleFocus}
-          layoutSlot="lpo-ps-knesset-stat-slot--military"
+          layoutSlot="lpo-ps-knesset-stat-slot--military-breakdown"
         />
-      ) : null}
-      <MilitaryServiceBars
-        rows={militaryStats.militaryService}
-        title={t.knessetStatsMilitaryBreakdownLabel}
-        t={t}
-        mapFilters={mapFilters}
-        onToggleFocus={onToggleFocus}
-        layoutSlot="lpo-ps-knesset-stat-slot--military-breakdown"
-      />
+        {militaryStats.militaryUnknownCount > 0 ? (
+          <p className="lpo-ps-knesset-military-unknown-caption" dir="rtl">
+            {t.knessetStatsMilUnknownCaption.replace(
+              '{count}',
+              String(militaryStats.militaryUnknownCount),
+            )}
+          </p>
+        ) : null}
+      </div>
       <SectorBars
         rows={sectorStats.sector}
         title={t.knessetStatsSectorLabel}

@@ -2,19 +2,14 @@ import baselineData from '../data/knesset25FactionBlocBaseline.json'
 import type { KnessetMapFilters } from './knessetSeatDemographics'
 
 /**
- * Knesset 25 roster demographics (120 MKs seated as of 2026-09-09), by faction and bloc.
- * Source: knesset25_faction_bloc_stats.xlsx — not the 2022 elected cohort alone.
+ * Knesset 25 roster demographics (120 MKs at swearing-in, 2022-11-15), by faction and bloc.
+ * servedPct: IDF served (regular + officer) / members with known service info (excludes אין מידע).
  */
 export type Knesset25BaselineSlice = {
   n: number
   femalePct: number
   newPct: number
-  /** Military service only (regular/career/shortened), as a share of all MKs in the slice. */
   servedPct: number
-  /** IDF served as a share of MKs with verified service info (excludes אין מידע). */
-  servedPctVerified: number
-  /** IDF served / (IDF served + לא שירת); excludes שירות לאומי and אין מידע (hero donut). */
-  servedPctIdfEligible: number
   avgAge: number
   avgKnessetYears: number
 }

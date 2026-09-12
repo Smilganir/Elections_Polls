@@ -1,176 +1,23 @@
 {
   "factions": {
-    "הליכוד": {
-      "n": 32,
-      "femalePct": 0.21899999999999997,
-      "newPct": 0.43799999999999994,
-      "servedPct": 0.75,
-      "avgAge": 57.1,
-      "avgKnessetYears": 8.6,
-      "servedPctVerified": 0.889,
-      "servedPctIdfEligible": 0.96
-    },
-    "יש עתיד": {
-      "n": 24,
-      "femalePct": 0.5,
-      "newPct": 0.41700000000000004,
-      "servedPct": 0.667,
-      "avgAge": 52.2,
-      "avgKnessetYears": 5.6,
-      "servedPctVerified": 0.8,
-      "servedPctIdfEligible": 0.842
-    },
-    "ש\"ס": {
-      "n": 11,
-      "femalePct": 0,
-      "newPct": 0.182,
-      "servedPct": 0.545,
-      "avgAge": 54.2,
-      "avgKnessetYears": 8.4,
-      "servedPctVerified": 0.545,
-      "servedPctIdfEligible": 0.6
-    },
-    "כחול לבן - המחנה הממלכתי": {
-      "n": 8,
-      "femalePct": 0.375,
-      "newPct": 0,
-      "servedPct": 0.875,
-      "avgAge": 55,
-      "avgKnessetYears": 6,
-      "servedPctVerified": 0.875,
-      "servedPctIdfEligible": 0.875
-    },
-    "הציונות הדתית": {
-      "n": 7,
-      "femalePct": 0.28600000000000003,
-      "newPct": 0.429,
-      "servedPct": 0.5710000000000001,
-      "avgAge": 50.7,
-      "avgKnessetYears": 5.3,
-      "servedPctVerified": 0.5710000000000001,
-      "servedPctIdfEligible": 0.571
-    },
-    "יהדות התורה": {
-      "n": 7,
-      "femalePct": 0,
-      "newPct": 0.14300000000000002,
-      "servedPct": 0.429,
-      "avgAge": 65.8,
-      "avgKnessetYears": 14,
-      "servedPctVerified": 0.429,
-      "servedPctIdfEligible": 0.429
-    },
-    "ישראל ביתנו": {
-      "n": 6,
-      "femalePct": 0.33299999999999996,
-      "newPct": 0.16699999999999998,
-      "servedPct": 0.833,
-      "avgAge": 55.4,
-      "avgKnessetYears": 11.1,
-      "servedPctVerified": 0.833,
-      "servedPctIdfEligible": 0.833
-    },
-    "עוצמה יהודית": {
-      "n": 6,
-      "femalePct": 0.16699999999999998,
-      "newPct": 0.833,
-      "servedPct": 0.667,
-      "avgAge": 48.4,
-      "avgKnessetYears": 3.7,
-      "servedPctVerified": 0.667,
-      "servedPctIdfEligible": 0.667
-    },
-    "חד\"ש-תע\"ל": {
-      "n": 5,
-      "femalePct": 0.2,
-      "newPct": 0.2,
-      "servedPct": 0.2,
-      "avgAge": 58.1,
-      "avgKnessetYears": 11.7,
-      "servedPctVerified": 0.25,
-      "servedPctIdfEligible": 0.25
-    },
-    "רע\"ם": {
-      "n": 5,
-      "femalePct": 0.2,
-      "newPct": 0.4,
-      "servedPct": 0,
-      "avgAge": 55.6,
-      "avgKnessetYears": 5.6,
-      "servedPctVerified": 0,
-      "servedPctIdfEligible": 0
-    },
-    "הימין הממלכתי": {
-      "n": 4,
-      "femalePct": 0.25,
-      "newPct": 0,
-      "servedPct": 0.5,
-      "avgAge": 56.4,
-      "avgKnessetYears": 9.3,
-      "servedPctVerified": 1,
-      "servedPctIdfEligible": 1
-    },
-    "העבודה": {
-      "n": 4,
-      "femalePct": 0.75,
-      "newPct": 0,
-      "servedPct": 1,
-      "avgAge": 51.9,
-      "avgKnessetYears": 7.4,
-      "servedPctVerified": 1,
-      "servedPctIdfEligible": 1
-    },
-    "נעם": {
-      "n": 1,
-      "femalePct": 0,
-      "newPct": 0,
-      "servedPct": 1,
-      "avgAge": 70.2,
-      "avgKnessetYears": 5.4,
-      "servedPctVerified": 1,
-      "servedPctIdfEligible": 1
-    }
+    "הליכוד": { "n": 32, "femalePct": 0.188, "newPct": 0.219, "servedPct": 0.935, "avgAge": 54.7, "avgKnessetYears": 7.9 },
+    "יש עתיד": { "n": 24, "femalePct": 0.375, "newPct": 0.125, "servedPct": 0.952, "avgAge": 51.0, "avgKnessetYears": 3.9 },
+    "ש\"ס": { "n": 11, "femalePct": 0.0, "newPct": 0.091, "servedPct": 0.636, "avgAge": 49.8, "avgKnessetYears": 5.7 },
+    "כחול לבן - המחנה הממלכתי": { "n": 8, "femalePct": 0.25, "newPct": 0.125, "servedPct": 0.875, "avgAge": 54.1, "avgKnessetYears": 2.5 },
+    "הציונות הדתית": { "n": 7, "femalePct": 0.286, "newPct": 0.286, "servedPct": 0.714, "avgAge": 48.2, "avgKnessetYears": 2.6 },
+    "יהדות התורה": { "n": 7, "femalePct": 0.0, "newPct": 0.143, "servedPct": 0.286, "avgAge": 64.3, "avgKnessetYears": 12.9 },
+    "ישראל ביתנו": { "n": 6, "femalePct": 0.333, "newPct": 0.167, "servedPct": 0.833, "avgAge": 51.5, "avgKnessetYears": 7.3 },
+    "עוצמה יהודית": { "n": 6, "femalePct": 0.167, "newPct": 0.833, "servedPct": 0.667, "avgAge": 44.1, "avgKnessetYears": 0.3 },
+    "חד\"ש-תע\"ל": { "n": 5, "femalePct": 0.2, "newPct": 0.0, "servedPct": 0.2, "avgAge": 56.8, "avgKnessetYears": 8.5 },
+    "רע\"ם": { "n": 5, "femalePct": 0.2, "newPct": 0.4, "servedPct": 0.0, "avgAge": 51.8, "avgKnessetYears": 1.8 },
+    "הימין הממלכתי": { "n": 4, "femalePct": 0.5, "newPct": 0.0, "servedPct": 1.0, "avgAge": 48.9, "avgKnessetYears": 10.8 },
+    "העבודה": { "n": 4, "femalePct": 0.75, "newPct": 0.0, "servedPct": 1.0, "avgAge": 48.1, "avgKnessetYears": 3.5 },
+    "נעם": { "n": 1, "femalePct": 0.0, "newPct": 0.0, "servedPct": 1.0, "avgAge": 66.4, "avgKnessetYears": 1.6 }
   },
   "blocs": {
-    "coalition": {
-      "n": 60,
-      "femalePct": 0.183,
-      "newPct": 0.4,
-      "servedPct": 0.667,
-      "avgAge": 54.9,
-      "avgKnessetYears": 7.7,
-      "servedPctVerified": 0.755,
-      "servedPctIdfEligible": 0.816
-    },
-    "oppositionMerged": {
-      "n": 60,
-      "femalePct": 0.36700000000000005,
-      "newPct": 0.25,
-      "servedPct": 0.617,
-      "avgAge": 55.6,
-      "avgKnessetYears": 7.8,
-      "servedPctVerified": 0.6729999999999999,
-      "servedPctIdfEligible": 0.725
-    },
-    "oppositionExclArabs": {
-      "n": 50,
-      "femalePct": 0.4,
-      "newPct": 0.24,
-      "servedPct": 0.72,
-      "avgAge": 55.3,
-      "avgKnessetYears": 7.7,
-      "servedPctVerified": 0.799,
-      "servedPctIdfEligible": 0.727
-    }
+    "coalition": { "n": 60, "femalePct": 0.183, "newPct": 0.25, "servedPct": 0.831, "avgAge": 51.6, "avgKnessetYears": 6.3 },
+    "oppositionMerged": { "n": 60, "femalePct": 0.3, "newPct": 0.133, "servedPct": 0.702, "avgAge": 53.6, "avgKnessetYears": 5.3 },
+    "oppositionExclArabs": { "n": 50, "femalePct": 0.32, "newPct": 0.12, "servedPct": 0.83, "avgAge": 53.5, "avgKnessetYears": 5.3 }
   },
-  "full": {
-    "n": 120,
-    "femalePct": 0.275,
-    "newPct": 0.325,
-    "servedPct": 0.642,
-    "avgAge": 55.2,
-    "avgKnessetYears": 7.8,
-    "servedPctVerified": 0.713,
-    "servedPctIdfEligible": 0.762
-  }
+  "full": { "n": 120, "femalePct": 0.242, "newPct": 0.192, "servedPct": 0.767, "avgAge": 52.6, "avgKnessetYears": 5.8 }
 }
