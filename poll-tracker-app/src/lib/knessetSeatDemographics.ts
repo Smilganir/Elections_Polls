@@ -100,6 +100,9 @@ function memberMatchesDemographic(
     if (focus.value === 'served') {
       return isMilitaryServiceServed(bucket)
     }
+    if (focus.value === 'non_idf') {
+      return bucket === 'national_service' || bucket === 'not_served'
+    }
     return bucket === focus.value
   }
   if (focus.kind === 'age') {
@@ -169,7 +172,9 @@ export function seatFilterVisualState(
 ): KnessetSeatFilterVisualState {
   if (!filters.length) return 'match'
   if (seatMatchesFilters(seat, filters, mergeArabsWithOpposition)) return 'match'
-  const hasMilitaryFilter = filters.some((f) => f.kind === 'military')
+  const hasMilitaryFilter = filters.some(
+    (f) => f.kind === 'military' && f.value !== 'unknown',
+  )
   if (
     hasMilitaryFilter &&
     seat.kind === 'member' &&
@@ -247,7 +252,26 @@ export const MILITARY_SERVICE_BUCKETS = [
 export type MilitaryServiceBucket = (typeof MILITARY_SERVICE_BUCKETS)[number]
 
 /** Donut aggregate filter: any IDF served bucket (regular, officer). */
-export type MilitaryFocusValue = MilitaryServiceBucket | 'served'
+export type MilitaryFocusValue = MilitaryServiceBucket | 'served' | 'non_idf'
+
+/** Breakdown bar / donut cross-highlight for aggregate military filters. */
+export function militaryBreakdownRowActive(
+  filters: KnessetMapFilters,
+  bucket: MilitaryServiceBucket,
+): boolean {
+  for (const focus of filters) {
+    if (focus.kind !== 'military') continue
+    if (focus.value === 'served' && isMilitaryServiceServed(bucket)) return true
+    if (
+      focus.value === 'non_idf' &&
+      (bucket === 'national_service' || bucket === 'not_served')
+    ) {
+      return true
+    }
+    if (focus.value === bucket) return true
+  }
+  return false
+}
 
 export const AGE_BIN_DEFS = [
   { id: '20', min: 20, max: 30, optional: false },

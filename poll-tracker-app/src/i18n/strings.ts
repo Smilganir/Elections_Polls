@@ -5,6 +5,8 @@ export type UiStrings = {
   titleElectionPolls: string
   /** Page title while hero chart dialog is open */
   titleElectionPollsHeroChart: string
+  /** Shorter hero-chart page title on narrow portrait (omits mapping word) */
+  titleElectionPollsHeroChartPortrait: string
   titleOverview: string
   coalition: string
   opposition: string
@@ -157,9 +159,12 @@ export type UiStrings = {
   knessetStatsMilOfficer: string
   knessetStatsMilNationalService: string
   knessetStatsMilNotServed: string
+  knessetStatsMilNonIdf: string
   knessetStatsMilUnknown: string
-  /** Military widget footnote — {count} = אין מידע candidates */
-  knessetStatsMilUnknownCaption: string
+  /** Military widget footnote — line 1 (HE: אין מידע על) */
+  knessetStatsMilUnknownCaptionLine1: string
+  /** Military widget footnote — line 2; {count} = candidate count */
+  knessetStatsMilUnknownCaptionLine2: string
   knessetStatsEducationLabel: string
   knessetStatsSectorLabel: string
   knessetStatsEduTorah: string
@@ -253,6 +258,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     titleLatest: '',
     titleElectionPolls: 'Election Polls in Israel',
     titleElectionPollsHeroChart: 'Knesset 26 mandate polls & list mapping',
+    titleElectionPollsHeroChartPortrait: 'Knesset 26 mandate polls & lists',
     titleOverview: '',
     coalition: 'Coalition',
     opposition: 'Opposition',
@@ -391,8 +397,10 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilOfficer: 'Officer',
     knessetStatsMilNationalService: 'National service',
     knessetStatsMilNotServed: 'Did not serve',
+    knessetStatsMilNonIdf: 'National service / did not serve',
     knessetStatsMilUnknown: 'No information',
-    knessetStatsMilUnknownCaption: 'No information for {count} candidates',
+    knessetStatsMilUnknownCaptionLine1: 'No information for',
+    knessetStatsMilUnknownCaptionLine2: '{count} candidates',
     knessetStatsEducationLabel: 'Education',
     knessetStatsSectorLabel: 'Sector',
     knessetStatsEduTorah: 'Torah',
@@ -474,6 +482,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     titleLatest: '',
     titleElectionPolls: 'סקרי מנדטים לכנסת ה-26',
     titleElectionPollsHeroChart: 'סקרי מנדטים ומיפוי רשימות לכנסת ה-26',
+    titleElectionPollsHeroChartPortrait: 'סקרי מנדטים ורשימות לכנסת ה-26',
     titleOverview: '',
     coalition: 'קואליציה',
     opposition: 'אופוזיציה',
@@ -603,8 +612,10 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetStatsMilOfficer: 'קצין',
     knessetStatsMilNationalService: 'שירות לאומי',
     knessetStatsMilNotServed: 'לא שירתו',
+    knessetStatsMilNonIdf: 'שירות לאומי / לא שירתו',
     knessetStatsMilUnknown: 'אין מידע',
-    knessetStatsMilUnknownCaption: 'אין מידע על {count} מועמדים',
+    knessetStatsMilUnknownCaptionLine1: 'אין מידע על',
+    knessetStatsMilUnknownCaptionLine2: '{count} מועמדים',
     knessetStatsAgeLabel: 'גיל',
     knessetStatsPeripheryLabel: 'ציון פריפריה',
     knessetStatsKnessetYearsLabel: 'ותק בכנסת',

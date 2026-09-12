@@ -139,16 +139,20 @@ function blocHighlightIdx(series: BlocPollPoint[], currentPollDate: string | und
 
 /** True when viewport width is at most `maxPx` (for overlap heuristics on small screens). */
 function useMediaMaxWidth(maxPx: number) {
+  return useMatchMedia(`(max-width: ${maxPx}px)`)
+}
+
+function useMatchMedia(query: string) {
   const [matches, setMatches] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(`(max-width: ${maxPx}px)`).matches,
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
   )
   useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${maxPx}px)`)
+    const mq = window.matchMedia(query)
     const onChange = () => setMatches(mq.matches)
     onChange()
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
-  }, [maxPx])
+  }, [query])
   return matches
 }
 
@@ -819,6 +823,7 @@ export function LatestPollsOverviewPage() {
   const { locale, setLocale } = useLocale()
   const t = UI[locale]
   const { open: heroPartiesChartOpen } = useHeroPartiesChartOverlay()
+  const isPortraitMobile = useMatchMedia(PORTRAIT_MOBILE_EVENT_MQ)
   const { unpivot, events, majorEvents, partiesDim, mediaOutletsDim, loading, error } = useDashboardData()
   const [pageIndex, setPageIndex] = useState(0)
   /** Single-column (sparkline) mode: filter rows to one party; cleared when leaving sparkline mode or All parties. Poll pagination is kept while focused. */
@@ -1625,7 +1630,9 @@ export function LatestPollsOverviewPage() {
                 {t.titleLatest}
                 <strong>
                   {showPollSummary && heroPartiesChartOpen
-                    ? t.titleElectionPollsHeroChart
+                    ? isPortraitMobile
+                      ? t.titleElectionPollsHeroChartPortrait
+                      : t.titleElectionPollsHeroChart
                     : t.titleElectionPolls}
                 </strong>
                 {t.titleOverview}

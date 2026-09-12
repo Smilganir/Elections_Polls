@@ -20,6 +20,7 @@ import {
   formatDemographicMean,
   formatPctLabel,
   knessetYearsBinLabel,
+  militaryBreakdownRowActive,
   peripheryBinLabel,
   sectorChartLabel,
   summarizeProjectedKnesset,
@@ -488,7 +489,7 @@ function MilitaryServiceBars({
             kind: 'military',
             value: row.bucket,
           }
-          const active = filtersInclude(mapFilters, focus)
+          const active = militaryBreakdownRowActive(mapFilters, row.bucket)
           return (
             <li key={row.bucket}>
               <button
@@ -823,28 +824,45 @@ export function KnessetStatsLeftStack({
             k25Scope={k25Scope}
             t={t}
             primaryFocus={{ kind: 'military', value: 'served' }}
-            complementFocus={{ kind: 'military', value: 'not_served' }}
+            complementFocus={{ kind: 'military', value: 'non_idf' }}
             mapFilters={mapFilters}
             onToggleFocus={onToggleFocus}
             layoutSlot="lpo-ps-knesset-stat-slot--military"
           />
         ) : null}
-        <MilitaryServiceBars
-          rows={militaryStats.militaryService}
-          title={t.knessetStatsMilitaryBreakdownLabel}
-          t={t}
-          mapFilters={mapFilters}
-          onToggleFocus={onToggleFocus}
-          layoutSlot="lpo-ps-knesset-stat-slot--military-breakdown"
-        />
-        {militaryStats.militaryUnknownCount > 0 ? (
-          <p className="lpo-ps-knesset-military-unknown-caption" dir="rtl">
-            {t.knessetStatsMilUnknownCaption.replace(
-              '{count}',
-              String(militaryStats.militaryUnknownCount),
-            )}
-          </p>
-        ) : null}
+        <div className="lpo-ps-knesset-military-breakdown-stack">
+          <MilitaryServiceBars
+            rows={militaryStats.militaryService}
+            title={t.knessetStatsMilitaryBreakdownLabel}
+            t={t}
+            mapFilters={mapFilters}
+            onToggleFocus={onToggleFocus}
+            layoutSlot="lpo-ps-knesset-stat-slot--military-breakdown"
+          />
+          {militaryStats.militaryUnknownCount > 0 ? (
+            <button
+              type="button"
+              className={`lpo-ps-knesset-military-unknown-caption lpo-ps-knesset-stat-hit${
+                filtersInclude(mapFilters, { kind: 'military', value: 'unknown' })
+                  ? ' lpo-ps-knesset-stat-hit--active'
+                  : ''
+              }`}
+              dir="rtl"
+              aria-pressed={filtersInclude(mapFilters, { kind: 'military', value: 'unknown' })}
+              onClick={() => onToggleFocus({ kind: 'military', value: 'unknown' })}
+            >
+              <span className="lpo-ps-knesset-military-unknown-caption-line">
+                {t.knessetStatsMilUnknownCaptionLine1}
+              </span>
+              <span className="lpo-ps-knesset-military-unknown-caption-line">
+                {t.knessetStatsMilUnknownCaptionLine2.replace(
+                  '{count}',
+                  String(militaryStats.militaryUnknownCount),
+                )}
+              </span>
+            </button>
+          ) : null}
+        </div>
       </div>
       <SectorBars
         rows={sectorStats.sector}

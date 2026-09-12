@@ -2554,7 +2554,7 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
 /* Poll summary header: compact 2-row layout on portrait phones/tablets. */
 @media (max-width: 768px) {
   .dashboard-heading--lpo .dashboard-heading-sync-grid:has(.lpo-ps-heading-meta) {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content) minmax(0, 1fr);
     grid-template-rows: auto auto;
     row-gap: 0.22rem;
     column-gap: 0.4rem;
@@ -2564,18 +2564,26 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .dashboard-heading--lpo .dashboard-heading-sync-grid:has(.lpo-ps-heading-meta) .dashboard-heading-locale-slot {
     grid-column: 1;
     grid-row: 1;
-    align-self: start;
+    align-self: center;
+    justify-self: start;
   }
 
   .dashboard-heading--lpo .dashboard-heading-sync-grid:has(.lpo-ps-heading-meta) .dashboard-heading-title-col {
     grid-column: 2;
     grid-row: 1;
     gap: 0.1rem;
+    justify-self: center;
+    align-items: center;
+    width: max-content;
+    max-width: 100%;
   }
 
   .dashboard-heading--lpo .dashboard-heading-sync-grid:has(.lpo-ps-heading-meta) .dashboard-heading-title-col h2 {
     font-size: 1rem;
     line-height: 1.28;
+    width: 100%;
+    align-self: center;
+    text-align: center;
   }
 
   .dashboard-heading--lpo .dashboard-heading-sync-grid:has(.lpo-ps-heading-meta) .dashboard-heading-title-col h2 strong {
@@ -2586,6 +2594,8 @@ html[lang='he'] .lpo-header-bloc-earliest-val {
   .dashboard-heading--lpo .dashboard-heading-sync-grid:has(.lpo-ps-heading-meta) .dashboard-heading-title-col .lpo-ps-subtitle--under-page-title {
     font-size: 0.68rem;
     line-height: 1.22;
+    width: 100%;
+    text-align: center;
   }
 
   .dashboard-heading--lpo .lpo-ps-heading-meta {
@@ -6729,6 +6739,24 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     padding: 0.12rem 0.16rem;
   }
 
+  .lpo-ps-hero-chart-scale-stage
+    .lpo-ps-hero-chart-hemicycle-wrap
+    .lpo-ps-knesset-stat-slot--military-breakdown
+    .lpo-ps-knesset-edu-list {
+    gap: 0.14rem;
+    min-height: 0;
+    grid-template-rows: repeat(4, auto);
+    padding-bottom: 0;
+  }
+
+  .lpo-ps-hero-chart-scale-stage
+    .lpo-ps-hero-chart-hemicycle-wrap
+    .lpo-ps-knesset-stat-slot--military-breakdown
+    .lpo-ps-knesset-edu-row {
+    gap: 0.22rem;
+    padding: 0.03rem 0.06rem;
+  }
+
   .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-name,
   .lpo-ps-hero-chart-scale-stage .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-edu-pct {
     font-size: 0.68rem;
@@ -7922,14 +7950,65 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   width: 100%;
 }
 
+.lpo-ps-knesset-military-breakdown-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
+  width: 100%;
+}
+
 .lpo-ps-knesset-military-unknown-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
   margin: 0;
   width: 100%;
-  font-size: 0.54rem;
+  font-size: 0.6rem;
   line-height: 1.2;
   font-weight: 500;
   color: #6f8198;
   text-align: center;
+  border-radius: 0.32rem;
+}
+
+.lpo-ps-knesset-military-unknown-caption-line {
+  display: block;
+}
+
+.lpo-ps-knesset-military-unknown-caption.lpo-ps-knesset-stat-hit--active {
+  color: #9eb4cc;
+}
+
+/* Hero chart left stack: room around military donut / breakdown / caption; tighter bar rows. */
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-widget {
+  gap: 0.52rem;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military {
+  padding: 0.2rem 0.14rem;
+  box-sizing: border-box;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown {
+  padding: 0.2rem 0.14rem 0.04rem;
+  box-sizing: border-box;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-unknown-caption {
+  padding-block: 0.14rem;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-list {
+  gap: 0.14rem;
+  min-height: 0;
+  grid-template-rows: repeat(4, auto);
+  padding-bottom: 0;
+}
+
+.lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-row {
+  padding: 0.03rem 0.06rem;
 }
 
 .lpo-ps-knesset-map--party-focus .lpo-ps-knesset-seat:not(.lpo-ps-knesset-seat--dimmed):hover,
@@ -8593,6 +8672,7 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0.55rem 0.42rem;
     grid-template-areas: none;
+    --lpo-ps-knesset-stats-col-gap: 0.42rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-stage {
@@ -8604,6 +8684,23 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter--right,
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stats-gutter .lpo-ps-knesset-stats {
     display: contents;
+  }
+
+  /* Unwrap military widget so donut + breakdown stack can sit on separate grid rows. */
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-widget {
+    display: contents;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-breakdown-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.2rem;
+    grid-column: 1 / 4;
+    grid-row: 4;
+    padding-inline-end: 0.55rem;
+    box-sizing: border-box;
+    align-self: start;
   }
 
   /* Row 2: military | new MKs | women */
@@ -8646,12 +8743,13 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     box-sizing: border-box;
   }
 
-  /* Row 4: military breakdown + periphery; row 5: education; row 6: sector */
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown {
-    grid-column: 1 / 4;
-    grid-row: 4;
-    padding-inline-end: 0.55rem;
-    box-sizing: border-box;
+  /* Row 4: military breakdown stack (left) + periphery (right); row 5: sector + education */
+  .lpo-ps-hero-chart-hemicycle-wrap
+    .lpo-ps-knesset-military-breakdown-stack
+    .lpo-ps-knesset-stat-slot--military-breakdown {
+    grid-column: auto;
+    grid-row: auto;
+    padding-inline-end: 0;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--education {
@@ -8672,19 +8770,30 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
     box-sizing: border-box;
   }
 
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-list,
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--education .lpo-ps-knesset-edu-list,
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--sector .lpo-ps-knesset-edu-list {
     min-height: 0;
     gap: 0.2rem;
   }
 
-  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-row,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-list {
+    min-height: 0;
+    gap: 0.1rem;
+    grid-template-rows: repeat(4, auto);
+    padding-bottom: 0;
+  }
+
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--education .lpo-ps-knesset-edu-row,
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--sector .lpo-ps-knesset-edu-row {
     grid-template-columns: 2.75rem minmax(0, 1fr) 1.55rem;
     gap: 0.18rem;
     padding: 0.06rem 0.04rem;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-row {
+    grid-template-columns: 2.75rem minmax(0, 1fr) 1.55rem;
+    gap: 0.14rem;
+    padding: 0.02rem 0.02rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--military-breakdown .lpo-ps-knesset-edu-name,
@@ -8709,6 +8818,40 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--education .lpo-ps-knesset-stats-caption,
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--sector .lpo-ps-knesset-stats-caption {
     margin-bottom: 0.12rem;
+  }
+}
+
+/* Mobile portrait: faint horizontal row separators between stat chart bands. */
+@media (max-width: 860px) and (orientation: portrait) {
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--tenure,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--age,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-breakdown-stack,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--periphery,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--sector,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--education {
+    margin-top: 0.32rem;
+    padding-top: 0.58rem;
+    box-sizing: border-box;
+  }
+
+  /* Full-width rule from the left column (50% + gap + 50%). */
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--tenure,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-breakdown-stack,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--sector {
+    position: relative;
+  }
+
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--tenure::before,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-military-breakdown-stack::before,
+  .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-stat-slot--sector::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(200% + var(--lpo-ps-knesset-stats-col-gap, 0.42rem));
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
   }
 }
 
@@ -9361,6 +9504,7 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-map-row--with-stats {
     gap: 0.45rem 0.3rem;
+    --lpo-ps-knesset-stats-col-gap: 0.3rem;
   }
 
   .lpo-ps-hero-chart-hemicycle-wrap .lpo-ps-knesset-donut {

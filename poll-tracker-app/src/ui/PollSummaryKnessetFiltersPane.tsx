@@ -26,8 +26,12 @@ function educationLabel(bucket: EducationBucket, t: UiStrings): string {
   return t.knessetStatsEduPhd
 }
 
-function militaryServiceLabel(bucket: MilitaryServiceBucket | 'served', t: UiStrings): string {
+function militaryServiceLabel(
+  bucket: MilitaryServiceBucket | 'served' | 'non_idf',
+  t: UiStrings,
+): string {
   if (bucket === 'served') return t.knessetStatsMilitaryLabel
+  if (bucket === 'non_idf') return t.knessetStatsMilNonIdf
   if (bucket === 'regular') return t.knessetStatsMilRegular
   if (bucket === 'officer') return t.knessetStatsMilOfficer
   if (bucket === 'national_service') return t.knessetStatsMilNationalService
