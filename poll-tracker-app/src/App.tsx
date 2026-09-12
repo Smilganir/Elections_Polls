@@ -10,7 +10,7 @@ function AppShellFooter() {
 
   return (
     <footer className="app-footer">
-      <AppFooter showVoteSmart={heroChartOpen} />
+      <AppFooter showKnessetMemberSources={heroChartOpen} />
     </footer>
   )
 }

@@ -1183,8 +1183,8 @@ export function PollSummaryHeroPartiesChartPopup({
         </div>
         </HeroChartScaleFit>
         <footer className="lpo-ps-hero-chart-dialog-footer">
-          <div className="app-footer">
-            <AppFooter showVoteSmart />
+          <div className="app-footer app-footer--with-knesset-sources">
+            <AppFooter showKnessetMemberSources />
           </div>
         </footer>
       </div>
