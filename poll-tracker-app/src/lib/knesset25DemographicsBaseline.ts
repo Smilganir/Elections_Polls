@@ -11,6 +11,10 @@ export type Knesset25BaselineSlice = {
   newPct: number
   /** Military service only (regular/career/shortened), as a share of all MKs in the slice. */
   servedPct: number
+  /** IDF served as a share of MKs with verified service info (excludes אין מידע). */
+  servedPctVerified: number
+  /** IDF served / (IDF served + לא שירת); excludes שירות לאומי and אין מידע (hero donut). */
+  servedPctIdfEligible: number
   avgAge: number
   avgKnessetYears: number
 }

@@ -96,7 +96,7 @@ function memberMatchesDemographic(
     return focus.value === 'female' ? member.gender.trim() === 'נקבה' : member.gender.trim() === 'זכר'
   }
   if (focus.kind === 'military') {
-    const bucket = classifyMilitaryService(member.militaryServiceCategory)
+    const bucket = memberMilitaryBucket(member)
     if (focus.value === 'served') {
       return isMilitaryServiceServed(bucket)
     }
@@ -225,7 +225,7 @@ export const MILITARY_SERVICE_BUCKETS = [
 ] as const
 export type MilitaryServiceBucket = (typeof MILITARY_SERVICE_BUCKETS)[number]
 
-/** Donut aggregate filter: any served bucket (regular, officer, national). */
+/** Donut aggregate filter: any IDF served bucket (regular, officer). */
 export type MilitaryFocusValue = MilitaryServiceBucket | 'served'
 
 export const AGE_BIN_DEFS = [
@@ -400,6 +400,16 @@ export function normalizePreKnessetRole(raw: string): string | null {
 
 const UNKNOWN_MILITARY = UNKNOWN_FIELD
 
+/** Sheet column «שירות צבאי קטגוריה» — normalized labels. */
+const MILITARY_CATEGORY_LABEL: Readonly<Record<string, MilitaryServiceBucket>> = {
+  'שירת בצה"ל': 'regular',
+  'קצין בצה"ל': 'officer',
+  'שירות לאומי': 'national_service',
+  'לא שירת': 'not_served',
+  'לא שירתו': 'not_served',
+  'אין מידע': 'unknown',
+}
+
 const MILITARY_NATIONAL = /שירות\s*לאומי/
 
 /** Negated national-service clause — strip before national-service detection. */
@@ -429,9 +439,31 @@ export function isMilitaryServiceServed(bucket: MilitaryServiceBucket): boolean 
   return bucket === 'regular' || bucket === 'officer'
 }
 
+/**
+ * IDF donut pool: שירת בצה"ל + קצין + לא שירת.
+ * Excludes שירות לאומי and אין מידע entirely (not in numerator or denominator).
+ */
+export function isIdfDonutEligible(bucket: MilitaryServiceBucket): boolean {
+  return bucket !== 'unknown' && bucket !== 'national_service'
+}
+
+/** @deprecated Use isIdfDonutEligible */
+export const isIdfServiceEligible = isIdfDonutEligible
+
+/** Prefer category column; fall back to free-text «שירות צבאי/לאומי»; empty → אין מידע. */
+export function memberMilitaryBucket(member: KnessetMemberRow): MilitaryServiceBucket {
+  const category = member.militaryServiceCategory.trim()
+  if (category) return classifyMilitaryService(category)
+  const freeText = member.militaryService.trim()
+  if (freeText) return classifyMilitaryService(freeText)
+  return 'unknown'
+}
+
 export function classifyMilitaryService(raw: string): MilitaryServiceBucket {
   const t = preprocessMilitaryServiceText(raw)
   if (!t || UNKNOWN_MILITARY.test(t) || t.startsWith('אין מידע')) return 'unknown'
+  const exact = MILITARY_CATEGORY_LABEL[t]
+  if (exact) return exact
   if (MILITARY_NOT_SERVED.test(t)) {
     return MILITARY_NATIONAL.test(t) ? 'national_service' : 'not_served'
   }
@@ -490,23 +522,24 @@ export function projectedMembers(seats: readonly KnessetFilledSeat[]): KnessetMe
 }
 
 /**
- * Military served (regular/officer only) as a share of projected MKs with known service info.
- * National service counts in the denominator but not the numerator (matches hero donut).
+ * Hero donut: IDF served / (IDF served + לא שירת).
+ * שירות לאומי and אין מידע are out of scope (matches K25 servedPctIdfEligible).
  */
-export function militaryServedPctOfAll(seats: readonly KnessetFilledSeat[]): number | null {
+export function militaryDonutServedPct(seats: readonly KnessetFilledSeat[]): number | null {
   const members = projectedMembers(seats)
   let served = 0
-  let known = 0
+  let donutPool = 0
   for (const m of members) {
-    const milCategory = m.militaryServiceCategory.trim()
-    if (!milCategory) continue
-    const bucket = classifyMilitaryService(milCategory)
-    if (bucket === 'unknown') continue
-    known++
+    const bucket = memberMilitaryBucket(m)
+    if (!isIdfDonutEligible(bucket)) continue
+    donutPool++
     if (isMilitaryServiceServed(bucket)) served++
   }
-  return known > 0 ? served / known : null
+  return donutPool > 0 ? served / donutPool : null
 }
+
+/** @deprecated Use militaryDonutServedPct */
+export const militaryServedPctOfAll = militaryDonutServedPct
 
 function ratio(part: number, whole: number): number | null {
   if (whole <= 0) return null
@@ -523,7 +556,7 @@ export function summarizeProjectedKnesset(
   let femaleCount = 0
   let genderKnown = 0
   let servedCount = 0
-  let militaryKnown = 0
+  let idfEligibleKnown = 0
   const ageCounts = new Map<AgeBinId, number>()
   for (const def of AGE_BIN_DEFS) ageCounts.set(def.id, 0)
   const knessetYearsCounts = new Map<KnessetYearsBinId, number>()
@@ -556,14 +589,11 @@ export function summarizeProjectedKnesset(
       if (g === 'נקבה') femaleCount++
     }
 
-    const milCategory = m.militaryServiceCategory.trim()
-    if (milCategory) {
-      const milBucket = classifyMilitaryService(milCategory)
-      militaryCounts.set(milBucket, (militaryCounts.get(milBucket) ?? 0) + 1)
-      if (milBucket !== 'unknown') {
-        militaryKnown++
-        if (isMilitaryServiceServed(milBucket)) servedCount++
-      }
+    const milBucket = memberMilitaryBucket(m)
+    militaryCounts.set(milBucket, (militaryCounts.get(milBucket) ?? 0) + 1)
+    if (isIdfDonutEligible(milBucket)) {
+      idfEligibleKnown++
+      if (isMilitaryServiceServed(milBucket)) servedCount++
     }
 
     const age = parseMemberAge(m.age)
@@ -623,7 +653,7 @@ export function summarizeProjectedKnesset(
     memberCount: members.length,
     newPct: ratio(newCount, seniorityKnown),
     femalePct: ratio(femaleCount, genderKnown),
-    servedPct: ratio(servedCount, militaryKnown),
+    servedPct: ratio(servedCount, idfEligibleKnown),
     avgAge: ageCount > 0 ? ageSum / ageCount : null,
     avgKnessetYears: knessetYearsCount > 0 ? knessetYearsSum / knessetYearsCount : null,
     ageBins,

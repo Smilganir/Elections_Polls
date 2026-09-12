@@ -20,7 +20,6 @@ import {
   formatDemographicMean,
   formatPctLabel,
   knessetYearsBinLabel,
-  militaryServedPctOfAll,
   peripheryBinLabel,
   sectorChartLabel,
   summarizeProjectedKnesset,
@@ -808,17 +807,11 @@ export function KnessetStatsLeftStack({
   const k25Resolve = resolveKnesset25Baseline(mapFilters, mergeArabsWithOpposition)
   const k25 = k25Resolve?.slice
   const k25Scope = k25Resolve?.scope ?? null
-  const militaryFilteredSeats = useMemo(
-    () =>
-      filterSeatsByFilters(
-        seats,
-        chartStatsExcludingKind(mapFilters, 'military'),
-        mergeArabsWithOpposition,
-      ),
-    [seats, mapFilters, mergeArabsWithOpposition],
-  )
   const militaryK25Pp = k25
-    ? knessetSharePpDelta(militaryServedPctOfAll(militaryFilteredSeats), k25.servedPct)
+    ? knessetSharePpDelta(
+        militaryStats.servedPct,
+        k25.servedPctIdfEligible ?? k25.servedPctVerified ?? k25.servedPct,
+      )
     : null
 
   return (
