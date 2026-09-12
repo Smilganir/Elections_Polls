@@ -130,6 +130,7 @@ export type UiStrings = {
   knessetMapTooltipSubIdentity: string
   knessetMapTooltipFunFact: string
   knessetMapTooltipPreRole: string
+  knessetMapTooltipSources: string
   knessetMapTooltipNoInfo: string
   knessetMapTooltipUnknownName: string
   knessetMapGenderMale: string
@@ -360,6 +361,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipSubIdentity: 'Sub-identity',
     knessetMapTooltipFunFact: 'Fun fact',
     knessetMapTooltipPreRole: 'Pre-Knesset role',
+    knessetMapTooltipSources: 'Sources',
     knessetMapTooltipNoInfo: 'No information',
     knessetMapTooltipUnknownName: 'Unknown candidate',
     knessetMapGenderMale: 'Male',
@@ -576,6 +578,7 @@ export const UI: Record<AppLocale, UiStrings> = {
     knessetMapTooltipSubIdentity: 'תת-זהות',
     knessetMapTooltipFunFact: 'עובדה מעניינת',
     knessetMapTooltipPreRole: 'תפקיד קדם-כנסת',
+    knessetMapTooltipSources: 'מקורות',
     knessetMapTooltipNoInfo: 'אין מידע',
     knessetMapTooltipUnknownName: 'מועמד/ת לא ידוע/ה',
     knessetMapGenderMale: 'זכר',

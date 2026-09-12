@@ -14,6 +14,8 @@ import { buildKnessetFilledSeats, type KnessetFilledSeat } from '../lib/knessetS
 import { PARTY_COLOR_MAP, SEGMENT_COLORS } from '../config/mappings'
 import {
   fetchKnessetMembers,
+  consolidateMemberSources,
+  memberSourcesPlainText,
   memberSeatImageUrl,
   membersByPartyKey,
   segmentLabel,
@@ -293,21 +295,44 @@ function MemberTooltipDetails({
   enProfile: MemberEnTooltipProfile | null
 }) {
   const detailRows = memberTooltipDetailRows(member, locale, t, enProfile)
-  if (!detailRows.length) return null
+  const sourceGroups = consolidateMemberSources(member.sources)
+  const sourcesPlain = memberSourcesPlainText(sourceGroups)
+  if (!detailRows.length && !sourceGroups.length) return null
   return (
-    <div className="lpo-ps-knesset-tooltip-details">
-      {detailRows.map((row) => (
-        <p
-          key={row.label}
-          className={`lpo-ps-knesset-tooltip-detail-row${
-            row.clamp ? ' lpo-ps-knesset-tooltip-detail-row--clamp' : ''
-          }`}
-        >
-          <span className="lpo-ps-knesset-tooltip-detail-label">{row.label}:</span>
-          <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
-        </p>
-      ))}
-    </div>
+    <>
+      {detailRows.length > 0 ? (
+        <div className="lpo-ps-knesset-tooltip-details">
+          {detailRows.map((row) => (
+            <p
+              key={row.label}
+              className={`lpo-ps-knesset-tooltip-detail-row${
+                row.clamp ? ' lpo-ps-knesset-tooltip-detail-row--clamp' : ''
+              }`}
+            >
+              <span className="lpo-ps-knesset-tooltip-detail-label">{row.label}:</span>
+              <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
+            </p>
+          ))}
+        </div>
+      ) : null}
+      {sourceGroups.length ? (
+        <div className="lpo-ps-knesset-tooltip-sources" title={sourcesPlain}>
+          <span className="lpo-ps-knesset-tooltip-sources-heading">{t.knessetMapTooltipSources}</span>
+          <p className="lpo-ps-knesset-tooltip-sources-body">
+            {sourceGroups.map((group, index) => (
+              <span key={group.source} className="lpo-ps-knesset-tooltip-sources-item">
+                {index > 0 ? (
+                  <span className="lpo-ps-knesset-tooltip-sources-sep" aria-hidden="true"> | </span>
+                ) : null}
+                <span className="lpo-ps-knesset-tooltip-sources-src">{group.source}</span>
+                <span className="lpo-ps-knesset-tooltip-sources-colon">:</span>
+                <span className="lpo-ps-knesset-tooltip-sources-cat">{group.categories.join(', ')}</span>
+              </span>
+            ))}
+          </p>
+        </div>
+      ) : null}
+    </>
   )
 }
 

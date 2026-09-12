@@ -8287,6 +8287,51 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   text-overflow: ellipsis;
 }
 
+.lpo-ps-knesset-tooltip-sources {
+  grid-column: 1;
+  margin: 0.32rem 0 0;
+  padding-top: 0.28rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 0;
+}
+
+.lpo-ps-knesset-tooltip-sources-heading {
+  display: block;
+  font-size: 0.48rem;
+  color: #6b7f96;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.1rem;
+}
+
+.lpo-ps-knesset-tooltip-sources-body {
+  margin: 0;
+  line-height: 1.3;
+  font-size: 0.46rem;
+}
+
+.lpo-ps-knesset-tooltip-sources-src {
+  color: #9aadc0;
+  font-weight: 600;
+}
+
+.lpo-ps-knesset-tooltip-sources-cat {
+  color: #6b7f96;
+  font-weight: 500;
+}
+
+.lpo-ps-knesset-tooltip-sources-colon {
+  color: #5a6d82;
+  font-weight: 600;
+  margin-inline: 0.05rem;
+}
+
+.lpo-ps-knesset-tooltip-sources-sep {
+  color: #4a5f75;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
 @media (max-width: 1100px) {
   .lpo-ps-knesset-map-row--with-stats {
     grid-template-columns: minmax(0, 9.25rem) minmax(0, 1fr) minmax(0, 8.75rem);

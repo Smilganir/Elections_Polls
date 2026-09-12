@@ -96,7 +96,7 @@ function memberMatchesDemographic(
     return focus.value === 'female' ? member.gender.trim() === 'נקבה' : member.gender.trim() === 'זכר'
   }
   if (focus.kind === 'military') {
-    const bucket = classifyMilitaryService(member.militaryService)
+    const bucket = classifyMilitaryService(member.militaryServiceCategory)
     if (focus.value === 'served') {
       return isMilitaryServiceServed(bucket)
     }
@@ -115,7 +115,7 @@ function memberMatchesDemographic(
     return bin?.id === focus.value
   }
   if (focus.kind === 'education') {
-    return classifyEducation(member.education) === focus.value
+    return classifyEducation(member.educationCategory) === focus.value
   }
   if (focus.kind === 'sector') {
     return classifySector(member.sector) === focus.value
@@ -498,7 +498,9 @@ export function militaryServedPctOfAll(seats: readonly KnessetFilledSeat[]): num
   let served = 0
   let known = 0
   for (const m of members) {
-    const bucket = classifyMilitaryService(m.militaryService)
+    const milCategory = m.militaryServiceCategory.trim()
+    if (!milCategory) continue
+    const bucket = classifyMilitaryService(milCategory)
     if (bucket === 'unknown') continue
     known++
     if (isMilitaryServiceServed(bucket)) served++
@@ -554,11 +556,14 @@ export function summarizeProjectedKnesset(
       if (g === 'נקבה') femaleCount++
     }
 
-    const milBucket = classifyMilitaryService(m.militaryService)
-    militaryCounts.set(milBucket, (militaryCounts.get(milBucket) ?? 0) + 1)
-    if (milBucket !== 'unknown') {
-      militaryKnown++
-      if (isMilitaryServiceServed(milBucket)) servedCount++
+    const milCategory = m.militaryServiceCategory.trim()
+    if (milCategory) {
+      const milBucket = classifyMilitaryService(milCategory)
+      militaryCounts.set(milBucket, (militaryCounts.get(milBucket) ?? 0) + 1)
+      if (milBucket !== 'unknown') {
+        militaryKnown++
+        if (isMilitaryServiceServed(milBucket)) servedCount++
+      }
     }
 
     const age = parseMemberAge(m.age)
@@ -585,7 +590,7 @@ export function summarizeProjectedKnesset(
       if (bin) peripheryCounts.set(bin.id, (peripheryCounts.get(bin.id) ?? 0) + 1)
     }
 
-    const edu = classifyEducation(m.education)
+    const edu = classifyEducation(m.educationCategory)
     if (edu) eduCounts.set(edu, (eduCounts.get(edu) ?? 0) + 1)
 
     const sector = classifySector(m.sector)
