@@ -105,7 +105,10 @@ function BlocSide({
         showRoundedSeatMandates ? ' lpo-ps-hero-side-value-col--with-seats' : ''
       }`}
     >
-      <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+      <span className="lpo-ps-hero-num-row">
+        <span className={`lpo-ps-hero-num ${numClass}`}>{value}</span>
+        {hasPrior ? <DeltaBadge delta={delta} /> : null}
+      </span>
       {showRoundedSeatMandates && seatsLabel ? (
         <span className="lpo-ps-hero-chart-seats-line">
           <span className="lpo-ps-hero-chart-seats">({roundedSeats})</span>
@@ -122,7 +125,6 @@ function BlocSide({
       <div className={`lpo-ps-hero-side ${sideClass}`}>
         <span className={`lpo-ps-hero-lbl ${lblClass}`}>{label}</span>
         {valueBlock}
-        {hasPrior ? <DeltaBadge delta={delta} /> : null}
       </div>
     )
   }
@@ -138,7 +140,6 @@ function BlocSide({
     >
       <span className={`lpo-ps-hero-lbl ${lblClass}`}>{label}</span>
       {valueBlock}
-      {hasPrior ? <DeltaBadge delta={delta} /> : null}
     </button>
   )
 }
