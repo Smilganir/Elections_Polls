@@ -101,18 +101,18 @@ jobs:
           gh issue create \
             --title "Poll summary background — Maariv ${{ steps.maariv.outputs.poll_date }}" \
             --body "$(cat <<EOF
-## Data synced
-Rolling narrative JSON and \`poll-bloc-summary.html\` were refreshed after Maariv poll **${{ steps.maariv.outputs.poll_id }}** (${{ steps.maariv.outputs.poll_date }}).
+          ## Data synced
+          Rolling narrative JSON and \`poll-bloc-summary.html\` were refreshed after Maariv poll **${{ steps.maariv.outputs.poll_id }}** (${{ steps.maariv.outputs.poll_date }}).
 
-## Still needed — hero background (EN/HE)
-Update the one-line geopolitical **background** via \`.cursor/skills/israel-poll-rolling-narrative/SKILL.md\`:
+          ## Still needed — hero background (EN/HE)
+          Update the one-line geopolitical **background** via \`.cursor/skills/israel-poll-rolling-narrative/SKILL.md\`:
 
-1. Web search for recent Israeli politics relative to the poll reference date.
-2. Edit \`locales.en.background\` / \`locales.he.background\` in \`poll-summary-narrative.json\`.
-3. Mirror \`DEFAULT_BACKGROUND_*\` in \`scripts/build-poll-summary-narrative.mjs\` and \`EDITORIAL_BACKGROUND_*\` in \`generatePollSummaryHeroNarrative.ts\`.
-4. Bump \`asOfUtc\` if the editorial frame changed.
-5. Commit, push (Pages deploy follows on \`main\`).
+          1. Web search for recent Israeli politics relative to the poll reference date.
+          2. Edit \`locales.en.background\` / \`locales.he.background\` in \`poll-summary-narrative.json\`.
+          3. Mirror \`DEFAULT_BACKGROUND_*\` in \`scripts/build-poll-summary-narrative.mjs\` and \`EDITORIAL_BACKGROUND_*\` in \`generatePollSummaryHeroNarrative.ts\`.
+          4. Bump \`asOfUtc\` if the editorial frame changed.
+          5. Commit, push (Pages deploy follows on \`main\`).
 
-Do **not** invent poll numbers — use repo sheet/HTML outputs only for figures.
-EOF
-)"
+          Do **not** invent poll numbers — use repo sheet/HTML outputs only for figures.
+          EOF
+          )"
