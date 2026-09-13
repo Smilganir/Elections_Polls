@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -73,6 +74,8 @@ const TOOLTIP_ANCHOR_GAP = 10
 const TOOLTIP_MAX_HEIGHT_CAP = 820
 /** Matches CSS max-width: min(20rem, 92vw) — used before layout measure. */
 const TOOLTIP_LAYOUT_WIDTH_PX = 320
+const TOOLTIP_CLOSE_DELAY_MS = 350
+const TOOLTIP_SUPPRESS_SEAT_OPEN_MS = 400
 
 type TooltipDetailRow = { label: string; value: string; clamp?: boolean }
 
@@ -350,6 +353,10 @@ function KnessetSeatTooltip({
   rankLabel,
   segLabel,
   photoCredit,
+  portalRef,
+  onPointerEnter,
+  onPointerLeave,
+  openLinksInNewTab = false,
 }: {
   tooltip: TooltipState
   locale: AppLocale
@@ -358,6 +365,10 @@ function KnessetSeatTooltip({
   rankLabel: (seat: KnessetFilledSeat) => string
   segLabel: (segment: Segment) => string
   photoCredit: PhotoCreditRecord | null
+  portalRef?: (el: HTMLDivElement | null) => void
+  onPointerEnter?: () => void
+  onPointerLeave?: () => void
+  openLinksInNewTab?: boolean
 }) {
   const member = tooltip.seat.kind === 'member' ? tooltip.seat.member : null
   const [enProfile, setEnProfile] = useState<MemberEnTooltipProfile | null>(null)
@@ -437,7 +448,10 @@ function KnessetSeatTooltip({
 
   return (
     <div
-      ref={tooltipRef}
+      ref={(el) => {
+        tooltipRef.current = el
+        portalRef?.(el)
+      }}
       className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${placementClass}${
         locale === 'he' ? ' lpo-ps-knesset-tooltip--rtl' : ' lpo-ps-knesset-tooltip--ltr'
       }`}
@@ -448,6 +462,8 @@ function KnessetSeatTooltip({
       }}
       dir={locale === 'he' ? 'rtl' : 'ltr'}
       role="tooltip"
+      onMouseEnter={onPointerEnter}
+      onMouseLeave={onPointerLeave}
     >
       <div className="lpo-ps-knesset-tooltip-header">
         <div className="lpo-ps-knesset-tooltip-main">
@@ -485,7 +501,11 @@ function KnessetSeatTooltip({
                 decoding="async"
                 referrerPolicy="no-referrer"
               />
-              <PhotoCreditLine credit={photoCredit} className="lpo-ps-photo-credit--tooltip" />
+              <PhotoCreditLine
+                credit={photoCredit}
+                className="lpo-ps-photo-credit--tooltip"
+                openLinksInNewTab={openLinksInNewTab}
+              />
             </div>
           ) : null}
           {member ? (
@@ -613,6 +633,8 @@ function SwingSeatPortrait({
   onPointerEnter,
   onLeave,
   onMove,
+  onBlur,
+  onPointerDown,
 }: {
   seat: KnessetFilledSeat
   locale: AppLocale
@@ -620,6 +642,8 @@ function SwingSeatPortrait({
   onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>) => void
   onLeave: () => void
   onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void
+  onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void
 }) {
   const isMember = seat.kind === 'member'
   const isPlaceholder = seat.kind === 'placeholder'
@@ -635,8 +659,9 @@ function SwingSeatPortrait({
       onMouseEnter={onPointerEnter}
       onMouseLeave={onLeave}
       onFocus={(e) => onPointerEnter(e as unknown as React.MouseEvent<HTMLButtonElement>)}
-      onBlur={onLeave}
+      onBlur={onBlur}
       onMouseMove={onMove}
+      onPointerDown={onPointerDown}
       aria-label={
         isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
       }
@@ -654,6 +679,8 @@ function PartySwingSeatsOverlay({
   onPointerEnter,
   onLeave,
   onMove,
+  onBlur,
+  onPointerDown,
 }: {
   swing: NonNullable<ReturnType<typeof computePartySwingSeats>>
   locale: AppLocale
@@ -662,6 +689,8 @@ function PartySwingSeatsOverlay({
   onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
   onLeave: () => void
   onMove: (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+  onBlur: (e: React.FocusEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+  onPointerDown: (e: React.PointerEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
 }) {
   if (swing.nextOut.length === 0 && swing.atRiskIn.length === 0) return null
 
@@ -693,6 +722,8 @@ function PartySwingSeatsOverlay({
                       onPointerEnter={(e) => onPointerEnter(e, seat)}
                       onLeave={onLeave}
                       onMove={(e) => onMove(e, seat)}
+                      onBlur={(e) => onBlur(e, seat)}
+                      onPointerDown={(e) => onPointerDown(e, seat)}
                     />
                   ))}
                 </div>
@@ -716,6 +747,8 @@ function PartySwingSeatsOverlay({
                       onPointerEnter={(e) => onPointerEnter(e, seat)}
                       onLeave={onLeave}
                       onMove={(e) => onMove(e, seat)}
+                      onBlur={(e) => onBlur(e, seat)}
+                      onPointerDown={(e) => onPointerDown(e, seat)}
                     />
                   ))}
                 </div>
@@ -740,6 +773,8 @@ function SeatPortrait({
   onPointerEnter,
   onLeave,
   onMove,
+  onBlur,
+  onPointerDown,
 }: {
   seat: KnessetFilledSeat
   visualState: KnessetSeatFilterVisualState
@@ -748,6 +783,8 @@ function SeatPortrait({
   onPointerEnter: (e: React.MouseEvent<HTMLButtonElement>) => void
   onLeave: () => void
   onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
+  onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void
+  onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void
 }) {
   const isMember = seat.kind === 'member'
   const isPlaceholder = seat.kind === 'placeholder'
@@ -771,8 +808,9 @@ function SeatPortrait({
       onMouseEnter={onPointerEnter}
       onMouseLeave={onLeave}
       onFocus={(e) => onPointerEnter(e as unknown as React.MouseEvent<HTMLButtonElement>)}
-      onBlur={onLeave}
+      onBlur={onBlur}
       onMouseMove={onMove}
+      onPointerDown={onPointerDown}
       aria-label={
         isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
       }
@@ -812,6 +850,16 @@ export function PollSummaryKnessetSeatMap({
   const [photoCredits, setPhotoCredits] = useState<PhotoCreditRecord[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+  const [pinnedSeatId, setPinnedSeatId] = useState<number | null>(null)
+  const pinnedSeatIdRef = useRef<number | null>(null)
+  const tooltipKeepAliveRef = useRef(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suppressSeatOpenRef = useRef(false)
+  const tooltipPortalRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    pinnedSeatIdRef.current = pinnedSeatId
+  }, [pinnedSeatId])
 
   useEffect(() => {
     let cancelled = false
@@ -1057,17 +1105,127 @@ export function PollSummaryKnessetSeatMap({
     )
   }, [seats, activeFilters, mergeArabsWithOpposition, onMatchingPartyKeysChange])
 
-  const updateTooltipPos = (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = rect.width > 0 ? rect.left + rect.width / 2 : e.clientX
-    const y = rect.height > 0 ? rect.top + rect.height / 2 : e.clientY
-    setTooltip({
-      seat,
-      x,
-      y,
-      placement: tooltipPlacement(y),
-    })
-  }
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => () => clearCloseTimer(), [clearCloseTimer])
+
+  const scheduleTooltipClose = useCallback(() => {
+    if (pinnedSeatIdRef.current) return
+    clearCloseTimer()
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null
+      if (!tooltipKeepAliveRef.current && !pinnedSeatIdRef.current) {
+        setTooltip(null)
+      }
+    }, TOOLTIP_CLOSE_DELAY_MS)
+  }, [clearCloseTimer])
+
+  const showTooltipAt = useCallback(
+    (
+      e: React.MouseEvent<HTMLButtonElement> | React.PointerEvent<HTMLButtonElement>,
+      seat: KnessetFilledSeat,
+    ) => {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = rect.width > 0 ? rect.left + rect.width / 2 : e.clientX
+      const y = rect.height > 0 ? rect.top + rect.height / 2 : e.clientY
+      setTooltip({
+        seat,
+        x,
+        y,
+        placement: tooltipPlacement(y),
+      })
+    },
+    [],
+  )
+
+  const handleSeatPointerEnter = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
+      if (suppressSeatOpenRef.current) return
+      if (pinnedSeatIdRef.current && pinnedSeatIdRef.current !== seat.slot.id) return
+
+      clearCloseTimer()
+      tooltipKeepAliveRef.current = true
+      showTooltipAt(e, seat)
+    },
+    [clearCloseTimer, showTooltipAt],
+  )
+
+  const handleSeatPointerLeave = useCallback(() => {
+    tooltipKeepAliveRef.current = false
+    if (pinnedSeatIdRef.current) return
+    scheduleTooltipClose()
+  }, [scheduleTooltipClose])
+
+  const handleSeatPointerMove = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
+      if (suppressSeatOpenRef.current) return
+      if (pinnedSeatIdRef.current && pinnedSeatIdRef.current !== seat.slot.id) return
+      showTooltipAt(e, seat)
+    },
+    [showTooltipAt],
+  )
+
+  const handleSeatBlur = useCallback(
+    (e: React.FocusEvent<HTMLButtonElement>) => {
+      const next = e.relatedTarget as Node | null
+      if (next && tooltipPortalRef.current?.contains(next)) return
+      tooltipKeepAliveRef.current = false
+      if (pinnedSeatIdRef.current) return
+      scheduleTooltipClose()
+    },
+    [scheduleTooltipClose],
+  )
+
+  const handleSeatPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
+      if (e.pointerType !== 'touch') return
+      if (suppressSeatOpenRef.current) return
+      if (pinnedSeatIdRef.current && pinnedSeatIdRef.current !== seat.slot.id) return
+
+      clearCloseTimer()
+      tooltipKeepAliveRef.current = true
+      setPinnedSeatId(seat.slot.id)
+      showTooltipAt(e, seat)
+    },
+    [clearCloseTimer, showTooltipAt],
+  )
+
+  const handleTooltipPointerEnter = useCallback(() => {
+    clearCloseTimer()
+    tooltipKeepAliveRef.current = true
+  }, [clearCloseTimer])
+
+  const handleTooltipPointerLeave = useCallback(() => {
+    tooltipKeepAliveRef.current = false
+    if (pinnedSeatIdRef.current) return
+    scheduleTooltipClose()
+  }, [scheduleTooltipClose])
+
+  useEffect(() => {
+    if (!pinnedSeatId) return
+
+    const handleOutsidePointerDown = (e: PointerEvent) => {
+      const target = e.target as Node
+      if (tooltipPortalRef.current?.contains(target)) return
+
+      setPinnedSeatId(null)
+      setTooltip(null)
+      tooltipKeepAliveRef.current = false
+      clearCloseTimer()
+      suppressSeatOpenRef.current = true
+      window.setTimeout(() => {
+        suppressSeatOpenRef.current = false
+      }, TOOLTIP_SUPPRESS_SEAT_OPEN_MS)
+    }
+
+    document.addEventListener('pointerdown', handleOutsidePointerDown, true)
+    return () => document.removeEventListener('pointerdown', handleOutsidePointerDown, true)
+  }, [pinnedSeatId, clearCloseTimer])
 
   const segLabel = (segment: Segment) =>
     segmentLabel(segment, {
@@ -1133,9 +1291,11 @@ export function PollSummaryKnessetSeatMap({
                   )}
                   locale={locale}
                   displayParty={displayParty}
-                  onPointerEnter={(e) => updateTooltipPos(e, seat)}
-                  onLeave={() => setTooltip(null)}
-                  onMove={(e) => updateTooltipPos(e, seat)}
+                  onPointerEnter={(e) => handleSeatPointerEnter(e, seat)}
+                  onLeave={handleSeatPointerLeave}
+                  onMove={(e) => handleSeatPointerMove(e, seat)}
+                  onBlur={handleSeatBlur}
+                  onPointerDown={(e) => handleSeatPointerDown(e, seat)}
                 />
               ))}
             </div>
@@ -1158,9 +1318,11 @@ export function PollSummaryKnessetSeatMap({
                   locale={locale}
                   t={t}
                   displayParty={displayParty}
-                  onPointerEnter={(e, seat) => updateTooltipPos(e, seat)}
-                  onLeave={() => setTooltip(null)}
-                  onMove={(e, seat) => updateTooltipPos(e, seat)}
+                  onPointerEnter={handleSeatPointerEnter}
+                  onLeave={handleSeatPointerLeave}
+                  onMove={handleSeatPointerMove}
+                  onBlur={handleSeatBlur}
+                  onPointerDown={handleSeatPointerDown}
                 />,
                 swingPortalEl,
               )
@@ -1176,6 +1338,12 @@ export function PollSummaryKnessetSeatMap({
                   rankLabel={rankLabel}
                   segLabel={segLabel}
                   photoCredit={tooltipPhotoCredit}
+                  portalRef={(el) => {
+                    tooltipPortalRef.current = el
+                  }}
+                  onPointerEnter={handleTooltipPointerEnter}
+                  onPointerLeave={handleTooltipPointerLeave}
+                  openLinksInNewTab
                 />,
                 document.body,
               )

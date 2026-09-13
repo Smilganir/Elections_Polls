@@ -8,9 +8,11 @@ import {
 export function PhotoCreditLine({
   credit,
   className = '',
+  openLinksInNewTab = false,
 }: {
   credit: PhotoCreditRecord | null
   className?: string
+  openLinksInNewTab?: boolean
 }) {
   const mode = photoCreditDisplayMode(credit)
   if (mode === 'none' || !credit) return null
@@ -23,6 +25,8 @@ export function PhotoCreditLine({
         <Link
           className="lpo-ps-photo-credit-link"
           to={`/photo-credits?entry=${encodeURIComponent(photoCreditEntryId(credit))}`}
+          target={openLinksInNewTab ? '_blank' : undefined}
+          rel={openLinksInNewTab ? 'noopener noreferrer' : undefined}
         >
           מקור התמונה ופרטי רישיון
         </Link>
