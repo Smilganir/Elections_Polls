@@ -9893,10 +9893,33 @@ html[lang='he'] .lpo-rotate-hint-title {
 }
 
 .photo-credits-page {
+  --photo-credits-sticky-back-height: 2.45rem;
   max-width: 52rem;
   margin: 0 auto;
-  padding: 1.25rem 1rem 2.5rem;
+  padding: calc(1.25rem + var(--photo-credits-sticky-back-height)) 1rem 2.5rem;
   color: #d8e0ea;
+  scroll-padding-top: var(--photo-credits-sticky-back-height);
+}
+
+/* Fixed (not sticky): app-shell uses overflow-x:hidden, which breaks position:sticky. */
+.photo-credits-page-sticky-back {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #121820;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.photo-credits-page-sticky-back-inner {
+  max-width: 52rem;
+  margin: 0 auto;
+  min-height: var(--photo-credits-sticky-back-height);
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 1rem 0.65rem;
+  box-sizing: border-box;
 }
 
 .photo-credits-page-header {
@@ -9974,6 +9997,15 @@ html[lang='he'] .lpo-rotate-hint-title {
   font-size: 0.84rem;
   line-height: 1.45;
   color: #b8c4d4;
+  scroll-margin-top: calc(var(--photo-credits-sticky-back-height, 2.45rem) + 0.35rem);
+}
+
+.photo-credits-party-list-item--highlighted {
+  background: rgba(142, 182, 232, 0.14);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(142, 182, 232, 0.28);
+  padding: 0.22rem 0.42rem;
+  margin-inline: -0.42rem;
 }
 
 .photo-credits-row-name {

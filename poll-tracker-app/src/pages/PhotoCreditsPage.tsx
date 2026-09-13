@@ -33,29 +33,45 @@ export function PhotoCreditsPage() {
     [records],
   )
 
+  const entryId = searchParams.get('entry')
+
   useEffect(() => {
-    const entry = searchParams.get('entry')
-    if (!entry || !entry.startsWith('photo-credit-')) return
-    const el = document.getElementById(entry)
-    el?.scrollIntoView({ block: 'nearest' })
-  }, [searchParams, records])
+    if (!entryId || !entryId.startsWith('photo-credit-') || !records) return
+
+    const scrollToEntry = () => {
+      const el = document.getElementById(entryId)
+      if (!el) return
+      const stickyBar = document.querySelector('.photo-credits-page-sticky-back')
+      const stickyHeight = stickyBar?.getBoundingClientRect().height ?? 0
+      const top = el.getBoundingClientRect().top + window.scrollY - stickyHeight - 8
+      window.scrollTo({ top: Math.max(0, top), behavior: 'auto' })
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToEntry)
+    })
+  }, [entryId, records])
 
   return (
     <div className="photo-credits-page" dir="rtl">
+      <div className="photo-credits-page-sticky-back">
+        <div className="photo-credits-page-sticky-back-inner">
+          <p className="photo-credits-page-back">
+            <Link
+              to="/?map=1"
+              onClick={() => setHeroChartOpen(true)}
+            >
+              ← חזרה למפה
+            </Link>
+          </p>
+        </div>
+      </div>
       <header className="photo-credits-page-header">
         <h1 className="photo-credits-page-title">קרדיטי תמונות</h1>
         <p className="photo-credits-page-policy">
           התמונות מוצגות לצורך זיהוי, דיווח והנגשת מידע בלבד. זכויות התמונות שייכות לבעליהן.
           לבקשת הסרה או תיקון קרדיט -{' '}
           <a href="mailto:smilganir@gmail.com">צרו קשר</a>.
-        </p>
-        <p className="photo-credits-page-back">
-          <Link
-            to="/?map=1"
-            onClick={() => setHeroChartOpen(true)}
-          >
-            ← חזרה למפה
-          </Link>
         </p>
       </header>
 
@@ -69,10 +85,17 @@ export function PhotoCreditsPage() {
             <section key={group.partyHeb} className="photo-credits-party-group">
               <h2 className="photo-credits-party-title">{group.partyHeb}</h2>
               <ul className="photo-credits-party-list">
-                {group.rows.map((row) => (
+                {group.rows.map((row) => {
+                  const rowEntryId = photoCreditEntryId(row)
+                  return (
                   <li
                     key={`${row.partyHeb}-${row.listRank}-${row.candidateName}`}
-                    id={photoCreditEntryId(row)}
+                    id={rowEntryId}
+                    className={
+                      entryId === rowEntryId
+                        ? 'photo-credits-party-list-item--highlighted'
+                        : undefined
+                    }
                   >
                     <span className="photo-credits-row-name">{row.candidateName}</span>
                     <span className="photo-credits-row-sep" aria-hidden="true">
@@ -117,7 +140,8 @@ export function PhotoCreditsPage() {
                       </>
                     ) : null}
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             </section>
           ))}

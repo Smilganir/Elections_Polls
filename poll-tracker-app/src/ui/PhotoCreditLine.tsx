@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
+  photoCreditCommonsSuffix,
   photoCreditDisplayMode,
   photoCreditEntryId,
   type PhotoCreditRecord,
@@ -37,6 +38,7 @@ export function PhotoCreditLine({
   const sourceHref = credit.sourcePageUrl.trim()
   const licenseHref = credit.licenseUrl.trim()
   const license = credit.license.trim()
+  const commonsSuffix = photoCreditCommonsSuffix(sourceHref, credit.credit)
 
   return (
     <p className={classNames}>
@@ -72,6 +74,9 @@ export function PhotoCreditLine({
             <span className="lpo-ps-photo-credit-text">{license}</span>
           )}
         </>
+      ) : null}
+      {commonsSuffix ? (
+        <span className="lpo-ps-photo-credit-text">{commonsSuffix}</span>
       ) : null}
     </p>
   )

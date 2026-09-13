@@ -100,6 +100,25 @@ export function photoCreditDisplayMode(record: PhotoCreditRecord | null): PhotoC
   return 'neutral'
 }
 
+const WIKIMEDIA_COMMONS_LABEL = 'ויקימדיה קומונס'
+
+/** Plain suffix for full credit lines sourced from Wikimedia Commons (not a link). */
+export function photoCreditCommonsSuffix(
+  sourcePageUrl: string,
+  credit: string,
+): string | null {
+  if (credit.includes(WIKIMEDIA_COMMONS_LABEL)) return null
+  try {
+    const hostname = new URL(sourcePageUrl.trim()).hostname
+    if (hostname.includes('commons.wikimedia.org')) {
+      return ` · ${WIKIMEDIA_COMMONS_LABEL}`
+    }
+  } catch {
+    /* ignore malformed URLs */
+  }
+  return null
+}
+
 function normalizeImageUrl(url: string): string {
   try {
     const u = new URL(url.trim())
