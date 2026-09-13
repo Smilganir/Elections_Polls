@@ -49,6 +49,8 @@ export type KnessetMemberRow = {
   preKnessetRole: string
   /** מקורות — provenance line for tooltips */
   sources: string
+  /** רישיון/מקור תמונה — full credit line from v2 sheet (parentheses preserved). */
+  photoCreditText: string | null
 }
 
 /** Hebrew sheet list name → canonical unpivot party key. */
@@ -144,6 +146,18 @@ const HEADER_SUB_IDENTITY = 'תת-זהות'
 const HEADER_FUN_FACT = 'עובדה מעניינת'
 const HEADER_PRE_KNESSET_ROLE = 'תפקיד קדם-כנסת 1 (קטגוריה)'
 const HEADER_SOURCES = 'מקורות'
+/** v2 column — parenthetical source notes must be preserved (not run through source tokenizer). */
+export const HEADER_PHOTO_CREDIT_V2 = 'רישיון/מקור תמונה'
+const HEADER_PHOTO_CREDIT = HEADER_PHOTO_CREDIT_V2
+
+/**
+ * Preserve full credit text including parenthetical notes.
+ * Do not use canonicalizeSourceToken — it rejects parentheses and drops ~68/70 rows.
+ */
+export function parsePhotoCreditText(raw: string): string | null {
+  const t = raw.trim()
+  return t.length > 0 ? t : null
+}
 
 const URL_IN_TEXT = /https?:\/\/[^\s;,)]+/gi
 
@@ -371,6 +385,7 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
     const funFact = cell(cols, headers, HEADER_FUN_FACT, 12)
     const preKnessetRole = cell(cols, headers, HEADER_PRE_KNESSET_ROLE, 19)
     const sources = cell(cols, headers, HEADER_SOURCES, 11)
+    const photoCreditText = parsePhotoCreditText(cell(cols, headers, HEADER_PHOTO_CREDIT, 7))
 
     return {
       partyHeb,
@@ -395,6 +410,7 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
       funFact,
       preKnessetRole,
       sources,
+      photoCreditText,
     }
   })
 }

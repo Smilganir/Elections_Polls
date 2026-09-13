@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import dayjs from 'dayjs'
 import {
@@ -853,7 +854,9 @@ function BlocArabsToggle({
 export function LatestPollsOverviewPage() {
   const { locale, setLocale } = useLocale()
   const t = UI[locale]
-  const { open: heroPartiesChartOpen } = useHeroPartiesChartOverlay()
+  const { open: heroPartiesChartOpen, setOpen: setHeroPartiesChartOpen } =
+    useHeroPartiesChartOverlay()
+  const [searchParams, setSearchParams] = useSearchParams()
   const isPortraitMobile = useMatchMedia(PORTRAIT_MOBILE_EVENT_MQ)
   const { unpivot, events, majorEvents, partiesDim, mediaOutletsDim, loading, error } = useDashboardData()
   const [pageIndex, setPageIndex] = useState(0)
@@ -869,6 +872,16 @@ export function LatestPollsOverviewPage() {
   const [pollSummaryWindowDays, setPollSummaryWindowDays] = useState(
     DEFAULT_POLL_SUMMARY_WINDOW_DAYS,
   )
+
+  useEffect(() => {
+    if (searchParams.get('map') !== '1') return
+    setShowPollSummary(true)
+    setHeroPartiesChartOpen(true)
+    const next = new URLSearchParams(searchParams)
+    next.delete('map')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams, setHeroPartiesChartOpen])
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem(

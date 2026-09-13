@@ -1,5 +1,7 @@
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import { useLocale } from './i18n/useLocale'
 import { LatestPollsOverviewPage } from './pages/LatestPollsOverviewPage'
+import { PhotoCreditsPage } from './pages/PhotoCreditsPage'
 import { AppFooter } from './ui/AppFooter'
 import {
   HeroPartiesChartOverlayProvider,
@@ -22,17 +24,29 @@ function AppRotateHint() {
   return <RotatePortraitHint locale={locale} />
 }
 
+function PollTrackerHome() {
+  return (
+    <>
+      <main className="page-content">
+        <LatestPollsOverviewPage />
+      </main>
+      <AppShellFooter />
+      <AppRotateHint />
+    </>
+  )
+}
+
 function App() {
   return (
     <HeroPartiesChartOverlayProvider>
-      <div className="app-shell">
-        <main className="page-content">
-          <LatestPollsOverviewPage />
-        </main>
-
-        <AppShellFooter />
-        <AppRotateHint />
-      </div>
+      <HashRouter>
+        <div className="app-shell">
+          <Routes>
+            <Route path="/" element={<PollTrackerHome />} />
+            <Route path="/photo-credits" element={<PhotoCreditsPage />} />
+          </Routes>
+        </div>
+      </HashRouter>
     </HeroPartiesChartOverlayProvider>
   )
 }

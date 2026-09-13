@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
+import { Link } from 'react-router-dom'
 import { useLocale } from '../i18n/useLocale'
 import { UI } from '../i18n/strings'
 
@@ -169,6 +170,11 @@ function CandidatesInfoButton({ leadingSep = true }: { leadingSep?: boolean }) {
                 <strong>{group.label}</strong> {group.body}
               </p>
             ))}
+            <p className="app-footer-candidates-popup-line app-footer-candidates-popup-credits-link">
+              <Link to="/photo-credits" onClick={() => setCandidatesInfoOpen(false)}>
+                קרדיטי תמונות
+              </Link>
+            </p>
           </div>
         </div>
       ) : null}

@@ -8562,9 +8562,18 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   min-width: 0;
 }
 
-.lpo-ps-knesset-tooltip-portrait {
+.lpo-ps-knesset-tooltip-portrait-wrap {
   grid-column: 2;
   grid-row: 1 / span 12;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.12rem;
+  min-width: 0;
+  max-width: 4.25rem;
+}
+
+.lpo-ps-knesset-tooltip-portrait {
   width: 4.25rem;
   height: 5.5rem;
   flex-shrink: 0;
@@ -8574,6 +8583,39 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
+}
+
+.lpo-ps-photo-credit {
+  margin: 0;
+  font-size: min(11px, 0.62rem);
+  line-height: 1.25;
+  font-weight: 400;
+  color: #7a8798;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.lpo-ps-photo-credit-label {
+  color: #6d7a8c;
+}
+
+.lpo-ps-photo-credit-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(122, 135, 152, 0.45);
+  text-underline-offset: 0.12em;
+}
+
+.lpo-ps-photo-credit-link:hover {
+  color: #9aa8ba;
+}
+
+.lpo-ps-photo-credit-sep {
+  opacity: 0.75;
+}
+
+.lpo-ps-photo-credit--tooltip {
+  max-width: 4.25rem;
 }
 
 .lpo-ps-knesset-tooltip-name {
@@ -9836,4 +9878,119 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
 html[lang='he'] .lpo-rotate-hint-title {
   font-family: 'Heebo', 'Noto Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* ── Photo credits page ─────────────────────────────────────────────────── */
+
+.app-footer-candidates-popup-credits-link a {
+  color: #9ec4ef;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.app-footer-candidates-popup-credits-link a:hover {
+  color: #c8dff8;
+}
+
+.photo-credits-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+  color: #d8e0ea;
+}
+
+.photo-credits-page-header {
+  margin-bottom: 1.5rem;
+}
+
+.photo-credits-page-title {
+  margin: 0 0 0.65rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #eef3fa;
+}
+
+.photo-credits-page-policy {
+  margin: 0 0 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #9aa8ba;
+}
+
+.photo-credits-page-policy a {
+  color: #9ec4ef;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.photo-credits-page-back {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.photo-credits-page-back a {
+  color: #8eb6e8;
+  text-decoration: none;
+}
+
+.photo-credits-page-back a:hover {
+  text-decoration: underline;
+}
+
+.photo-credits-page-status {
+  margin: 0;
+  color: #9aa8ba;
+  font-size: 0.9rem;
+}
+
+.photo-credits-page-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.photo-credits-party-group {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 0.85rem;
+}
+
+.photo-credits-party-title {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e8eef6;
+}
+
+.photo-credits-party-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+
+.photo-credits-party-list li {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #b8c4d4;
+}
+
+.photo-credits-row-name {
+  font-weight: 600;
+  color: #dde5f0;
+}
+
+.photo-credits-row-sep {
+  opacity: 0.55;
+}
+
+.photo-credits-row-link {
+  color: #9ec4ef;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.photo-credits-row-link:hover {
+  color: #c8dff8;
 }

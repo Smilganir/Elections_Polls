@@ -21,6 +21,12 @@ import {
   segmentLabel,
   type KnessetMemberRow,
 } from '../lib/knessetMembersSheet'
+import {
+  buildPhotoCreditIndex,
+  fetchPhotoCredits,
+  photoCreditForMember,
+  type PhotoCreditRecord,
+} from '../lib/photoCreditsSheet'
 import type { RollingPoll } from '../lib/pollRollingWindow'
 import { knessetHollowInsetStyle } from '../lib/knessetHollowInsets'
 import {
@@ -42,6 +48,7 @@ import { computePartySwingSeats } from '../lib/knessetPartySwingSeats'
 import type { Segment } from '../types/data'
 import { KnessetStatsLeftStack, KnessetStatsRightStack } from './PollSummaryKnessetDemographics'
 import { KnessetSeatEmptyPortraitIcon } from './KnessetSeatEmptyPortraitIcon'
+import { PhotoCreditLine } from './PhotoCreditLine'
 /**
  * Keep in sync with HERO_CHART_COMPACT_MQ in PollSummaryHeroPartiesChartPopup.tsx and the
  * `@media (max-width: 768px), (max-height: 500px)` blocks in index.css that style
@@ -342,6 +349,7 @@ function KnessetSeatTooltip({
   displayParty,
   rankLabel,
   segLabel,
+  photoCredit,
 }: {
   tooltip: TooltipState
   locale: AppLocale
@@ -349,6 +357,7 @@ function KnessetSeatTooltip({
   displayParty: (partyKey: string) => string
   rankLabel: (seat: KnessetFilledSeat) => string
   segLabel: (segment: Segment) => string
+  photoCredit: PhotoCreditRecord | null
 }) {
   const member = tooltip.seat.kind === 'member' ? tooltip.seat.member : null
   const [enProfile, setEnProfile] = useState<MemberEnTooltipProfile | null>(null)
@@ -467,14 +476,17 @@ function KnessetSeatTooltip({
             </p>
           </div>
           {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
-            <img
-              className="lpo-ps-knesset-tooltip-portrait"
-              src={tooltip.seat.member.portraitImageUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              referrerPolicy="no-referrer"
-            />
+            <div className="lpo-ps-knesset-tooltip-portrait-wrap">
+              <img
+                className="lpo-ps-knesset-tooltip-portrait"
+                src={tooltip.seat.member.portraitImageUrl}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+              />
+              <PhotoCreditLine credit={photoCredit} className="lpo-ps-photo-credit--tooltip" />
+            </div>
           ) : null}
           {member ? (
             <MemberTooltipDetails
@@ -797,6 +809,7 @@ export function PollSummaryKnessetSeatMap({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [members, setMembers] = useState<KnessetMemberRow[] | null>(null)
+  const [photoCredits, setPhotoCredits] = useState<PhotoCreditRecord[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
@@ -809,10 +822,27 @@ export function PollSummaryKnessetSeatMap({
       .catch(() => {
         if (!cancelled) setLoadError(true)
       })
+    fetchPhotoCredits()
+      .then((rows) => {
+        if (!cancelled) setPhotoCredits(rows)
+      })
+      .catch(() => {
+        /* credits are optional — tooltip/page degrade gracefully */
+      })
     return () => {
       cancelled = true
     }
   }, [])
+
+  const photoCreditIndex = useMemo(
+    () => (photoCredits ? buildPhotoCreditIndex(photoCredits) : new Map()),
+    [photoCredits],
+  )
+
+  const tooltipPhotoCredit = useMemo(() => {
+    if (!tooltip || tooltip.seat.kind !== 'member') return null
+    return photoCreditForMember(tooltip.seat.member, photoCreditIndex)
+  }, [tooltip, photoCreditIndex])
 
   const seats = useMemo(() => {
     if (!members) return []
@@ -1145,6 +1175,7 @@ export function PollSummaryKnessetSeatMap({
                   displayParty={displayParty}
                   rankLabel={rankLabel}
                   segLabel={segLabel}
+                  photoCredit={tooltipPhotoCredit}
                 />,
                 document.body,
               )
