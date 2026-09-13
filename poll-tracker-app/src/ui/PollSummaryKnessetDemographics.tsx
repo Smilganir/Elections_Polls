@@ -847,7 +847,7 @@ export function KnessetStatsLeftStack({
                   ? ' lpo-ps-knesset-stat-hit--active'
                   : ''
               }`}
-              dir="rtl"
+              dir={locale === 'he' ? 'rtl' : 'ltr'}
               aria-pressed={filtersInclude(mapFilters, { kind: 'military', value: 'unknown' })}
               onClick={() => onToggleFocus({ kind: 'military', value: 'unknown' })}
             >

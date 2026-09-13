@@ -417,6 +417,7 @@ function PollSummaryRowMain({
             mergeArabsWithOpposition={combineArabsWithOpposition}
             showMajLine
             mini
+            t={t}
           />
         </div>
       </div>

@@ -8616,6 +8616,8 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 
 .lpo-ps-photo-credit--tooltip {
   max-width: 4.25rem;
+  font-size: min(9px, 0.5rem);
+  line-height: 1.2;
 }
 
 .lpo-ps-knesset-tooltip-name {

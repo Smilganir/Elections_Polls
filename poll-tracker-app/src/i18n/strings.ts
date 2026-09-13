@@ -28,6 +28,22 @@ export type UiStrings = {
   design: string
   /** Hero chart / seat-map footer: label before per-MK source links */
   footerKnessetCandidates: string
+  /** Hero chart footer: open candidate-sources popup */
+  footerCandidatesInfoBtn: string
+  footerCandidatesInfoAria: string
+  footerCandidatesInfoCloseAria: string
+  footerCandidatesInfoOfficialLabel: string
+  footerCandidatesInfoOfficialBody: string
+  footerCandidatesInfoOpenLabel: string
+  footerCandidatesInfoOpenBody: string
+  footerCandidatesInfoMediaLabel: string
+  footerCandidatesInfoMediaBody: string
+  footerPhotoCreditsLink: string
+  footerVotesmartCredit: string
+  /** Seat-map tooltip photo credit (neutral mode) */
+  photoCreditNeutralLink: string
+  /** Seat-map tooltip photo credit prefix */
+  photoCreditImageLabel: string
   localeToggleAria: string
   backToAllParties: string
   sparklineRowFocusAria: string
@@ -276,6 +292,22 @@ export const UI: Record<AppLocale, UiStrings> = {
     data: 'Data:',
     design: 'Design:',
     footerKnessetCandidates: 'Candidates:',
+    footerCandidatesInfoBtn: 'Candidate info',
+    footerCandidatesInfoAria: 'Candidate information and data sources',
+    footerCandidatesInfoCloseAria: 'Close',
+    footerCandidatesInfoOfficialLabel: 'Official & primary:',
+    footerCandidatesInfoOfficialBody:
+      'Knesset OData and Knesset website, CBS, party websites and official announcements',
+    footerCandidatesInfoOpenLabel: 'Open data:',
+    footerCandidatesInfoOpenBody: 'Hebrew Wikipedia, Wikidata',
+    footerCandidatesInfoMediaLabel: 'Media:',
+    footerCandidatesInfoMediaBody:
+      'mivzaklive, Channel 7, Knesset Channel, News 10, ynet, Kikar Hashabbat, i24, mako, Now 14, Kipa, Kan 11, JDN, Ice, Maariv',
+    footerPhotoCreditsLink: 'Photo credits',
+    footerVotesmartCredit:
+      'An earlier version used data from “Bochrim Hachamim (VoteSmart)”.',
+    photoCreditNeutralLink: 'Image source & license details',
+    photoCreditImageLabel: 'Photo:',
     localeToggleAria: 'Interface language',
     backToAllParties: 'All parties',
     sparklineRowFocusAria: 'Show this party only',
@@ -498,6 +530,22 @@ export const UI: Record<AppLocale, UiStrings> = {
     data: 'נתונים:',
     design: 'עיצוב:',
     footerKnessetCandidates: 'מועמדים:',
+    footerCandidatesInfoBtn: 'מידע על מועמדים',
+    footerCandidatesInfoAria: 'מידע על מועמדים ומקורות הנתונים',
+    footerCandidatesInfoCloseAria: 'סגור',
+    footerCandidatesInfoOfficialLabel: 'רשמיים וראשוניים:',
+    footerCandidatesInfoOfficialBody:
+      'Knesset OData ואתר הכנסת, הלמ״ס, אתרי המפלגות והודעותיהן הרשמיות',
+    footerCandidatesInfoOpenLabel: 'פתוחים:',
+    footerCandidatesInfoOpenBody: 'ויקיפדיה העברית, ויקינתונים',
+    footerCandidatesInfoMediaLabel: 'תקשורת:',
+    footerCandidatesInfoMediaBody:
+      'mivzaklive, ערוץ 7, ערוץ הכנסת, חדשות 10, ynet, כיכר השבת, i24, mako, עכשיו 14, כיפה, כאן 11, JDN, אייס, מעריב',
+    footerPhotoCreditsLink: 'קרדיטי תמונות',
+    footerVotesmartCredit:
+      'בגרסה הקודמת נעשה שימוש בנתוני ״בוחרים ח״כם (VoteSmart)״.',
+    photoCreditNeutralLink: 'מקור התמונה ופרטי רישיון',
+    photoCreditImageLabel: 'תמונה:',
     localeToggleAria: 'שפת הממשק',
     backToAllParties: 'כל המפלגות',
     sparklineRowFocusAria: 'הצג רק מפלגה זו',

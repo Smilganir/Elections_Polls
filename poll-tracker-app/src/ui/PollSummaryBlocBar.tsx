@@ -10,6 +10,7 @@ export function PsSegmentBar({
   mergeArabsWithOpposition,
   showMajLine,
   mini,
+  t,
   className = '',
 }: {
   coalition: number
@@ -18,6 +19,7 @@ export function PsSegmentBar({
   mergeArabsWithOpposition: boolean
   showMajLine: boolean
   mini: boolean
+  t: UiStrings
   className?: string
 }) {
   const c = Math.max(0, coalition)
@@ -36,7 +38,11 @@ export function PsSegmentBar({
     <div
       className={`lpo-ps-segbar${mini ? ' lpo-ps-segbar--mini' : ''} ${className}`.trim()}
       role="img"
-      aria-label={`Coalition ${c}, opposition ${mergeArabsWithOpposition ? o : oRaw}, ${mergeArabsWithOpposition ? '' : `Arabs ${aRaw}, `}total ${sum}`}
+      aria-label={
+        mergeArabsWithOpposition
+          ? `${t.coalition} ${c}, ${t.opposition} ${o}, total ${sum}`
+          : `${t.coalition} ${c}, ${t.opposition} ${oRaw}, ${t.arabs} ${aRaw}, total ${sum}`
+      }
     >
       <div className="lpo-ps-bar-slot">
         <div className="lpo-ps-bar-track">
@@ -213,6 +219,7 @@ export function PollSummaryHeroBlocBar({
         mergeArabsWithOpposition={combineArabsWithOpposition}
         showMajLine
         mini={false}
+        t={t}
         className="lpo-ps-hero-bar"
       />
     </div>

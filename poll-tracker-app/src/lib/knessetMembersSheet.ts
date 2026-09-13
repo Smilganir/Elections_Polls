@@ -293,6 +293,58 @@ export function memberSourcesPlainText(groups: readonly MemberSourceGroup[]): st
   return groups.map((g) => `${g.source}: ${g.categories.join(', ')}`).join(' | ')
 }
 
+const MEMBER_SOURCE_NAME_EN: Record<string, string> = {
+  'ויקיפדיה': 'Wikipedia',
+  'ויקינתונים': 'Wikidata',
+  'אתר הכנסת': 'Knesset website',
+  'למ"ס': 'CBS',
+}
+
+/** Tooltip source token (canonical Hebrew sheet label → English when locale is en). */
+export function memberSourceDisplayName(source: string, locale: 'en' | 'he'): string {
+  if (locale === 'he') return source
+  return MEMBER_SOURCE_NAME_EN[source] ?? source
+}
+
+/** Sheet provenance category (Hebrew column label → English field name). */
+export function memberSourceCategoryLabel(
+  category: string,
+  locale: 'en' | 'he',
+  labels: {
+    age: string
+    gender: string
+    knessetYears: string
+    professional: string
+    education: string
+    military: string
+    sector: string
+    city: string
+    subIdentity: string
+    preRole: string
+    funFact: string
+    periphery: string
+  },
+): string {
+  if (locale === 'he') return category
+  const map: Record<string, string> = {
+    גיל: labels.age,
+    מין: labels.gender,
+    'ותק בכנסת': labels.knessetYears,
+    'ניסיון מקצועי': labels.professional,
+    השכלה: labels.education,
+    'שירות צבאי/לאומי': labels.military,
+    'שירות צבאי קטגוריה': labels.military,
+    מגזר: labels.sector,
+    עיר: labels.city,
+    'תת-זהות': labels.subIdentity,
+    'תפקיד קדם-כנסת 1 (קטגוריה)': labels.preRole,
+    'תפקיד קדם-כנסת': labels.preRole,
+    'עובדה מעניינת': labels.funFact,
+    'ציון פריפריה': labels.periphery,
+  }
+  return map[category] ?? category
+}
+
 function headerIndex(headers: readonly string[], name: string): number {
   return headers.findIndex((h) => h.trim() === name)
 }

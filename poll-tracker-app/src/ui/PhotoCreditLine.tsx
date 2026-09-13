@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import type { UiStrings } from '../i18n/strings'
 import {
   photoCreditCommonsSuffix,
   photoCreditDisplayMode,
@@ -8,10 +9,12 @@ import {
 
 export function PhotoCreditLine({
   credit,
+  t,
   className = '',
   openLinksInNewTab = false,
 }: {
   credit: PhotoCreditRecord | null
+  t: UiStrings
   className?: string
   openLinksInNewTab?: boolean
 }) {
@@ -29,7 +32,7 @@ export function PhotoCreditLine({
           target={openLinksInNewTab ? '_blank' : undefined}
           rel={openLinksInNewTab ? 'noopener noreferrer' : undefined}
         >
-          מקור התמונה ופרטי רישיון
+          {t.photoCreditNeutralLink}
         </Link>
       </p>
     )
@@ -42,7 +45,7 @@ export function PhotoCreditLine({
 
   return (
     <p className={classNames}>
-      <span className="lpo-ps-photo-credit-label">תמונה:</span>{' '}
+      <span className="lpo-ps-photo-credit-label">{t.photoCreditImageLabel}</span>{' '}
       {sourceHref ? (
         <a
           className="lpo-ps-photo-credit-link"

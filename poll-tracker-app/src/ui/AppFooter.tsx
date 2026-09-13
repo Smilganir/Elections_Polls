@@ -1,26 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import { Link } from 'react-router-dom'
+import type { AppLocale } from '../i18n/localeContext'
 import { useLocale } from '../i18n/useLocale'
+import type { UiStrings } from '../i18n/strings'
 import { UI } from '../i18n/strings'
-
-const VOTESMART_CREDIT_HE =
-  'בגרסה הקודמת נעשה שימוש בנתוני ״בוחרים ח״כם (VoteSmart)״.'
-
-const CANDIDATES_INFO_GROUPS: readonly { label: string; body: string }[] = [
-  {
-    label: 'רשמיים וראשוניים:',
-    body: 'Knesset OData ואתר הכנסת, הלמ״ס, אתרי המפלגות והודעותיהן הרשמיות',
-  },
-  {
-    label: 'פתוחים:',
-    body: 'ויקיפדיה העברית, ויקינתונים',
-  },
-  {
-    label: 'תקשורת:',
-    body:
-      'mivzaklive, ערוץ 7, ערוץ הכנסת, חדשות 10, ynet, כיכר השבת, i24, mako, עכשיו 14, כיפה, כאן 11, JDN, אייס, מעריב',
-  },
-]
 
 let candidatesInfoOpen = false
 let candidatesInfoAnchor: HTMLButtonElement | null = null
@@ -79,7 +62,23 @@ function placePopupAboveButton(popup: HTMLDivElement, button: HTMLButtonElement)
   popup.style.maxWidth = `calc(100vw - ${margin * 2}px)`
 }
 
-function CandidatesInfoButton({ leadingSep = true }: { leadingSep?: boolean }) {
+function candidatesInfoGroups(t: UiStrings): readonly { label: string; body: string }[] {
+  return [
+    { label: t.footerCandidatesInfoOfficialLabel, body: t.footerCandidatesInfoOfficialBody },
+    { label: t.footerCandidatesInfoOpenLabel, body: t.footerCandidatesInfoOpenBody },
+    { label: t.footerCandidatesInfoMediaLabel, body: t.footerCandidatesInfoMediaBody },
+  ]
+}
+
+function CandidatesInfoButton({
+  leadingSep = true,
+  locale,
+  t,
+}: {
+  leadingSep?: boolean
+  locale: AppLocale
+  t: UiStrings
+}) {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
   const open = useCandidatesInfoOpen()
@@ -146,33 +145,33 @@ function CandidatesInfoButton({ leadingSep = true }: { leadingSep?: boolean }) {
           setCandidatesInfoOpen(true, buttonRef.current)
         }}
       >
-        מידע על מועמדים
+        {t.footerCandidatesInfoBtn}
       </button>
       {isActive ? (
         <div
           ref={popupRef}
           className="app-footer-candidates-popup"
-          dir="rtl"
+          dir={locale === 'he' ? 'rtl' : 'ltr'}
           role="dialog"
-          aria-label="מידע על מועמדים"
+          aria-label={t.footerCandidatesInfoAria}
         >
           <button
             type="button"
             className="app-footer-candidates-popup-close"
-            aria-label="סגור"
+            aria-label={t.footerCandidatesInfoCloseAria}
             onClick={() => setCandidatesInfoOpen(false)}
           >
             ×
           </button>
           <div className="app-footer-candidates-popup-body">
-            {CANDIDATES_INFO_GROUPS.map((group) => (
+            {candidatesInfoGroups(t).map((group) => (
               <p key={group.label} className="app-footer-candidates-popup-line">
                 <strong>{group.label}</strong> {group.body}
               </p>
             ))}
             <p className="app-footer-candidates-popup-line app-footer-candidates-popup-credits-link">
               <Link to="/photo-credits" onClick={() => setCandidatesInfoOpen(false)}>
-                קרדיטי תמונות
+                {t.footerPhotoCreditsLink}
               </Link>
             </p>
           </div>
@@ -209,11 +208,14 @@ export function AppFooter({
         {showKnessetMemberSources ? (
           <>
             <span className="app-footer-source-sep" aria-hidden="true"> · </span>
-            <span className="app-footer-votesmart-group" dir="rtl">
-              <CandidatesInfoButton leadingSep={false} />
+            <span
+              className="app-footer-votesmart-group"
+              dir={locale === 'he' ? 'rtl' : 'ltr'}
+            >
+              <CandidatesInfoButton leadingSep={false} locale={locale} t={t} />
               <span className="app-footer-votesmart-asterisk"> * </span>
               <span className="app-footer-votesmart-credit">
-                {VOTESMART_CREDIT_HE}
+                {t.footerVotesmartCredit}
               </span>
             </span>
           </>

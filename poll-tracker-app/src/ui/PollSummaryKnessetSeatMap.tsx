@@ -16,7 +16,8 @@ import { PARTY_COLOR_MAP, SEGMENT_COLORS } from '../config/mappings'
 import {
   fetchKnessetMembers,
   consolidateMemberSources,
-  memberSourcesPlainText,
+  memberSourceCategoryLabel,
+  memberSourceDisplayName,
   memberSeatImageUrl,
   membersByPartyKey,
   segmentLabel,
@@ -292,6 +293,23 @@ function memberTooltipDetailRows(
   return rows
 }
 
+function memberSourceCategoryLabels(t: UiStrings) {
+  return {
+    age: t.knessetMapTooltipAge,
+    gender: t.knessetMapTooltipGender,
+    knessetYears: t.knessetMapTooltipKnessetYears,
+    professional: t.knessetMapTooltipProfessional,
+    education: t.knessetMapTooltipEducation,
+    military: t.knessetMapTooltipMilitary,
+    sector: t.knessetMapTooltipSector,
+    city: t.knessetMapTooltipCity,
+    subIdentity: t.knessetMapTooltipSubIdentity,
+    preRole: t.knessetMapTooltipPreRole,
+    funFact: t.knessetMapTooltipFunFact,
+    periphery: t.knessetStatsPeripheryLabel,
+  }
+}
+
 function MemberTooltipDetails({
   member,
   locale,
@@ -305,7 +323,16 @@ function MemberTooltipDetails({
 }) {
   const detailRows = memberTooltipDetailRows(member, locale, t, enProfile)
   const sourceGroups = consolidateMemberSources(member.sources)
-  const sourcesPlain = memberSourcesPlainText(sourceGroups)
+  const categoryLabels = memberSourceCategoryLabels(t)
+  const sourcesPlain = sourceGroups
+    .map((group) => {
+      const source = memberSourceDisplayName(group.source, locale)
+      const categories = group.categories
+        .map((category) => memberSourceCategoryLabel(category, locale, categoryLabels))
+        .join(', ')
+      return `${source}: ${categories}`
+    })
+    .join(' | ')
   if (!detailRows.length && !sourceGroups.length) return null
   return (
     <>
@@ -333,9 +360,17 @@ function MemberTooltipDetails({
                 {index > 0 ? (
                   <span className="lpo-ps-knesset-tooltip-sources-sep" aria-hidden="true"> | </span>
                 ) : null}
-                <span className="lpo-ps-knesset-tooltip-sources-src">{group.source}</span>
+                <span className="lpo-ps-knesset-tooltip-sources-src">
+                  {memberSourceDisplayName(group.source, locale)}
+                </span>
                 <span className="lpo-ps-knesset-tooltip-sources-colon">:</span>
-                <span className="lpo-ps-knesset-tooltip-sources-cat">{group.categories.join(', ')}</span>
+                <span className="lpo-ps-knesset-tooltip-sources-cat">
+                  {group.categories
+                    .map((category) =>
+                      memberSourceCategoryLabel(category, locale, categoryLabels),
+                    )
+                    .join(', ')}
+                </span>
               </span>
             ))}
           </p>
@@ -503,6 +538,7 @@ function KnessetSeatTooltip({
               />
               <PhotoCreditLine
                 credit={photoCredit}
+                t={t}
                 className="lpo-ps-photo-credit--tooltip"
                 openLinksInNewTab={openLinksInNewTab}
               />
