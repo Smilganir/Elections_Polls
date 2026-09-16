@@ -10161,3 +10161,19 @@ html[lang='he'] .lpo-rotate-hint-title {
 .lpo-ps-knesset-parliamentary-drawer > a {
   align-self: start;
 }
+
+/* Match the card's existing general-data label/value hierarchy inside the drawer. */
+.lpo-ps-knesset-parliamentary-metric-copy > strong,
+.lpo-ps-knesset-parliamentary-committee > strong {
+  color: #7a90a8;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.lpo-ps-knesset-parliamentary-metric-copy > strong + span,
+.lpo-ps-knesset-parliamentary-committee > p {
+  color: #edf2f9;
+  font-size: 0.66rem;
+  font-weight: 500;
+}
