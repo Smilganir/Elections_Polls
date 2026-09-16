@@ -603,7 +603,6 @@ function CategoryBars({
       <figcaption className="lpo-ps-knesset-stats-caption">{title}</figcaption>
       <ul className="lpo-ps-knesset-edu-list" dir="ltr">
         {rows.map((row) => {
-          if (row.count <= 0) return null
           const focus = focusForRow(row.key)
           const active = filtersInclude(mapFilters, focus)
           return (
@@ -614,6 +613,7 @@ function CategoryBars({
                   active ? ' lpo-ps-knesset-stat-hit--active' : ''
                 }`}
                 aria-pressed={active}
+                disabled={row.count <= 0}
                 onClick={() => onToggleFocus(focus)}
               >
                 <span className="lpo-ps-knesset-edu-name">{labelForRow(row.key)}</span>
@@ -793,18 +793,49 @@ export function KnessetStatsLeftStack({
   locale: AppLocale
   t: UiStrings
 } & ChartFocusProps) {
-  const militaryStats = useMemo(
+  // Fixed global orders: compute once from the full projection, never from a filtered cut.
+  const globalStats = useMemo(() => summarizeProjectedKnesset(seats), [seats])
+  const globalMilitaryOrder = useMemo(
+    () => [...globalStats.militaryService].sort((a, b) => b.count - a.count).map((row) => row.bucket),
+    [globalStats],
+  )
+  const globalSectorOrder = useMemo(
+    () => [...globalStats.sector].sort((a, b) => b.count - a.count).map((row) => row.bucket),
+    [globalStats],
+  )
+  // Education uses its natural attainment hierarchy, highest to lowest.
+  const educationOrder: EducationBucket[] = ['phd', 'ma', 'ba', 'highschool', 'torah']
+
+  const militaryStatsRaw = useMemo(
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'military'),
     [seats, mapFilters, mergeArabsWithOpposition],
   )
-  const educationStats = useMemo(
+  const militaryStats = useMemo(() => ({
+    ...militaryStatsRaw,
+    militaryService: globalMilitaryOrder.map((bucket) =>
+      militaryStatsRaw.militaryService.find((row) => row.bucket === bucket)!,
+    ),
+  }), [militaryStatsRaw, globalMilitaryOrder])
+  const educationStatsRaw = useMemo(
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'education'),
     [seats, mapFilters, mergeArabsWithOpposition],
   )
-  const sectorStats = useMemo(
+  const educationStats = useMemo(() => ({
+    ...educationStatsRaw,
+    education: educationOrder.map((bucket) =>
+      educationStatsRaw.education.find((row) => row.bucket === bucket)!,
+    ),
+  }), [educationStatsRaw])
+  const sectorStatsRaw = useMemo(
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'sector'),
     [seats, mapFilters, mergeArabsWithOpposition],
   )
+  const sectorStats = useMemo(() => ({
+    ...sectorStatsRaw,
+    sector: globalSectorOrder.map((bucket) =>
+      sectorStatsRaw.sector.find((row) => row.bucket === bucket)!,
+    ),
+  }), [sectorStatsRaw, globalSectorOrder])
   const k25Resolve = resolveKnesset25Baseline(mapFilters, mergeArabsWithOpposition)
   const k25 = k25Resolve?.slice
   const k25Scope = k25Resolve?.scope ?? null
