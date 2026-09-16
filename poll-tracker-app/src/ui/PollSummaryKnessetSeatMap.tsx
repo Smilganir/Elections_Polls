@@ -359,11 +359,11 @@ type ParliamentaryBenchmark = {
 /*
  * Verified from the populated Knesset-25 rows in the live candidates sheet.
  * Votes: n=86, median=4,068, upper-third cutoff=4,315.
- * Bills: n=74, median=96, upper-third cutoff=100 (the source field is capped at 100).
+ * Lead-initiator bills: n=74, median=95.5, upper-third cutoff=174.
  */
 const PARLIAMENTARY_BENCHMARKS: Record<ParliamentaryMetric, ParliamentaryBenchmark> = {
   votes: { median: 4068, topThirdCutoff: 4315 },
-  bills: { median: 96, topThirdCutoff: 100 },
+  bills: { median: 95.5, topThirdCutoff: 174 },
 }
 
 function parliamentaryNumber(value: string): number | null {
@@ -430,15 +430,15 @@ function ParliamentaryActivity({
   if (!peek) return null
   const labels = locale === 'he'
     ? {
-        votes: 'הצבעות במליאה', bills: 'הצעות חוק כמגיש/ה', committees: 'ועדות',
+        votes: 'הצבעות במליאה', bills: 'הצעות חוק כיוזם/ת ראשי/ת', committees: 'ועדות',
         source: 'מקור: אתר הכנסת', profile: 'לפרופיל באתר הכנסת',
       }
     : {
-        votes: 'Plenary votes', bills: 'Bills submitted', committees: 'Committees',
+        votes: 'Plenary votes', bills: 'Bills as lead initiator', committees: 'Committees',
         source: 'Source: Knesset website', profile: 'Knesset profile',
       }
   const votes = parliamentaryNumber(p.votes)
-  const bills = parliamentaryNumber(p.billsTotal)
+  const bills = parliamentaryNumber(p.billsLead)
   const committee = seniorCommitteeClause(p.currentCommittees) || seniorCommitteeClause(p.pastCommittees)
   const compactMeta = [p.knessets, p.factions].filter((value) => value.trim()).join(' · ')
   return (
