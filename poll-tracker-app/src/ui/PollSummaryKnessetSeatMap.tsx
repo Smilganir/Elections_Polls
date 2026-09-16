@@ -310,6 +310,95 @@ function memberSourceCategoryLabels(t: UiStrings) {
   }
 }
 
+const SENIOR_COMMITTEE_PRIORITY = [
+  'ועדת החוץ והביטחון',
+  'ועדת הכספים',
+  'ועדת החוקה',
+  'ועדת הכלכלה',
+  'ועדת הפנים',
+  'ועדת העבודה והרווחה',
+]
+
+
+function seniorCommitteeClause(value: string): string {
+  const clauses = value.split(';').map((part) => part.trim()).filter(Boolean)
+  for (const committee of SENIOR_COMMITTEE_PRIORITY) {
+    const match = clauses.find((clause) => clause.includes(committee))
+    if (match) return match
+  }
+  return clauses[0] ?? ''
+}
+
+/** Fixed, deterministic peek hierarchy. Never tailor the choice to a person. */
+function parliamentaryPeek(member: KnessetMemberRow, locale: AppLocale): string {
+  const p = member.parliamentary
+  const current = seniorCommitteeClause(p.currentCommittees)
+  if (current) return locale === 'he' ? `ועדה נוכחית: ${current}` : `Current committee: ${current}`
+  const past = seniorCommitteeClause(p.pastCommittees)
+  if (past) return locale === 'he' ? `ועדה בעבר: ${past}` : `Past committee: ${past}`
+  if (p.billsLead.trim()) {
+    return locale === 'he'
+      ? `${p.billsLead.trim()} הצעות חוק כיוזם/ת ראשי/ת בכנסת ה-25`
+      : `${p.billsLead.trim()} bills as lead initiator in the 25th Knesset`
+  }
+  if (p.votes.trim()) {
+    return locale === 'he'
+      ? `${p.votes.trim()} רשומות הצבעה במליאה בכנסת ה-25`
+      : `${p.votes.trim()} plenary voting records in the 25th Knesset`
+  }
+  return ''
+}
+
+function ParliamentaryActivity({ member, locale }: { member: KnessetMemberRow; locale: AppLocale }) {
+  const [open, setOpen] = useState(false)
+  const p = member.parliamentary
+  const peek = parliamentaryPeek(member, locale)
+  if (!peek) return null
+  const labels = locale === 'he'
+    ? {
+        knessets: 'כנסות', factions: 'סיעות בכנסת ה-25', current: 'ועדות נוכחיות',
+        past: 'ועדות בעבר', bills: 'הצעות חוק', motions: 'הצעות לסדר', queries: 'שאילתות',
+        votes: 'הצבעות במליאה', methodology: 'מתודולוגיה', profile: 'לפרופיל באתר הכנסת', source: 'מקור: אתר הכנסת',
+      }
+    : {
+        knessets: 'Knessets served', factions: '25th Knesset factions', current: 'Current committees',
+        past: 'Past committees', bills: 'Bills', motions: 'Motions for the agenda', queries: 'Queries',
+        votes: 'Plenary votes', methodology: 'Methodology', profile: 'Knesset profile', source: 'Source: Knesset website',
+      }
+  const details = [
+    [labels.knessets, p.knessets], [labels.factions, p.factions], [labels.current, p.currentCommittees],
+    [labels.past, p.pastCommittees],
+    [labels.bills, p.billsLead || p.billsTotal ? `${p.billsLead || '0'} ${locale === 'he' ? 'כיוזם/ת ראשי/ת' : 'lead'} · ${p.billsTotal || '0'} ${locale === 'he' ? 'סה"כ כמגיש/ה' : 'total'}` : ''],
+    [labels.motions, p.motions], [labels.queries, p.queries], [labels.votes, p.votes],
+  ].filter(([, value]) => value.trim())
+  return (
+    <div className="lpo-ps-knesset-parliamentary">
+      <button
+        type="button"
+        className="lpo-ps-knesset-parliamentary-peek"
+        aria-expanded={open}
+        onClick={(event) => { event.stopPropagation(); setOpen((value) => !value) }}
+      >
+        <span>{peek}</span><span aria-hidden="true">{open ? '▴' : '▾'}</span>
+      </button>
+      {open ? (
+        <div className="lpo-ps-knesset-parliamentary-drawer">
+          {details.map(([label, value]) => (
+            <p key={label}><strong>{label}:</strong> {value}</p>
+          ))}
+          <p className="lpo-ps-knesset-parliamentary-method">
+            <strong>{labels.methodology}:</strong> {locale === 'he'
+              ? 'הספירות מבוססות על רשומות הפעילות הזמינות באתר הכנסת לכנסת ה-25.'
+              : 'Counts are based on the 25th Knesset activity records available on the Knesset website.'}
+          </p>
+          <p className="lpo-ps-knesset-parliamentary-source">{labels.source}</p>
+          {p.profileUrl ? <a href={p.profileUrl} target="_blank" rel="noreferrer">{labels.profile}</a> : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function MemberTooltipDetails({
   member,
   locale,
@@ -339,16 +428,23 @@ function MemberTooltipDetails({
       {detailRows.length > 0 ? (
         <div className="lpo-ps-knesset-tooltip-details">
           {detailRows.map((row) => (
-            <p
-              key={row.label}
-              className={`lpo-ps-knesset-tooltip-detail-row${
-                row.clamp ? ' lpo-ps-knesset-tooltip-detail-row--clamp' : ''
-              }`}
-            >
-              <span className="lpo-ps-knesset-tooltip-detail-label">{row.label}:</span>
-              <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
-            </p>
+            <div key={row.label}>
+              <p
+                className={`lpo-ps-knesset-tooltip-detail-row${
+                  row.clamp ? ' lpo-ps-knesset-tooltip-detail-row--clamp' : ''
+                }`}
+              >
+                <span className="lpo-ps-knesset-tooltip-detail-label">{row.label}:</span>
+                <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
+              </p>
+              {row.label === t.knessetMapTooltipKnessetYears ? (
+                <ParliamentaryActivity member={member} locale={locale} />
+              ) : null}
+            </div>
           ))}
+          {!detailRows.some((row) => row.label === t.knessetMapTooltipKnessetYears) ? (
+            <ParliamentaryActivity member={member} locale={locale} />
+          ) : null}
         </div>
       ) : null}
       {sourceGroups.length ? (
@@ -1391,5 +1487,4 @@ export function PollSummaryKnessetSeatMap({
       )}
     </div>
   )
-}
-
+      }
