@@ -5017,6 +5017,27 @@ html[lang='he'] .lpo-ps-unified-party-name {
   margin-inline: auto;
   min-width: 0;
   gap: 0;
+  
+.photo-credits-row-link {
+  
+  color: #9ec4ef;
+  
+  text-decoration: underline;
+  
+  text-underline-offset: 0.12em;
+  
+}
+  
+
+  
+.photo-credits-
+
+
+
+
+
+
+
   unicode-bidi: isolate;
   background-repeat: no-repeat;
 }
