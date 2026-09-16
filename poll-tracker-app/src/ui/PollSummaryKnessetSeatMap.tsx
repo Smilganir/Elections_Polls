@@ -629,24 +629,24 @@ function KnessetSeatTooltip({
     const el = tooltipRef.current
     if (!el) return
 
-    el.style.maxHeight = ''
-    const cardHeight = el.scrollHeight
-    const nextVertical = resolveTooltipVerticalLayout(
-      tooltip.y,
-      tooltip.placement,
-      cardHeight,
-    )
-    setVerticalLayout((prev) => {
-      if (
-        prev.placement === nextVertical.placement &&
-        prev.top === nextVertical.top &&
-        prev.maxHeight === nextVertical.maxHeight &&
-        prev.pinTop === nextVertical.pinTop
-      ) {
-        return prev
-      }
-      return nextVertical
-    })
+    const applyVerticalLayout = () => {
+      const nextVertical = resolveTooltipVerticalLayout(
+        tooltip.y,
+        tooltip.placement,
+        el.scrollHeight,
+      )
+      setVerticalLayout((prev) => {
+        if (
+          prev.placement === nextVertical.placement &&
+          prev.top === nextVertical.top &&
+          prev.maxHeight === nextVertical.maxHeight &&
+          prev.pinTop === nextVertical.pinTop
+        ) {
+          return prev
+        }
+        return nextVertical
+      })
+    }
 
     const applyHorizontalClamp = () => {
       const width = Math.max(el.offsetWidth, el.scrollWidth, TOOLTIP_LAYOUT_WIDTH_PX)
@@ -655,9 +655,18 @@ function KnessetSeatTooltip({
       setLeft((prev) => (prev === next ? prev : next))
     }
 
+    applyVerticalLayout()
     applyHorizontalClamp()
     const raf = requestAnimationFrame(applyHorizontalClamp)
-    return () => cancelAnimationFrame(raf)
+    const resizeObserver = new ResizeObserver(applyVerticalLayout)
+    const mutationObserver = new MutationObserver(applyVerticalLayout)
+    resizeObserver.observe(el)
+    mutationObserver.observe(el, { childList: true, subtree: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      resizeObserver.disconnect()
+      mutationObserver.disconnect()
+    }
   }, [tooltip.x, tooltip.y, tooltip.placement, tooltip.seat, memberName, enProfile, locale, t])
 
   const placementClass = verticalLayout.pinTop
@@ -1571,4 +1580,4 @@ export function PollSummaryKnessetSeatMap({
       )}
     </div>
   )
-      }
+  }
