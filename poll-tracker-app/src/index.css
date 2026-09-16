@@ -10114,6 +10114,7 @@ html[lang='he'] .lpo-rotate-hint-title {
 
 .lpo-ps-knesset-parliamentary-bar {
   position: relative;
+  direction: ltr;
   height: 3px;
   margin-top: 0.12rem;
   overflow: hidden;
