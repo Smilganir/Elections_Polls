@@ -51,6 +51,20 @@ export type KnessetMemberRow = {
   sources: string
   /** רישיון/מקור תמונה — full credit line from v2 sheet (parentheses preserved). */
   photoCreditText: string | null
+  /** Parliamentary activity columns W:AG from the live candidates sheet. */
+  parliamentary: {
+    knessets: string
+    factions: string
+    currentCommittees: string
+    pastCommittees: string
+    billsLead: string
+    billsTotal: string
+    motions: string
+    queries: string
+    votes: string
+    profileUrl: string
+    methodology: string
+  }
 }
 
 /** Hebrew sheet list name → canonical unpivot party key. */
@@ -149,6 +163,17 @@ const HEADER_SOURCES = 'מקורות'
 /** v2 column — parenthetical source notes must be preserved (not run through source tokenizer). */
 export const HEADER_PHOTO_CREDIT_V2 = 'רישיון/מקור תמונה'
 const HEADER_PHOTO_CREDIT = HEADER_PHOTO_CREDIT_V2
+const HEADER_KNESSETS = 'כנסות שבהן כיהן/ה'
+const HEADER_FACTIONS = 'סיעה/ות בכנסת ה-25'
+const HEADER_CURRENT_COMMITTEES = 'ועדות נוכחיות בכנסת ה-25'
+const HEADER_PAST_COMMITTEES = 'ועדות קודמות בכנסת ה-25'
+const HEADER_BILLS_LEAD = 'הצעות חוק - יוזם/ת ראשי/ת (כנסת 25)'
+const HEADER_BILLS_TOTAL = 'הצעות חוק - סה"כ כמגיש/ה (כנסת 25)'
+const HEADER_MOTIONS = 'הצעות לסדר היום (כנסת 25)'
+const HEADER_QUERIES = 'שאילתות (כנסת 25)'
+const HEADER_VOTES = 'רשומות הצבעה במליאה (כנסת 25)'
+const HEADER_KNESSET_PROFILE = 'קישור לפרופיל/פעילות באתר הכנסת'
+const HEADER_PARLIAMENTARY_SOURCES = 'מקורות פעילות פרלמנטרית'
 
 /**
  * Preserve full credit text including parenthetical notes.
@@ -536,6 +561,19 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
     const preKnessetRole = cell(cols, headers, HEADER_PRE_KNESSET_ROLE, 19)
     const sources = cell(cols, headers, HEADER_SOURCES, 11)
     const photoCreditText = parsePhotoCreditText(cell(cols, headers, HEADER_PHOTO_CREDIT, 7))
+    const parliamentary = {
+      knessets: cell(cols, headers, HEADER_KNESSETS, -1),
+      factions: cell(cols, headers, HEADER_FACTIONS, -1),
+      currentCommittees: cell(cols, headers, HEADER_CURRENT_COMMITTEES, -1),
+      pastCommittees: cell(cols, headers, HEADER_PAST_COMMITTEES, -1),
+      billsLead: cell(cols, headers, HEADER_BILLS_LEAD, -1),
+      billsTotal: cell(cols, headers, HEADER_BILLS_TOTAL, -1),
+      motions: cell(cols, headers, HEADER_MOTIONS, -1),
+      queries: cell(cols, headers, HEADER_QUERIES, -1),
+      votes: cell(cols, headers, HEADER_VOTES, -1),
+      profileUrl: cell(cols, headers, HEADER_KNESSET_PROFILE, -1),
+      methodology: cell(cols, headers, HEADER_PARLIAMENTARY_SOURCES, -1),
+    }
 
     return {
       partyHeb,
@@ -561,6 +599,7 @@ export function parseKnessetMembersCsv(csv: string): KnessetMemberRow[] {
       preKnessetRole,
       sources,
       photoCreditText,
+      parliamentary,
     }
   })
 }
