@@ -353,7 +353,17 @@ type ParliamentaryMetric = 'votes' | 'bills'
 
 type ParliamentaryBenchmark = {
   median: number
-  values: number[]
+  topThirdCutoff: number
+}
+
+/*
+ * Verified from the populated Knesset-25 rows in the live candidates sheet.
+ * Votes: n=86, median=4,068, upper-third cutoff=4,315.
+ * Bills: n=74, median=96, upper-third cutoff=100 (the source field is capped at 100).
+ */
+const PARLIAMENTARY_BENCHMARKS: Record<ParliamentaryMetric, ParliamentaryBenchmark> = {
+  votes: { median: 4068, topThirdCutoff: 4315 },
+  bills: { median: 96, topThirdCutoff: 100 },
 }
 
 function parliamentaryNumber(value: string): number | null {
@@ -361,40 +371,12 @@ function parliamentaryNumber(value: string): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
 }
 
-function parliamentaryBenchmarks(members: KnessetMemberRow[]): Record<ParliamentaryMetric, ParliamentaryBenchmark> {
-  const unique = new Map<string, KnessetMemberRow>()
-  members.forEach((member) => {
-    if (!unique.has(member.name)) unique.set(member.name, member)
-  })
-  const valuesFor = (metric: ParliamentaryMetric) => [...unique.values()]
-    .map((member) => parliamentaryNumber(
-      metric === 'votes' ? member.parliamentary.votes : member.parliamentary.billsTotal,
-    ))
-    .filter((value): value is number => value !== null)
-    .sort((a, b) => a - b)
-  const benchmarkFor = (values: number[]): ParliamentaryBenchmark => {
-    const middle = Math.floor(values.length / 2)
-    const median = values.length === 0
-      ? 0
-      : values.length % 2
-        ? values[middle]
-        : (values[middle - 1] + values[middle]) / 2
-    return { median, values }
-  }
-  return {
-    votes: benchmarkFor(valuesFor('votes')),
-    bills: benchmarkFor(valuesFor('bills')),
-  }
-}
-
 function placementLabel(
   value: number,
   benchmark: ParliamentaryBenchmark,
   locale: AppLocale,
 ): string {
-  const greater = benchmark.values.filter((candidate) => candidate > value).length
-  const topShare = benchmark.values.length ? greater / benchmark.values.length : 1
-  if (topShare < 1 / 3) return locale === 'he' ? 'שליש עליון' : 'Top third'
+  if (value >= benchmark.topThirdCutoff) return locale === 'he' ? 'שליש עליון' : 'Top third'
   if (value >= benchmark.median) return locale === 'he' ? 'מעל החציון' : 'Above median'
   return locale === 'he' ? 'מתחת לחציון' : 'Below median'
 }
@@ -499,19 +481,16 @@ function ParliamentaryActivity({
 
 function MemberTooltipDetails({
   member,
-  members,
   locale,
   t,
   enProfile,
 }: {
   member: KnessetMemberRow
-  members: KnessetMemberRow[]
   locale: AppLocale
   t: UiStrings
   enProfile: MemberEnTooltipProfile | null
 }) {
   const detailRows = memberTooltipDetailRows(member, locale, t, enProfile)
-  const benchmarks = useMemo(() => parliamentaryBenchmarks(members), [members])
   const sourceGroups = consolidateMemberSources(member.sources)
   const categoryLabels = memberSourceCategoryLabels(t)
   const sourcesPlain = sourceGroups
@@ -539,12 +518,12 @@ function MemberTooltipDetails({
                 <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
               </p>
               {row.label === t.knessetMapTooltipKnessetYears ? (
-                <ParliamentaryActivity member={member} locale={locale} benchmarks={benchmarks} />
+                <ParliamentaryActivity member={member} locale={locale} benchmarks={PARLIAMENTARY_BENCHMARKS} />
               ) : null}
             </div>
           ))}
           {!detailRows.some((row) => row.label === t.knessetMapTooltipKnessetYears) ? (
-            <ParliamentaryActivity member={member} locale={locale} benchmarks={benchmarks} />
+            <ParliamentaryActivity member={member} locale={locale} benchmarks={PARLIAMENTARY_BENCHMARKS} />
           ) : null}
         </div>
       ) : null}
@@ -582,7 +561,6 @@ function MemberTooltipDetails({
 
 function KnessetSeatTooltip({
   tooltip,
-  members,
   locale,
   t,
   displayParty,
@@ -595,7 +573,6 @@ function KnessetSeatTooltip({
   openLinksInNewTab = false,
 }: {
   tooltip: TooltipState
-  members: KnessetMemberRow[]
   locale: AppLocale
   t: UiStrings
   displayParty: (partyKey: string) => string
@@ -749,7 +726,6 @@ function KnessetSeatTooltip({
           {member ? (
             <MemberTooltipDetails
               member={member}
-              members={members}
               locale={locale}
               t={t}
               enProfile={enProfile}
@@ -1571,7 +1547,6 @@ export function PollSummaryKnessetSeatMap({
                 <KnessetSeatTooltip
                   key={tooltip.seat.slot.id}
                   tooltip={tooltip}
-                  members={members ?? []}
                   locale={locale}
                   t={t}
                   displayParty={displayParty}
