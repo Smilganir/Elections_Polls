@@ -349,28 +349,116 @@ function parliamentaryPeek(member: KnessetMemberRow, locale: AppLocale): string 
   return ''
 }
 
-function ParliamentaryActivity({ member, locale }: { member: KnessetMemberRow; locale: AppLocale }) {
+type ParliamentaryMetric = 'votes' | 'bills'
+
+type ParliamentaryBenchmark = {
+  median: number
+  values: number[]
+}
+
+function parliamentaryNumber(value: string): number | null {
+  const parsed = Number(value.replace(/,/g, '').trim())
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
+function parliamentaryBenchmarks(members: KnessetMemberRow[]): Record<ParliamentaryMetric, ParliamentaryBenchmark> {
+  const unique = new Map<string, KnessetMemberRow>()
+  members.forEach((member) => {
+    if (!unique.has(member.name)) unique.set(member.name, member)
+  })
+  const valuesFor = (metric: ParliamentaryMetric) => [...unique.values()]
+    .map((member) => parliamentaryNumber(
+      metric === 'votes' ? member.parliamentary.votes : member.parliamentary.billsTotal,
+    ))
+    .filter((value): value is number => value !== null)
+    .sort((a, b) => a - b)
+  const benchmarkFor = (values: number[]): ParliamentaryBenchmark => {
+    const middle = Math.floor(values.length / 2)
+    const median = values.length === 0
+      ? 0
+      : values.length % 2
+        ? values[middle]
+        : (values[middle - 1] + values[middle]) / 2
+    return { median, values }
+  }
+  return {
+    votes: benchmarkFor(valuesFor('votes')),
+    bills: benchmarkFor(valuesFor('bills')),
+  }
+}
+
+function placementLabel(
+  value: number,
+  benchmark: ParliamentaryBenchmark,
+  locale: AppLocale,
+): string {
+  const greater = benchmark.values.filter((candidate) => candidate > value).length
+  const topShare = benchmark.values.length ? greater / benchmark.values.length : 1
+  if (topShare < 1 / 3) return locale === 'he' ? 'שליש עליון' : 'Top third'
+  if (value >= benchmark.median) return locale === 'he' ? 'מעל החציון' : 'Above median'
+  return locale === 'he' ? 'מתחת לחציון' : 'Below median'
+}
+
+function ParliamentaryMetricRow({
+  label,
+  value,
+  benchmark,
+  locale,
+}: {
+  label: string
+  value: number
+  benchmark: ParliamentaryBenchmark
+  locale: AppLocale
+}) {
+  // The median tick sits at 50%; values at twice the median fill the compact scale.
+  const fill = benchmark.median > 0 ? Math.min(100, (value / (benchmark.median * 2)) * 100) : 0
+  const formattedMedian = new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US', {
+    maximumFractionDigits: 1,
+  }).format(benchmark.median)
+  return (
+    <div className="lpo-ps-knesset-parliamentary-metric">
+      <div className="lpo-ps-knesset-parliamentary-metric-copy">
+        <strong>{label}</strong>
+        <span>{new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-US').format(value)}</span>
+        <span className="lpo-ps-knesset-parliamentary-placement">
+          {placementLabel(value, benchmark, locale)}
+        </span>
+      </div>
+      <div className="lpo-ps-knesset-parliamentary-bar" aria-hidden="true">
+        <span style={{ width: `${fill}%` }} />
+        <i />
+      </div>
+      <small>{locale === 'he' ? `חציון ח״כי כנסת 25: ${formattedMedian}` : `25th Knesset MK median: ${formattedMedian}`}</small>
+    </div>
+  )
+}
+
+function ParliamentaryActivity({
+  member,
+  locale,
+  benchmarks,
+}: {
+  member: KnessetMemberRow
+  locale: AppLocale
+  benchmarks: Record<ParliamentaryMetric, ParliamentaryBenchmark>
+}) {
   const [open, setOpen] = useState(false)
   const p = member.parliamentary
   const peek = parliamentaryPeek(member, locale)
   if (!peek) return null
   const labels = locale === 'he'
     ? {
-        knessets: 'כנסות', factions: 'סיעות בכנסת ה-25', current: 'ועדות נוכחיות',
-        past: 'ועדות בעבר', bills: 'הצעות חוק', motions: 'הצעות לסדר', queries: 'שאילתות',
-        votes: 'הצבעות במליאה', methodology: 'מתודולוגיה', profile: 'לפרופיל באתר הכנסת', source: 'מקור: אתר הכנסת',
+        votes: 'הצבעות במליאה', bills: 'הצעות חוק כמגיש/ה', committees: 'ועדות',
+        source: 'מקור: אתר הכנסת', profile: 'לפרופיל באתר הכנסת',
       }
     : {
-        knessets: 'Knessets served', factions: '25th Knesset factions', current: 'Current committees',
-        past: 'Past committees', bills: 'Bills', motions: 'Motions for the agenda', queries: 'Queries',
-        votes: 'Plenary votes', methodology: 'Methodology', profile: 'Knesset profile', source: 'Source: Knesset website',
+        votes: 'Plenary votes', bills: 'Bills submitted', committees: 'Committees',
+        source: 'Source: Knesset website', profile: 'Knesset profile',
       }
-  const details = [
-    [labels.knessets, p.knessets], [labels.factions, p.factions], [labels.current, p.currentCommittees],
-    [labels.past, p.pastCommittees],
-    [labels.bills, p.billsLead || p.billsTotal ? `${p.billsLead || '0'} ${locale === 'he' ? 'כיוזם/ת ראשי/ת' : 'lead'} · ${p.billsTotal || '0'} ${locale === 'he' ? 'סה"כ כמגיש/ה' : 'total'}` : ''],
-    [labels.motions, p.motions], [labels.queries, p.queries], [labels.votes, p.votes],
-  ].filter(([, value]) => value.trim())
+  const votes = parliamentaryNumber(p.votes)
+  const bills = parliamentaryNumber(p.billsTotal)
+  const committee = seniorCommitteeClause(p.currentCommittees) || seniorCommitteeClause(p.pastCommittees)
+  const compactMeta = [p.knessets, p.factions].filter((value) => value.trim()).join(' · ')
   return (
     <div className="lpo-ps-knesset-parliamentary">
       <button
@@ -383,13 +471,23 @@ function ParliamentaryActivity({ member, locale }: { member: KnessetMemberRow; l
       </button>
       {open ? (
         <div className="lpo-ps-knesset-parliamentary-drawer">
-          {details.map(([label, value]) => (
-            <p key={label}><strong>{label}:</strong> {value}</p>
-          ))}
+          {compactMeta ? <p className="lpo-ps-knesset-parliamentary-meta">{compactMeta}</p> : null}
+          {votes !== null ? (
+            <ParliamentaryMetricRow label={labels.votes} value={votes} benchmark={benchmarks.votes} locale={locale} />
+          ) : null}
+          {bills !== null ? (
+            <ParliamentaryMetricRow label={labels.bills} value={bills} benchmark={benchmarks.bills} locale={locale} />
+          ) : null}
+          {committee ? (
+            <div className="lpo-ps-knesset-parliamentary-committee">
+              <strong>{labels.committees}</strong>
+              <p>{committee}</p>
+            </div>
+          ) : null}
           <p className="lpo-ps-knesset-parliamentary-method">
-            <strong>{labels.methodology}:</strong> {locale === 'he'
-              ? 'הספירות מבוססות על רשומות הפעילות הזמינות באתר הכנסת לכנסת ה-25.'
-              : 'Counts are based on the 25th Knesset activity records available on the Knesset website.'}
+            {locale === 'he'
+              ? 'החציון מחושב מנתוני חברי הכנסת ה-25 המלאים בגיליון.'
+              : 'Median calculated from populated 25th Knesset member data in the sheet.'}
           </p>
           <p className="lpo-ps-knesset-parliamentary-source">{labels.source}</p>
           {p.profileUrl ? <a href={p.profileUrl} target="_blank" rel="noreferrer">{labels.profile}</a> : null}
@@ -401,16 +499,19 @@ function ParliamentaryActivity({ member, locale }: { member: KnessetMemberRow; l
 
 function MemberTooltipDetails({
   member,
+  members,
   locale,
   t,
   enProfile,
 }: {
   member: KnessetMemberRow
+  members: KnessetMemberRow[]
   locale: AppLocale
   t: UiStrings
   enProfile: MemberEnTooltipProfile | null
 }) {
   const detailRows = memberTooltipDetailRows(member, locale, t, enProfile)
+  const benchmarks = useMemo(() => parliamentaryBenchmarks(members), [members])
   const sourceGroups = consolidateMemberSources(member.sources)
   const categoryLabels = memberSourceCategoryLabels(t)
   const sourcesPlain = sourceGroups
@@ -438,12 +539,12 @@ function MemberTooltipDetails({
                 <span className="lpo-ps-knesset-tooltip-detail-value">{row.value}</span>
               </p>
               {row.label === t.knessetMapTooltipKnessetYears ? (
-                <ParliamentaryActivity member={member} locale={locale} />
+                <ParliamentaryActivity member={member} locale={locale} benchmarks={benchmarks} />
               ) : null}
             </div>
           ))}
           {!detailRows.some((row) => row.label === t.knessetMapTooltipKnessetYears) ? (
-            <ParliamentaryActivity member={member} locale={locale} />
+            <ParliamentaryActivity member={member} locale={locale} benchmarks={benchmarks} />
           ) : null}
         </div>
       ) : null}
@@ -481,6 +582,7 @@ function MemberTooltipDetails({
 
 function KnessetSeatTooltip({
   tooltip,
+  members,
   locale,
   t,
   displayParty,
@@ -493,6 +595,7 @@ function KnessetSeatTooltip({
   openLinksInNewTab = false,
 }: {
   tooltip: TooltipState
+  members: KnessetMemberRow[]
   locale: AppLocale
   t: UiStrings
   displayParty: (partyKey: string) => string
@@ -646,6 +749,7 @@ function KnessetSeatTooltip({
           {member ? (
             <MemberTooltipDetails
               member={member}
+              members={members}
               locale={locale}
               t={t}
               enProfile={enProfile}
@@ -1467,6 +1571,7 @@ export function PollSummaryKnessetSeatMap({
                 <KnessetSeatTooltip
                   key={tooltip.seat.slot.id}
                   tooltip={tooltip}
+                  members={members ?? []}
                   locale={locale}
                   t={t}
                   displayParty={displayParty}
