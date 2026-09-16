@@ -10080,7 +10080,11 @@ html[lang='he'] .lpo-rotate-hint-title {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  padding: 0.2rem 0 0.05rem;
+  margin-top: 0.14rem;
+  padding: 0.32rem 0.38rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.045);
   font: inherit;
 }
 
