@@ -449,7 +449,11 @@ function ParliamentaryActivity({
         aria-expanded={open}
         onClick={(event) => { event.stopPropagation(); setOpen((value) => !value) }}
       >
-        <span>{peek}</span><span aria-hidden="true">{open ? '▴' : '▾'}</span>
+        <span>{peek}</span>
+        <span className="lpo-ps-knesset-parliamentary-peek-action">
+          {locale === 'he' ? (open ? 'סגור' : 'פרטים') : (open ? 'Close' : 'Details')}
+          <span aria-hidden="true">{open ? '▴' : '▾'}</span>
+        </span>
       </button>
       {open ? (
         <div className="lpo-ps-knesset-parliamentary-drawer">

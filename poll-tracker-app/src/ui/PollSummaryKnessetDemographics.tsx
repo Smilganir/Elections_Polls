@@ -803,8 +803,10 @@ export function KnessetStatsLeftStack({
     () => [...globalStats.sector].sort((a, b) => b.count - a.count).map((row) => row.bucket),
     [globalStats],
   )
-  // Education uses its natural attainment hierarchy, highest to lowest.
-  const educationOrder: EducationBucket[] = ['phd', 'ma', 'ba', 'highschool', 'torah']
+  const globalEducationOrder = useMemo(
+    () => [...globalStats.education].sort((a, b) => b.count - a.count).map((row) => row.bucket),
+    [globalStats],
+  )
 
   const militaryStatsRaw = useMemo(
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'military'),
@@ -822,10 +824,10 @@ export function KnessetStatsLeftStack({
   )
   const educationStats = useMemo(() => ({
     ...educationStatsRaw,
-    education: educationOrder.map((bucket) =>
+    education: globalEducationOrder.map((bucket) =>
       educationStatsRaw.education.find((row) => row.bucket === bucket)!,
     ),
-  }), [educationStatsRaw])
+  }), [educationStatsRaw, globalEducationOrder])
   const sectorStatsRaw = useMemo(
     () => chartDemographics(seats, mapFilters, mergeArabsWithOpposition, 'sector'),
     [seats, mapFilters, mergeArabsWithOpposition],

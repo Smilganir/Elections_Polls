@@ -10049,15 +10049,31 @@ html[lang='he'] .lpo-rotate-hint-title {
   align-items: start;
   justify-content: space-between;
   gap: 0.35rem;
-  padding: 0.2rem 0;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.28rem 0.38rem;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 6px;
   color: #b9c8d9;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.045);
   font: inherit;
   line-height: inherit;
   text-align: start;
   cursor: pointer;
+}
+
+.lpo-ps-knesset-parliamentary-peek:hover,
+.lpo-ps-knesset-parliamentary-peek:focus-visible {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.lpo-ps-knesset-parliamentary-peek-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  color: #9fc2ea;
+  font-size: 1em;
+  font-weight: 600;
 }
 
 .lpo-ps-knesset-parliamentary-drawer {
