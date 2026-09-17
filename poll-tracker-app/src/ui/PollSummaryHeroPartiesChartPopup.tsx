@@ -672,10 +672,14 @@ function segmentDisplayColor(segment: Segment, mergeArabsWithOpposition: boolean
   return SEGMENT_COLORS[segment]
 }
 
+const OUTLET_LONG_PRESS_MS = 450
+
 export function PollSummaryOutletFilterStrip({
   allOutlets,
   excludedOutlets,
   onToggleOutlet,
+  onSoloOutlet,
+  onClearOutletFilter,
   displayMediaOutlet,
   t,
   className,
@@ -684,6 +688,10 @@ export function PollSummaryOutletFilterStrip({
   allOutlets: readonly string[]
   excludedOutlets: ReadonlySet<string>
   onToggleOutlet: (outlet: string) => void
+  /** Long-press / Shift+click: keep only this outlet in the average */
+  onSoloOutlet?: (outlet: string) => void
+  /** Long-press on a soloed outlet: bring every outlet back */
+  onClearOutletFilter?: () => void
   displayMediaOutlet: (outlet: string) => string
   t: UiStrings
   className?: string
@@ -693,6 +701,27 @@ export function PollSummaryOutletFilterStrip({
     () => allOutlets.filter((outlet) => !excludedOutlets.has(outlet)).length,
     [allOutlets, excludedOutlets],
   )
+  const longPressTimerRef = useRef<number | null>(null)
+  const longPressFiredRef = useRef(false)
+
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
+
+  const startLongPress = (outlet: string, soloed: boolean) => () => {
+    if (!onSoloOutlet) return
+    cancelLongPress()
+    longPressFiredRef.current = false
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTimerRef.current = null
+      longPressFiredRef.current = true
+      if (soloed) onClearOutletFilter?.()
+      else onSoloOutlet(outlet)
+    }, OUTLET_LONG_PRESS_MS)
+  }
 
   return (
     <div
@@ -704,23 +733,47 @@ export function PollSummaryOutletFilterStrip({
       {allOutlets.map((outlet) => {
         const included = !excludedOutlets.has(outlet)
         const outletLabel = displayMediaOutlet(outlet)
+        const soloed =
+          included && allOutlets.length > 1 && includedOutletCount === 1
         const toggleAria = (
           included
             ? t.pollSummaryHeroPartiesChartOutletExcludeAria
             : t.pollSummaryHeroPartiesChartOutletIncludeAria
         ).replace(/\{outlet\}/g, outletLabel)
+        const soloAria = (
+          soloed
+            ? t.pollSummaryHeroPartiesChartOutletShowAllAria
+            : t.pollSummaryHeroPartiesChartOutletSoloAria.replace(/\{outlet\}/g, outletLabel)
+        )
         const disableExclude = included && includedOutletCount <= 1
 
         return (
           <button
             key={outlet}
             type="button"
-            className={`lpo-ps-hero-chart-outlet-btn${included ? '' : ' lpo-ps-hero-chart-outlet-btn--excluded'}`}
+            className={`lpo-ps-hero-chart-outlet-btn${included ? '' : ' lpo-ps-hero-chart-outlet-btn--excluded'}${soloed ? ' lpo-ps-hero-chart-outlet-btn--solo' : ''}`}
             aria-pressed={included}
-            aria-label={toggleAria}
-            title={outletLabel}
-            disabled={disableExclude}
-            onClick={() => onToggleOutlet(outlet)}
+            aria-disabled={disableExclude}
+            aria-label={`${toggleAria}. ${soloAria}`}
+            title={`${outletLabel} · ${t.pollSummaryHeroPartiesChartOutletTooltip}`}
+            onPointerDown={startLongPress(outlet, soloed)}
+            onPointerUp={cancelLongPress}
+            onPointerLeave={cancelLongPress}
+            onPointerCancel={cancelLongPress}
+            onContextMenu={(e) => e.preventDefault()}
+            onClick={(e) => {
+              if (longPressFiredRef.current) {
+                longPressFiredRef.current = false
+                return
+              }
+              if (e.shiftKey && onSoloOutlet) {
+                if (soloed) onClearOutletFilter?.()
+                else onSoloOutlet(outlet)
+                return
+              }
+              if (disableExclude) return
+              onToggleOutlet(outlet)
+            }}
           >
             <IconWithFallback src={MEDIA_ICON_MAP[outlet]} label={outletLabel} />
           </button>
@@ -804,6 +857,8 @@ export function PollSummaryHeroPartiesChartPopup({
   allOutlets,
   excludedOutlets,
   onToggleOutlet,
+  onSoloOutlet,
+  onClearOutletFilter,
   avgCoalition,
   avgOpposition,
   avgArabs,
@@ -826,6 +881,8 @@ export function PollSummaryHeroPartiesChartPopup({
   allOutlets: readonly string[]
   excludedOutlets: ReadonlySet<string>
   onToggleOutlet: (outlet: string) => void
+  onSoloOutlet?: (outlet: string) => void
+  onClearOutletFilter?: () => void
   avgCoalition: number
   avgOpposition: number
   avgArabs: number
@@ -1072,6 +1129,8 @@ export function PollSummaryHeroPartiesChartPopup({
               allOutlets={allOutlets}
               excludedOutlets={excludedOutlets}
               onToggleOutlet={onToggleOutlet}
+              onSoloOutlet={onSoloOutlet}
+              onClearOutletFilter={onClearOutletFilter}
               displayMediaOutlet={displayMediaOutlet}
               t={t}
             />
