@@ -1,0 +1,20 @@
+/* Outlet filter strip: long-press "show only this outlet" (solo) interactions.
+   Kept in a separate file so the strip can add guards/visuals without touching index.css. */
+
+/* Suppress the iOS long-press callout menu, text selection, and double-tap zoom on outlet chips */
+.lpo-ps-hero-chart-outlet-btn {
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Soloed outlet chip: accent ring on top of the full-opacity included look */
+.lpo-ps-hero-chart-outlet-btn--solo .mapped-icon,
+.lpo-ps-hero-chart-outlet-btn--solo .icon-fallback {
+  border-color: rgba(96, 165, 250, 0.95);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.55), 0 0 10px rgba(96, 165, 250, 0.35);
+}
+
+.lpo-ps-hero-chart-outlet-btn[aria-disabled="true"] {
+  cursor: default;
+}
