@@ -501,6 +501,55 @@ function HeroChartHemicycleTouchZoom({
   )
 }
 
+function HeroChartBlocSummary({
+  t,
+  combineArabsWithOpposition,
+  hasPrior,
+  avgCoalition,
+  avgOpposition,
+  avgArabs,
+  avgOppositionPlusArabs,
+  deltaCoalition,
+  deltaOpposition,
+  deltaOppositionPlusArabs,
+  focusedSegment,
+  onToggleSegmentFocus,
+}: {
+  t: UiStrings
+  combineArabsWithOpposition: boolean
+  hasPrior: boolean
+  avgCoalition: number
+  avgOpposition: number
+  avgArabs: number
+  avgOppositionPlusArabs: number
+  deltaCoalition: number
+  deltaOpposition: number
+  deltaOppositionPlusArabs: number
+  focusedSegment: 'Coalition' | 'Opposition' | null
+  onToggleSegmentFocus: (segment: 'Coalition' | 'Opposition') => void
+}) {
+  return (
+    <div className="lpo-ps-hero-chart-bloc-summary--header">
+      <PollSummaryHeroBlocBar
+        t={t}
+        combineArabsWithOpposition={combineArabsWithOpposition}
+        hasPrior={hasPrior}
+        avgCoalition={avgCoalition}
+        avgOpposition={avgOpposition}
+        avgArabs={avgArabs}
+        avgOppositionPlusArabs={avgOppositionPlusArabs}
+        deltaCoalition={deltaCoalition}
+        deltaOpposition={deltaOpposition}
+        deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+        focusedSegment={focusedSegment}
+        onToggleSegmentFocus={onToggleSegmentFocus}
+        showRoundedSeatMandates
+        className="lpo-ps-hero-chart-bloc-bar"
+      />
+    </div>
+  )
+}
+
 function formatChipNum(n: number): string {
   const r = Math.round(n * 10) / 10
   return Number.isInteger(r) ? String(r) : r.toFixed(1)
@@ -1026,8 +1075,8 @@ export function PollSummaryHeroPartiesChartPopup({
               displayMediaOutlet={displayMediaOutlet}
               t={t}
             />
-            <div className="lpo-ps-hero-chart-bloc-summary--header">
-              <PollSummaryHeroBlocBar
+            {!heroChartCompact ? (
+              <HeroChartBlocSummary
                 t={t}
                 combineArabsWithOpposition={combineArabsWithOpposition}
                 hasPrior={hasPrior}
@@ -1040,10 +1089,8 @@ export function PollSummaryHeroPartiesChartPopup({
                 deltaOppositionPlusArabs={deltaOppositionPlusArabs}
                 focusedSegment={focusedSegment}
                 onToggleSegmentFocus={toggleSegmentFocus}
-                showRoundedSeatMandates
-                className="lpo-ps-hero-chart-bloc-bar"
               />
-            </div>
+            ) : null}
           </div>
           <button
             type="button"
@@ -1056,6 +1103,24 @@ export function PollSummaryHeroPartiesChartPopup({
         </header>
         <div className="lpo-ps-hero-chart-body">
           <HeroChartHemicycleTouchZoom enabled={heroChartCompact}>
+          {heroChartCompact ? (
+            <div className="lpo-ps-hero-chart-dialog-heading lpo-ps-hero-chart-zoom-bloc-heading">
+              <HeroChartBlocSummary
+                t={t}
+                combineArabsWithOpposition={combineArabsWithOpposition}
+                hasPrior={hasPrior}
+                avgCoalition={avgCoalition}
+                avgOpposition={avgOpposition}
+                avgArabs={avgArabs}
+                avgOppositionPlusArabs={avgOppositionPlusArabs}
+                deltaCoalition={deltaCoalition}
+                deltaOpposition={deltaOpposition}
+                deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+                focusedSegment={focusedSegment}
+                onToggleSegmentFocus={toggleSegmentFocus}
+              />
+            </div>
+          ) : null}
           <div className="lpo-ps-hero-chart-hemicycle-wrap">
             <div className="lpo-ps-knesset-filters-slot">
               <PollSummaryKnessetFiltersPane
