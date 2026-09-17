@@ -77,6 +77,8 @@ const TOOLTIP_MAX_HEIGHT_CAP = 820
 const TOOLTIP_LAYOUT_WIDTH_PX = 320
 const TOOLTIP_CLOSE_DELAY_MS = 350
 const TOOLTIP_SUPPRESS_SEAT_OPEN_MS = 400
+const TOOLTIP_TOUCH_MOVE_THRESHOLD_PX = 10
+const TOOLTIP_TOUCH_MOUSE_SUPPRESS_MS = 750
 
 type TooltipDetailRow = { label: string; value: string; clamp?: boolean }
 
@@ -863,6 +865,10 @@ function SwingSeatPortrait({
   onMove,
   onBlur,
   onPointerDown,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  onTouchCancel,
 }: {
   seat: KnessetFilledSeat
   locale: AppLocale
@@ -872,6 +878,10 @@ function SwingSeatPortrait({
   onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
   onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void
   onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchMove: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchCancel: () => void
 }) {
   const isMember = seat.kind === 'member'
   const isPlaceholder = seat.kind === 'placeholder'
@@ -890,6 +900,10 @@ function SwingSeatPortrait({
       onBlur={onBlur}
       onMouseMove={onMove}
       onPointerDown={onPointerDown}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchCancel}
       aria-label={
         isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
       }
@@ -909,6 +923,10 @@ function PartySwingSeatsOverlay({
   onMove,
   onBlur,
   onPointerDown,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  onTouchCancel,
 }: {
   swing: NonNullable<ReturnType<typeof computePartySwingSeats>>
   locale: AppLocale
@@ -919,6 +937,10 @@ function PartySwingSeatsOverlay({
   onMove: (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
   onBlur: (e: React.FocusEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
   onPointerDown: (e: React.PointerEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+  onTouchStart: (e: React.TouchEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+  onTouchMove: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => void
+  onTouchCancel: () => void
 }) {
   if (swing.nextOut.length === 0 && swing.atRiskIn.length === 0) return null
 
@@ -952,6 +974,10 @@ function PartySwingSeatsOverlay({
                       onMove={(e) => onMove(e, seat)}
                       onBlur={(e) => onBlur(e, seat)}
                       onPointerDown={(e) => onPointerDown(e, seat)}
+                      onTouchStart={(e) => onTouchStart(e, seat)}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={(e) => onTouchEnd(e, seat)}
+                      onTouchCancel={onTouchCancel}
                     />
                   ))}
                 </div>
@@ -977,6 +1003,10 @@ function PartySwingSeatsOverlay({
                       onMove={(e) => onMove(e, seat)}
                       onBlur={(e) => onBlur(e, seat)}
                       onPointerDown={(e) => onPointerDown(e, seat)}
+                      onTouchStart={(e) => onTouchStart(e, seat)}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={(e) => onTouchEnd(e, seat)}
+                      onTouchCancel={onTouchCancel}
                     />
                   ))}
                 </div>
@@ -1003,6 +1033,10 @@ function SeatPortrait({
   onMove,
   onBlur,
   onPointerDown,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  onTouchCancel,
 }: {
   seat: KnessetFilledSeat
   visualState: KnessetSeatFilterVisualState
@@ -1013,6 +1047,10 @@ function SeatPortrait({
   onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
   onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void
   onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchMove: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => void
+  onTouchCancel: () => void
 }) {
   const isMember = seat.kind === 'member'
   const isPlaceholder = seat.kind === 'placeholder'
@@ -1039,6 +1077,10 @@ function SeatPortrait({
       onBlur={onBlur}
       onMouseMove={onMove}
       onPointerDown={onPointerDown}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchCancel}
       aria-label={
         isMember ? memberTooltipName(seat.member, locale) : displayParty(seat.partyKey)
       }
@@ -1084,6 +1126,8 @@ export function PollSummaryKnessetSeatMap({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressSeatOpenRef = useRef(false)
   const tooltipPortalRef = useRef<HTMLDivElement | null>(null)
+  const touchGestureRef = useRef<{ startX: number; startY: number; moved: boolean } | null>(null)
+  const suppressTouchMouseUntilRef = useRef(0)
 
   useEffect(() => {
     pinnedSeatIdRef.current = pinnedSeatId
@@ -1355,12 +1399,16 @@ export function PollSummaryKnessetSeatMap({
 
   const showTooltipAt = useCallback(
     (
-      e: React.MouseEvent<HTMLButtonElement> | React.PointerEvent<HTMLButtonElement>,
+      e:
+        | React.MouseEvent<HTMLButtonElement>
+        | React.PointerEvent<HTMLButtonElement>
+        | React.TouchEvent<HTMLButtonElement>,
       seat: KnessetFilledSeat,
     ) => {
       const rect = e.currentTarget.getBoundingClientRect()
-      const x = rect.width > 0 ? rect.left + rect.width / 2 : e.clientX
-      const y = rect.height > 0 ? rect.top + rect.height / 2 : e.clientY
+      const fallbackPoint = 'changedTouches' in e ? e.changedTouches[0] : e
+      const x = rect.width > 0 ? rect.left + rect.width / 2 : fallbackPoint?.clientX ?? 0
+      const y = rect.height > 0 ? rect.top + rect.height / 2 : fallbackPoint?.clientY ?? 0
       setTooltip({
         seat,
         x,
@@ -1373,7 +1421,7 @@ export function PollSummaryKnessetSeatMap({
 
   const handleSeatPointerEnter = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
-      if (suppressSeatOpenRef.current) return
+      if (suppressSeatOpenRef.current || Date.now() < suppressTouchMouseUntilRef.current) return
       if (pinnedSeatIdRef.current && pinnedSeatIdRef.current !== seat.slot.id) return
 
       clearCloseTimer()
@@ -1391,7 +1439,7 @@ export function PollSummaryKnessetSeatMap({
 
   const handleSeatPointerMove = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
-      if (suppressSeatOpenRef.current) return
+      if (suppressSeatOpenRef.current || Date.now() < suppressTouchMouseUntilRef.current) return
       if (pinnedSeatIdRef.current && pinnedSeatIdRef.current !== seat.slot.id) return
       showTooltipAt(e, seat)
     },
@@ -1409,11 +1457,36 @@ export function PollSummaryKnessetSeatMap({
     [scheduleTooltipClose],
   )
 
-  const handleSeatPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
-      if (e.pointerType !== 'touch') return
-      if (suppressSeatOpenRef.current) return
-      if (pinnedSeatIdRef.current && pinnedSeatIdRef.current !== seat.slot.id) return
+  const handleSeatPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType === 'touch') suppressTouchMouseUntilRef.current = Date.now() + TOOLTIP_TOUCH_MOUSE_SUPPRESS_MS
+  }, [])
+
+  const handleSeatTouchStart = useCallback((e: React.TouchEvent<HTMLButtonElement>) => {
+    const touch = e.touches[0]
+    if (!touch) return
+    suppressTouchMouseUntilRef.current = Date.now() + TOOLTIP_TOUCH_MOUSE_SUPPRESS_MS
+    touchGestureRef.current = { startX: touch.clientX, startY: touch.clientY, moved: false }
+  }, [])
+
+  const handleSeatTouchMove = useCallback((e: React.TouchEvent<HTMLButtonElement>) => {
+    const gesture = touchGestureRef.current
+    const touch = e.touches[0]
+    if (!gesture || !touch || gesture.moved) return
+    if (
+      Math.hypot(touch.clientX - gesture.startX, touch.clientY - gesture.startY) >
+      TOOLTIP_TOUCH_MOVE_THRESHOLD_PX
+    ) {
+      gesture.moved = true
+      tooltipKeepAliveRef.current = false
+    }
+  }, [])
+
+  const handleSeatTouchEnd = useCallback(
+    (e: React.TouchEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
+      const gesture = touchGestureRef.current
+      touchGestureRef.current = null
+      suppressTouchMouseUntilRef.current = Date.now() + TOOLTIP_TOUCH_MOUSE_SUPPRESS_MS
+      if (!gesture || gesture.moved || suppressSeatOpenRef.current) return
 
       clearCloseTimer()
       tooltipKeepAliveRef.current = true
@@ -1422,6 +1495,12 @@ export function PollSummaryKnessetSeatMap({
     },
     [clearCloseTimer, showTooltipAt],
   )
+
+  const handleSeatTouchCancel = useCallback(() => {
+    touchGestureRef.current = null
+    tooltipKeepAliveRef.current = false
+    suppressTouchMouseUntilRef.current = Date.now() + TOOLTIP_TOUCH_MOUSE_SUPPRESS_MS
+  }, [])
 
   const handleTooltipPointerEnter = useCallback(() => {
     clearCloseTimer()
@@ -1523,7 +1602,11 @@ export function PollSummaryKnessetSeatMap({
                   onLeave={handleSeatPointerLeave}
                   onMove={(e) => handleSeatPointerMove(e, seat)}
                   onBlur={handleSeatBlur}
-                  onPointerDown={(e) => handleSeatPointerDown(e, seat)}
+                  onPointerDown={handleSeatPointerDown}
+                  onTouchStart={handleSeatTouchStart}
+                  onTouchMove={handleSeatTouchMove}
+                  onTouchEnd={(e) => handleSeatTouchEnd(e, seat)}
+                  onTouchCancel={handleSeatTouchCancel}
                 />
               ))}
             </div>
@@ -1550,7 +1633,11 @@ export function PollSummaryKnessetSeatMap({
                   onLeave={handleSeatPointerLeave}
                   onMove={handleSeatPointerMove}
                   onBlur={handleSeatBlur}
-                  onPointerDown={handleSeatPointerDown}
+                  onPointerDown={(e) => handleSeatPointerDown(e)}
+                  onTouchStart={handleSeatTouchStart}
+                  onTouchMove={handleSeatTouchMove}
+                  onTouchEnd={handleSeatTouchEnd}
+                  onTouchCancel={handleSeatTouchCancel}
                 />,
                 swingPortalEl,
               )
@@ -1580,4 +1667,4 @@ export function PollSummaryKnessetSeatMap({
       )}
     </div>
   )
-  }
+                  }
