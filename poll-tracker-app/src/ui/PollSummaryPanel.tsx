@@ -897,6 +897,12 @@ export function PollSummaryPanel({
     })
   }, [])
   const clearExcluded = useCallback(() => setExcludedOutlets(new Set()), [])
+  const soloOutlet = useCallback(
+    (outlet: string) => {
+      setExcludedOutlets(new Set(allOutletKeys.filter((o) => o !== outlet)))
+    },
+    [allOutletKeys],
+  )
 
   const summary = useMemo(() => summaryFromRollingRows(filteredRows), [filteredRows])
   const trendPanelTitle = useMemo(() => {
@@ -1339,6 +1345,8 @@ export function PollSummaryPanel({
               allOutlets={allOutletKeys}
               excludedOutlets={excludedOutlets}
               onToggleOutlet={toggleOutlet}
+              onSoloOutlet={soloOutlet}
+              onClearOutletFilter={clearExcluded}
               avgCoalition={summary.avgCoalition}
               avgOpposition={summary.avgOpposition}
               avgArabs={summary.avgArabs}
