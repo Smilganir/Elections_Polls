@@ -106,6 +106,12 @@ export type UiStrings = {
   pollSummaryHeroPartiesChartOutletsAria: string
   pollSummaryHeroPartiesChartOutletExcludeAria: string
   pollSummaryHeroPartiesChartOutletIncludeAria: string
+  /** Long-press / Shift+click solo action label */
+  pollSummaryHeroPartiesChartOutletSoloAria: string
+  /** Clear solo/exclusions and show every outlet */
+  pollSummaryHeroPartiesChartOutletShowAllAria: string
+  /** Per-chip tooltip explaining tap vs long-press */
+  pollSummaryHeroPartiesChartOutletTooltip: string
   /** Hint under chart popup title (outlet icon toggle) */
   pollSummaryHeroPartiesChartOutletHint: string
   /** Hero chart dialog info button */
@@ -359,12 +365,16 @@ export const UI: Record<AppLocale, UiStrings> = {
       'Outlets in the rolling window; click to include or exclude from the average',
     pollSummaryHeroPartiesChartOutletExcludeAria: 'Exclude {outlet} from average',
     pollSummaryHeroPartiesChartOutletIncludeAria: 'Include {outlet} in average',
+    pollSummaryHeroPartiesChartOutletSoloAria: 'Show only {outlet}',
+    pollSummaryHeroPartiesChartOutletShowAllAria: 'Show all outlets',
+    pollSummaryHeroPartiesChartOutletTooltip:
+      'Click: exclude or include in the average. Long-press or Shift+click: show only this outlet',
     pollSummaryHeroPartiesChartOutletHint:
-      'Click an outlet icon to include or exclude it from the average',
+      'Click an outlet to exclude or include it in the average · Long-press to show only that outlet',
     pollSummaryHeroPartiesChartInfoAria: 'Methodology and how to use this chart',
     pollSummaryHeroPartiesChartInfoTitle: 'Methodology & how to read',
     pollSummaryHeroPartiesChartInfoBulletWindow:
-      'Shows the latest poll from each outlet in the last {n} days. Tap an outlet icon to include or exclude it from the averages.',
+      'Shows the latest poll from each outlet in the last {n} days. Tap an outlet icon to exclude or re-include it in the averages; long-press (or Shift+click) an icon to show only that outlet, and long-press it again to bring every outlet back.',
     pollSummaryHeroPartiesChartInfoBulletBars:
       'Bars show each party’s mean seat count across included outlets (one decimal). The number in parentheses is that average rounded to whole seats for the hemicycle map.',
     pollSummaryHeroPartiesChartInfoBulletDelta:
@@ -597,12 +607,16 @@ export const UI: Record<AppLocale, UiStrings> = {
       'ערוצים בחלון הסקרים; לחיצה לכלילה או הוצאה מהממוצע',
     pollSummaryHeroPartiesChartOutletExcludeAria: 'הוצא את {outlet} מהממוצע',
     pollSummaryHeroPartiesChartOutletIncludeAria: 'כלול את {outlet} בממוצע',
+    pollSummaryHeroPartiesChartOutletSoloAria: 'הצג רק את {outlet}',
+    pollSummaryHeroPartiesChartOutletShowAllAria: 'הצג את כל הערוצים',
+    pollSummaryHeroPartiesChartOutletTooltip:
+      'לחיצה: הוצאה או החזרה מהממוצע · לחיצה ארוכה או Shift+לחיצה: רק ערוץ זה',
     pollSummaryHeroPartiesChartOutletHint:
-      'לחצו על ערוץ כדי לכלול או להוציא אותו מהממוצע',
+      'לחיצה על ערוץ מוציאה או מחזירה אותו מהממוצע · לחיצה ארוכה מציגה רק אותו',
     pollSummaryHeroPartiesChartInfoAria: 'מתודולוגיה והסבר על השימוש בגרף',
     pollSummaryHeroPartiesChartInfoTitle: 'מתודולוגיה ואיך לקרוא',
     pollSummaryHeroPartiesChartInfoBulletWindow:
-      'מוצג הסקר האחרון מכל ערוץ ב-{n} הימים האחרונים. לחצו על אייקון ערוץ כדי לכלול או להוציא אותו מהממוצע.',
+      'מוצג הסקר האחרון מכל ערוץ ב-{n} הימים האחרונים. לחיצה על אייקון ערוץ מוציאה או מחזירה אותו מהממוצע; לחיצה ארוכה (או Shift+לחיצה) מציגה רק אותו, ולחיצה ארוכה נוספת מחזירה את כל הערוצים.',
     pollSummaryHeroPartiesChartInfoBulletBars:
       'העמודות מציגות ממוצע מנדטים לפי מפלגה בין הערוצים שנבחרו (ספרה עשרונית אחת). המספר בסוגריים הוא העיגול למנדטים שלמים למפת המושבים.',
     pollSummaryHeroPartiesChartInfoBulletDelta:
