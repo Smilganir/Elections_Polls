@@ -71,6 +71,7 @@ SPREADSHEET_ID = '1RIqzrv_ViVWBqeXkM-rOAvusoXryyRFX5Xmu2S-uEw4'
 KEY_FILE = str(_REPO_DIR / 'google-sheets-service-account.json')
 DATA_URL = 'https://themadad.com/allpolls/'
 FINGERPRINT_FILE = str(_REPO_DIR / '.themadad-fingerprint')
+HISTORY_SEED_FILE = _REPO_DIR / 'themadad-polls-history-seed.csv'
 
 ORIGINAL_SHEET_RANGE = "'Elections Polls Data'!A1"
 UNPIVOT_SHEET_RANGE = "'UnpivotData'!A1"
@@ -338,6 +339,29 @@ def _wide_polls_from_html(html: str, *, verbose: bool = False) -> pd.DataFrame |
     return data_df
 
 
+def merge_with_history_seed(data_df: pd.DataFrame) -> pd.DataFrame:
+    """Keep the long poll history when themadad serves only its recent window."""
+    if not HISTORY_SEED_FILE.exists():
+        return data_df
+
+    seed = pd.read_csv(HISTORY_SEED_FILE, encoding='utf-8-sig')
+    for column in HEADERS:
+        if column not in seed.columns:
+            seed[column] = ''
+    seed = seed[HEADERS].copy()
+    seed['Poll ID'] = pd.to_numeric(seed['Poll ID'], errors='coerce')
+    seed['Date'] = pd.to_datetime(seed['Date'], errors='coerce', dayfirst=True, format='mixed')
+    seed[VALUE_VARS] = seed[VALUE_VARS].apply(pd.to_numeric, errors='coerce')
+    seed = seed.dropna(subset=['Poll ID', 'Date']).copy()
+    seed['Poll ID'] = seed['Poll ID'].astype(int)
+
+    combined = pd.concat([data_df.assign(_source_order=0), seed.assign(_source_order=1)], ignore_index=True)
+    combined = combined.sort_values(['Poll ID', '_source_order'], ascending=[False, True])
+    combined = combined.drop_duplicates(subset=['Date', 'Media Outlet'], keep='first').copy()
+    combined = combined.drop(columns=['_source_order'])
+    return combined
+
+
 def sync_fingerprint_from_wide(data_df: pd.DataFrame) -> str:
     """
     Stable content fingerprint for the wide table we upload.
@@ -442,6 +466,7 @@ def process_data():
     if data_df is None:
         return None, None, None
 
+    data_df = merge_with_history_seed(data_df)
     sync_fp = sync_fingerprint_from_wide(data_df)
 
     # Historical average votes per party per media outlet (for rank tie-breaking)
@@ -553,4 +578,3 @@ def upload():
 
 if __name__ == '__main__':
     upload()
-
