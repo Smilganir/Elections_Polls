@@ -10181,3 +10181,17 @@ html[lang='he'] .lpo-rotate-hint-title {
   font-size: 0.66rem;
   font-weight: 500;
 }
+
+/* Desktop candidate hover is intentionally brief; click pins the full card. */
+.lpo-ps-knesset-tooltip--compact { min-width: 10.5rem; overflow: hidden; }
+.lpo-ps-knesset-tooltip--compact .lpo-ps-knesset-tooltip-main { display: block; }
+.lpo-ps-knesset-tooltip-expand {
+  margin: 0.32rem 0 0; padding: 0.22rem 0.52rem;
+  border: 1px solid rgba(168, 184, 204, 0.42); border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06); color: #dce7f5;
+  font: inherit; font-size: 0.66rem; font-weight: 650; line-height: 1.2; cursor: pointer;
+}
+.lpo-ps-knesset-tooltip-expand:hover,
+.lpo-ps-knesset-tooltip-expand:focus-visible {
+  border-color: rgba(168, 184, 204, 0.76); background: rgba(255, 255, 255, 0.12); outline: none;
+}

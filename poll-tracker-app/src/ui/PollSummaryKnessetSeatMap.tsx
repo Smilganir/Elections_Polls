@@ -576,6 +576,8 @@ function KnessetSeatTooltip({
   portalRef,
   onPointerEnter,
   onPointerLeave,
+  expanded,
+  onExpand,
   openLinksInNewTab = false,
 }: {
   tooltip: TooltipState
@@ -588,6 +590,8 @@ function KnessetSeatTooltip({
   portalRef?: (el: HTMLDivElement | null) => void
   onPointerEnter?: () => void
   onPointerLeave?: () => void
+  expanded: boolean
+  onExpand: () => void
   openLinksInNewTab?: boolean
 }) {
   const member = tooltip.seat.kind === 'member' ? tooltip.seat.member : null
@@ -682,6 +686,8 @@ function KnessetSeatTooltip({
         portalRef?.(el)
       }}
       className={`lpo-ps-knesset-tooltip lpo-ps-knesset-tooltip--${placementClass}${
+        expanded ? ' lpo-ps-knesset-tooltip--expanded' : ' lpo-ps-knesset-tooltip--compact'
+      }${
         locale === 'he' ? ' lpo-ps-knesset-tooltip--rtl' : ' lpo-ps-knesset-tooltip--ltr'
       }`}
       style={{
@@ -703,7 +709,7 @@ function KnessetSeatTooltip({
               <p className="lpo-ps-knesset-tooltip-name">{displayParty(tooltip.seat.partyKey)}</p>
             )}
             <p className="lpo-ps-knesset-tooltip-rank">{rankLabel(tooltip.seat)}</p>
-            <p className="lpo-ps-knesset-tooltip-meta">
+            {expanded ? <p className="lpo-ps-knesset-tooltip-meta">
               <span
                 className="lpo-ps-knesset-tooltip-segment"
                 style={{ color: SEGMENT_COLORS[tooltip.seat.segment] }}
@@ -718,9 +724,14 @@ function KnessetSeatTooltip({
               >
                 {displayParty(tooltip.seat.partyKey)}
               </span>
-            </p>
+            </p> : null}
+            {!expanded ? (
+              <button type="button" className="lpo-ps-knesset-tooltip-expand" onClick={(event) => { event.stopPropagation(); onExpand() }}>
+                {locale === 'he' ? 'לחצו לפרטים' : 'Click for details'}
+              </button>
+            ) : null}
           </div>
-          {tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
+          {expanded && tooltip.seat.kind === 'member' && tooltip.seat.member.portraitImageUrl ? (
             <div className="lpo-ps-knesset-tooltip-portrait-wrap">
               <img
                 className="lpo-ps-knesset-tooltip-portrait"
@@ -738,7 +749,7 @@ function KnessetSeatTooltip({
               />
             </div>
           ) : null}
-          {member ? (
+          {expanded && member ? (
             <MemberTooltipDetails
               member={member}
               locale={locale}
@@ -1033,6 +1044,7 @@ function SeatPortrait({
   onMove,
   onBlur,
   onPointerDown,
+  onClick,
   onTouchStart,
   onTouchMove,
   onTouchEnd,
@@ -1047,6 +1059,7 @@ function SeatPortrait({
   onMove: (e: React.MouseEvent<HTMLButtonElement>) => void
   onBlur: (e: React.FocusEvent<HTMLButtonElement>) => void
   onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
   onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => void
   onTouchMove: (e: React.TouchEvent<HTMLButtonElement>) => void
   onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => void
@@ -1077,6 +1090,7 @@ function SeatPortrait({
       onBlur={onBlur}
       onMouseMove={onMove}
       onPointerDown={onPointerDown}
+      onClick={onClick}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -1461,6 +1475,17 @@ export function PollSummaryKnessetSeatMap({
     if (e.pointerType === 'touch') suppressTouchMouseUntilRef.current = Date.now() + TOOLTIP_TOUCH_MOUSE_SUPPRESS_MS
   }, [])
 
+  const pinTooltip = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, seat: KnessetFilledSeat) => {
+      if (Date.now() < suppressTouchMouseUntilRef.current) return
+      clearCloseTimer()
+      tooltipKeepAliveRef.current = true
+      setPinnedSeatId(seat.slot.id)
+      showTooltipAt(e, seat)
+    },
+    [clearCloseTimer, showTooltipAt],
+  )
+
   const handleSeatTouchStart = useCallback((e: React.TouchEvent<HTMLButtonElement>) => {
     const touch = e.touches[0]
     if (!touch) return
@@ -1603,6 +1628,7 @@ export function PollSummaryKnessetSeatMap({
                   onMove={(e) => handleSeatPointerMove(e, seat)}
                   onBlur={handleSeatBlur}
                   onPointerDown={handleSeatPointerDown}
+                  onClick={(e) => pinTooltip(e, seat)}
                   onTouchStart={handleSeatTouchStart}
                   onTouchMove={handleSeatTouchMove}
                   onTouchEnd={(e) => handleSeatTouchEnd(e, seat)}
@@ -1658,6 +1684,12 @@ export function PollSummaryKnessetSeatMap({
                   }}
                   onPointerEnter={handleTooltipPointerEnter}
                   onPointerLeave={handleTooltipPointerLeave}
+                  expanded={pinnedSeatId === tooltip.seat.slot.id}
+                  onExpand={() => {
+                    clearCloseTimer()
+                    tooltipKeepAliveRef.current = true
+                    setPinnedSeatId(tooltip.seat.slot.id)
+                  }}
                   openLinksInNewTab
                 />,
                 document.body,
