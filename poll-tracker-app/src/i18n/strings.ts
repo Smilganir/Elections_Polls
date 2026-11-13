@@ -92,6 +92,17 @@ export type UiStrings = {
   pollSummaryToolbarChartLabel: string
   /** Second line on hero chart button — opens seat map + bars */
   pollSummaryToolbarChartSeatsLabel: string
+  actualResultsBtnLabel: string
+  actualResultsBtnAria: string
+  actualResultsTitle: string
+  actualResultsSource: string
+  actualResultsColParty: string
+  actualResultsColActual: string
+  actualResultsColLastPoll: string
+  actualResultsColDiff: string
+  actualResultsNoInfo: string
+  actualResultsPollsCount: string
+  actualResultsFootnote: string
   /** Short label above outlet filter toolbar button (unified table header) */
   pollSummaryToolbarFilterLabel: string
   /** Open cross-outlet average party bar chart (hero) */
@@ -353,6 +364,17 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroChipDeltaColorLegend: 'Green/red = change vs prior poll',
     pollSummaryToolbarChartLabel: 'Chart',
     pollSummaryToolbarChartSeatsLabel: '+ Seats',
+    actualResultsBtnLabel: 'Results',
+    actualResultsBtnAria: 'Show or hide the actual election results',
+    actualResultsTitle: 'Actual results vs. last poll',
+    actualResultsSource: 'Official final results, Central Elections Committee (election day 27.10.2026)',
+    actualResultsColParty: 'Party',
+    actualResultsColActual: 'Actual seats',
+    actualResultsColLastPoll: 'Last poll',
+    actualResultsColDiff: 'Result vs poll',
+    actualResultsNoInfo: 'No data',
+    actualResultsPollsCount: '{n} polls',
+    actualResultsFootnote: 'Last poll = the party’s most recent poll on or before election day (27.10.2026); when several outlets polled that day, the average of that day is shown. Date shown under each value.',
     pollSummaryToolbarFilterLabel: 'Filter',
     pollSummaryHeroPartiesChartOpenAria:
       'Show cross-outlet party averages with Knesset seat map and bar chart',
@@ -595,6 +617,17 @@ export const UI: Record<AppLocale, UiStrings> = {
     pollSummaryHeroChipDeltaColorLegend: 'ירוק/אדום = שינוי מול סקר קודם',
     pollSummaryToolbarChartLabel: 'גרף',
     pollSummaryToolbarChartSeatsLabel: '+מושבים',
+    actualResultsBtnLabel: 'תוצאות',
+    actualResultsBtnAria: 'הצגה או הסתרה של תוצאות הבחירות בפועל',
+    actualResultsTitle: 'תוצאות אמת מול הסקר האחרון',
+    actualResultsSource: 'תוצאות סופיות רשמיות, ועדת הבחירות המרכזית (יום הבחירות 27.10.2026)',
+    actualResultsColParty: 'מפלגה',
+    actualResultsColActual: 'מנדטים בפועל',
+    actualResultsColLastPoll: 'סקר אחרון',
+    actualResultsColDiff: 'פער תוצאה מסקר',
+    actualResultsNoInfo: 'אין מידע',
+    actualResultsPollsCount: '{n} סקרים',
+    actualResultsFootnote: 'סקר אחרון = הסקר האחרון של המפלגה עד יום הבחירות (27.10.2026); כשכמה ערוצים פרסמו באותו יום מוצג ממוצע אותו יום. התאריך מופיע מתחת לכל ערך.',
     pollSummaryToolbarFilterLabel: 'סינון',
     pollSummaryHeroPartiesChartOpenAria:
       'הצג ממוצע מנדטים לפי מפלגה עם מפת 120 מושבים וגרף מנדטים',

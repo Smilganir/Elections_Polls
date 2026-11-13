@@ -35,6 +35,8 @@ import {
   PollSummaryHeroPartiesChartPopup,
 } from './PollSummaryHeroPartiesChartPopup'
 import { useHeroPartiesChartOverlay } from './HeroPartiesChartOverlayContext'
+import { KnessetBuildingIcon } from './KnessetBuildingIcon'
+import { PollSummaryActualResults } from './PollSummaryActualResults'
 import { mediaBiasAppUrl } from '../utils/publicUrl'
 import { DeltaBadge, PollSummaryHeroBlocBar, PsSegmentBar } from './PollSummaryBlocBar'
 
@@ -763,6 +765,31 @@ function PollSummaryChipsStrip({
   )
 }
 
+function ActualResultsButton({
+  onClick,
+  pressed,
+  ariaLabel,
+  label,
+}: {
+  onClick: () => void
+  pressed: boolean
+  ariaLabel: string
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      className={'lpo-ps-actual-btn' + (pressed ? ' lpo-ps-actual-btn--on' : '')}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={pressed}
+    >
+      <KnessetBuildingIcon className="lpo-ps-actual-btn-icon" />
+      <span className="lpo-ps-actual-btn-label">{label}</span>
+    </button>
+  )
+}
+
 export function PollSummaryPanel({
   rows,
   pollHistory,
@@ -781,6 +808,7 @@ export function PollSummaryPanel({
   const { open: heroPartiesChartOpen, setOpen: setHeroPartiesChartOpen } =
     useHeroPartiesChartOverlay()
 
+  const [showActualResults, setShowActualResults] = useState(false)
   const [excludedOutlets, setExcludedOutlets] = useState<Set<string>>(() => new Set())
   const allOutletKeys = useMemo(() => rows.map((r) => r.current.mediaOutlet), [rows])
   const filteredRows = useMemo(
@@ -1242,6 +1270,14 @@ export function PollSummaryPanel({
                   />
                 </div>
               </div>
+              <div className="lpo-ps-hero-parties-end-col">
+                <ActualResultsButton
+                  onClick={() => setShowActualResults((v) => !v)}
+                  pressed={showActualResults}
+                  ariaLabel={t.actualResultsBtnAria}
+                  label={t.actualResultsBtnLabel}
+                />
+              </div>
               <div
                 ref={heroPartiesWrapRef}
                 className="lpo-ps-hero-parties-wrap lpo-ps-hero-parties-wrap--hero-centered"
@@ -1328,6 +1364,15 @@ export function PollSummaryPanel({
                 </p>
               ) : null}
             </div>
+          ) : null}
+          {showActualResults && heroAvgChips ? (
+            <PollSummaryActualResults
+              polls={pollHistory ?? []}
+              partyOrder={unifiedPartyOrder}
+              locale={locale}
+              t={t}
+              displayParty={displayParty}
+            />
           ) : null}
           {heroAvgChips ? (
             <PollSummaryHeroPartiesChartPopup

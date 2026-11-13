@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import { SPARKLINE_PARTY_DEBUT_DATE } from '../config/mappings'
-import { ageDaysPollToToday } from './pollRollingWindow'
+import { ageDaysPollToToday, pollReferenceToday } from './pollRollingWindow'
 
 export type PartyTrendPoint = { date: string; votes: number; pollId: number }
 
@@ -46,7 +46,7 @@ export function buildPartyCrossOutletAverageTrendSeries(
   party: string,
   maxStaleDays: number,
   allowedOutlets?: ReadonlySet<string>,
-  today = new Date(),
+  today = pollReferenceToday(),
 ): PartyTrendPoint[] {
   const debutStr = SPARKLINE_PARTY_DEBUT_DATE[party]
   const debut = debutStr ? dayjs(debutStr) : null

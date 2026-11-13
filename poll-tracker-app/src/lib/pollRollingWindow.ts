@@ -22,8 +22,17 @@ function parseSheetDate(s: string): number | null {
   return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
 }
 
+/** Election day (Knesset 26). The poll window never extends past it. */
+export const ELECTION_DAY_ISO = '2026-10-27'
+
+/** Reference "today" for rolling windows: now, capped at election day (27.10.2026). */
+export function pollReferenceToday(now = new Date()): Date {
+  const election = new Date(`${ELECTION_DAY_ISO}T12:00:00Z`)
+  return now.getTime() > election.getTime() ? election : now
+}
+
 /** Calendar days from poll date (sheet) to today, UTC (matches summarize-latest-blocs). */
-export function ageDaysPollToToday(pollDateStr: string, today = new Date()): number {
+export function ageDaysPollToToday(pollDateStr: string, today = pollReferenceToday()): number {
   const pollT = parseSheetDate(pollDateStr)
   if (pollT === null) return Infinity
   const diff = utcDayStart(today) - pollT
@@ -482,7 +491,7 @@ export function isPartySeatColumnOutlier(
 export function buildRollingWindowReport(
   polls: RollingPoll[],
   maxStaleDays: number,
-  today = new Date(),
+  today = pollReferenceToday(),
 ): { rows: RollingWindowRow[]; summary: RollingWindowSummary } {
   const byOutlet = new Map<string, RollingPoll[]>()
   for (const p of polls) {

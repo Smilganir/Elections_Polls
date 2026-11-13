@@ -10195,3 +10195,244 @@ html[lang='he'] .lpo-rotate-hint-title {
 .lpo-ps-knesset-tooltip-expand:focus-visible {
   border-color: rgba(168, 184, 204, 0.76); background: rgba(255, 255, 255, 0.12); outline: none;
 }
+
+/* ── Actual election results (Knesset button + panel) ─────────────────────── */
+.lpo-ps-hero-parties-outer {
+  padding-inline-end: var(--lpo-ps-hero-chart-btn-pad-inline, 0.35rem);
+}
+
+.lpo-ps-hero-parties-end-col {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 0.28rem;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.lpo-ps-hero-parties-end-col .lpo-ps-actual-btn {
+  pointer-events: auto;
+}
+
+.lpo-ps-actual-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 8px;
+  border: 1px solid rgba(90, 158, 248, 0.55);
+  background: linear-gradient(165deg, rgba(26, 45, 74, 0.98) 0%, rgba(16, 28, 46, 0.98) 100%);
+  color: #cfd6e0;
+  box-shadow:
+    0 0 0 1px rgba(90, 158, 248, 0.14),
+    0 4px 14px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.lpo-ps-actual-btn:hover,
+.lpo-ps-actual-btn--on {
+  border-color: rgba(140, 195, 255, 0.95);
+  color: #ffffff;
+  background: linear-gradient(165deg, rgba(36, 64, 104, 0.98) 0%, rgba(22, 40, 66, 0.98) 100%);
+}
+
+.lpo-ps-actual-btn:focus-visible {
+  outline: 2px solid #8cc3ff;
+  outline-offset: 2px;
+}
+
+.lpo-ps-actual-btn-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+}
+
+.lpo-ps-actual-btn-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 1100px) {
+  .lpo-ps-hero-parties-outer {
+    --lpo-ps-hero-chart-btn-pad-inline: 3.85rem;
+    padding-inline-end: 3.85rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .lpo-ps-hero-parties-end-col {
+    z-index: 5;
+  }
+  .lpo-ps-actual-btn {
+    width: 3.15rem;
+    height: 3.15rem;
+  }
+}
+
+.lpo-ps-actual {
+  width: 100%;
+  max-width: 44rem;
+  margin: 0.9rem auto 0.2rem;
+  padding: 0.7rem 0.8rem 0.6rem;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid rgba(90, 158, 248, 0.3);
+  background: rgba(10, 18, 32, 0.55);
+}
+
+.lpo-ps-actual-title {
+  margin: 0 0 0.15rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e8f2ff;
+  text-align: center;
+}
+
+.lpo-ps-actual-source {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.lpo-ps-actual-source a {
+  color: #8fb4de;
+}
+
+.lpo-ps-actual-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.lpo-ps-actual-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lpo-ps-actual-row--head {
+  border-top: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #8fa6c2;
+  text-align: center;
+}
+
+.lpo-ps-actual-row--head > span:first-child {
+  text-align: start;
+}
+
+.lpo-ps-actual-party {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.lpo-ps-actual-ring {
+  flex: 0 0 auto;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: #101a2b;
+  display: block;
+}
+
+.lpo-ps-actual-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lpo-ps-actual-name {
+  font-size: 0.78rem;
+  color: #dbe6f5;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.lpo-ps-actual-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.lpo-ps-actual-num {
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.lpo-ps-actual-num--poll {
+  color: #b9c9de;
+}
+
+.lpo-ps-actual-sub {
+  font-size: 0.6rem;
+  color: #8fa6c2;
+  white-space: nowrap;
+}
+
+.lpo-ps-actual-noinfo {
+  font-size: 0.68rem;
+  color: #7f93ad;
+}
+
+.lpo-ps-actual-diff {
+  font-size: 0.9rem;
+  color: #9fb0c6;
+}
+
+.lpo-ps-actual-diff--up {
+  color: #3ecf74;
+}
+
+.lpo-ps-actual-diff--down {
+  color: #ff5a7a;
+}
+
+.lpo-ps-actual-foot {
+  margin: 0.5rem 0 0;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: #7f93ad;
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .lpo-ps-actual {
+    padding: 0.55rem 0.4rem;
+  }
+  .lpo-ps-actual-row {
+    gap: 0.2rem;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(0, 0.7fr);
+  }
+  .lpo-ps-actual-ring {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .lpo-ps-actual-name {
+    font-size: 0.68rem;
+  }
+  .lpo-ps-actual-sub {
+    font-size: 0.54rem;
+  }
+}
