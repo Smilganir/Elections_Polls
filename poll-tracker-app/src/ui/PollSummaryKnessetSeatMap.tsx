@@ -1117,6 +1117,7 @@ export function PollSummaryKnessetSeatMap({
   onMatchingPartyKeysChange,
   mergeArabsWithOpposition = false,
   stageOverlay,
+  showPartySwing = true,
 }: {
   poll: RollingPoll
   displayParty: (partyKey: string) => string
@@ -1128,6 +1129,8 @@ export function PollSummaryKnessetSeatMap({
   mergeArabsWithOpposition?: boolean
   /** Rendered inside the map stage (same % coords as seats) — e.g. bloc + party table. */
   stageOverlay?: ReactNode
+  /** Swing (מתנדנדים) in/out panel — poll-projection only, hidden in official-results mode. */
+  showPartySwing?: boolean
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [members, setMembers] = useState<KnessetMemberRow[] | null>(null)
@@ -1194,9 +1197,9 @@ export function PollSummaryKnessetSeatMap({
   const focusedPartyKey = activeFilters.find((f) => f.kind === 'party')?.partyKey ?? null
 
   const partySwing = useMemo(() => {
-    if (!focusedPartyKey || !members) return null
+    if (!showPartySwing || !focusedPartyKey || !members) return null
     return computePartySwingSeats(focusedPartyKey, seats, membersByParty)
-  }, [focusedPartyKey, seats, membersByParty, members])
+  }, [showPartySwing, focusedPartyKey, seats, membersByParty, members])
 
   const [swingPortalEl, setSwingPortalEl] = useState<HTMLElement | null>(null)
 

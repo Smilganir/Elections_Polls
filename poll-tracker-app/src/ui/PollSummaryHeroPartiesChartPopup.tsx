@@ -1286,6 +1286,7 @@ export function PollSummaryHeroPartiesChartPopup({
               onMapFiltersChange={setMapFilters}
               onMatchingPartyKeysChange={setMatchingPartyKeys}
               mergeArabsWithOpposition={combineArabsWithOpposition}
+              showPartySwing={!resultsMode}
               stageOverlay={
                 <div className="lpo-ps-hero-chart-center-stack">
                   <div className="lpo-ps-hero-chart-table lpo-ps-hero-chart-table--inset" dir="ltr">
