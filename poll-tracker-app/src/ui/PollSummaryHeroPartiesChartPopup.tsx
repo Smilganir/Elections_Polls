@@ -5,23 +5,56 @@ import type { UiStrings } from '../i18n/strings'
 import {
   MEDIA_ICON_MAP,
   PARTY_COLOR_MAP,
+  PARTY_SEGMENT_BY_KEY,
   SEGMENT_COLORS,
 } from '../config/mappings'
 import { seatCountsByParty } from '../lib/knessetSeatAllocation'
+import {
+  KNESSET26_OFFICIAL_BY_PARTY_KEY,
+} from '../data/knesset26OfficialResults'
 import {
   filtersInclude,
   toggleMapFilter,
   type KnessetMapFilters,
   type KnessetMapFocusItem,
 } from '../lib/knessetSeatDemographics'
-import type { ChangedParty, RollingPoll } from '../lib/pollRollingWindow'
+import type { ChangedParty, RollingPoll, RollingPollParty } from '../lib/pollRollingWindow'
+import { ELECTION_DAY_ISO } from '../lib/pollRollingWindow'
 import type { Segment } from '../types/data'
 import { PollSummaryHeroBlocBar } from './PollSummaryBlocBar'
 import { PollSummaryKnessetFiltersPane } from './PollSummaryKnessetFiltersPane'
 import { HeroChartPartyMark } from './HeroChartPartyMark'
 import { IconWithFallback } from './IconWithFallback'
 import { PollSummaryKnessetSeatMap } from './PollSummaryKnessetSeatMap'
+import { KnessetBuildingIcon } from './KnessetBuildingIcon'
 import { AppFooter } from './AppFooter'
+
+/**
+ * Synthetic poll carrying the official K26 final results (seats as whole numbers).
+ * The seats sum to exactly 120, so `roundSeatsTo120` reproduces them one-to-one and
+ * the hemicycle, party bars and bloc bar all render the actual Knesset.
+ */
+const OFFICIAL_RESULTS_POLL: RollingPoll = (() => {
+  const parties: RollingPollParty[] = Object.entries(KNESSET26_OFFICIAL_BY_PARTY_KEY)
+    .filter(([, r]) => r.seats > 0)
+    .map(([party, r], i) => ({
+      party,
+      votes: r.seats,
+      segment: PARTY_SEGMENT_BY_KEY[party] ?? 'Opposition',
+      partyId: 10_000 + i,
+    }))
+  const sumSegment = (segment: Segment) =>
+    parties.filter((p) => p.segment === segment).reduce((s, p) => s + p.votes, 0)
+  return {
+    pollId: -1,
+    date: ELECTION_DAY_ISO,
+    mediaOutlet: 'official-results',
+    coalitionTotal: sumSegment('Coalition'),
+    oppositionTotal: sumSegment('Opposition'),
+    arabsTotal: sumSegment('Arabs'),
+    parties,
+  }
+})()
 
 const HERO_CHART_SCALE_BAND_MIN_PX = 769
 const HERO_CHART_STAGE_WIDTH_PX = 1440
@@ -684,6 +717,9 @@ export function PollSummaryOutletFilterStrip({
   t,
   className,
   stripRef,
+  resultsMode,
+  onShowResults,
+  onShowPolls,
 }: {
   allOutlets: readonly string[]
   excludedOutlets: ReadonlySet<string>
@@ -696,6 +732,12 @@ export function PollSummaryOutletFilterStrip({
   t: UiStrings
   className?: string
   stripRef?: RefObject<HTMLDivElement | null>
+  /** Official-results mode: results icon pressed, outlet icons dimmed */
+  resultsMode?: boolean
+  /** Switch the chart to official results */
+  onShowResults?: () => void
+  /** Switch the chart back to polls (fired by any outlet interaction in results mode) */
+  onShowPolls?: () => void
 }) {
   const includedOutletCount = useMemo(
     () => allOutlets.filter((outlet) => !excludedOutlets.has(outlet)).length,
@@ -718,6 +760,7 @@ export function PollSummaryOutletFilterStrip({
     longPressTimerRef.current = window.setTimeout(() => {
       longPressTimerRef.current = null
       longPressFiredRef.current = true
+      if (resultsMode) onShowPolls?.()
       if (soloed) onClearOutletFilter?.()
       else onSoloOutlet(outlet)
     }, OUTLET_LONG_PRESS_MS)
@@ -730,6 +773,18 @@ export function PollSummaryOutletFilterStrip({
       role="group"
       aria-label={t.pollSummaryHeroPartiesChartOutletsAria}
     >
+      {onShowResults ? (
+        <button
+          type="button"
+          className={`lpo-ps-hero-chart-outlet-btn lpo-ps-hero-chart-outlet-btn--results${resultsMode ? ' lpo-ps-hero-chart-outlet-btn--results-on' : ''}`}
+          aria-pressed={!!resultsMode}
+          aria-label={t.heroChartResultsBtnAria}
+          title={t.heroChartResultsBtnTooltip}
+          onClick={onShowResults}
+        >
+          <KnessetBuildingIcon className="lpo-ps-hero-chart-results-icon" />
+        </button>
+      ) : null}
       {allOutlets.map((outlet) => {
         const included = !excludedOutlets.has(outlet)
         const outletLabel = displayMediaOutlet(outlet)
@@ -751,7 +806,7 @@ export function PollSummaryOutletFilterStrip({
           <button
             key={outlet}
             type="button"
-            className={`lpo-ps-hero-chart-outlet-btn${included ? '' : ' lpo-ps-hero-chart-outlet-btn--excluded'}${soloed ? ' lpo-ps-hero-chart-outlet-btn--solo' : ''}`}
+            className={`lpo-ps-hero-chart-outlet-btn${included ? '' : ' lpo-ps-hero-chart-outlet-btn--excluded'}${soloed ? ' lpo-ps-hero-chart-outlet-btn--solo' : ''}${resultsMode ? ' lpo-ps-hero-chart-outlet-btn--dimmed' : ''}`}
             aria-pressed={included}
             aria-disabled={disableExclude}
             aria-label={`${toggleAria}. ${soloAria}`}
@@ -767,8 +822,13 @@ export function PollSummaryOutletFilterStrip({
                 return
               }
               if (e.shiftKey && onSoloOutlet) {
+                if (resultsMode) onShowPolls?.()
                 if (soloed) onClearOutletFilter?.()
                 else onSoloOutlet(outlet)
+                return
+              }
+              if (resultsMode) {
+                onShowPolls?.()
                 return
               }
               if (disableExclude) return
@@ -1039,11 +1099,14 @@ export function PollSummaryHeroPartiesChartPopup({
   const heroChartCompact = useHeroChartCompact()
   const [mapFilters, setMapFilters] = useState<KnessetMapFilters>([])
   const [matchingPartyKeys, setMatchingPartyKeys] = useState<ReadonlySet<string> | null>(null)
+  /** Official results vs poll average in this chart; results pressed by default (Nir 13.11). */
+  const [resultsMode, setResultsMode] = useState(true)
 
   useEffect(() => {
     if (!open) {
       setMapFilters([])
       setMatchingPartyKeys(null)
+      setResultsMode(true)
     }
   }, [open])
 
@@ -1062,13 +1125,15 @@ export function PollSummaryHeroPartiesChartPopup({
     handleToggleFilter({ kind: 'segment', segment })
   }
 
+  const chartPoll = resultsMode ? OFFICIAL_RESULTS_POLL : current
+
   const rows = useMemo(
     () =>
-      [...current.parties]
+      [...chartPoll.parties]
         .filter((p) => p.votes > 0)
         .sort((a, b) => b.votes - a.votes || a.party.localeCompare(b.party))
         .map((p) => ({ party: p.party, votes: p.votes, segment: p.segment })),
-    [current.parties],
+    [chartPoll.parties],
   )
 
   const maxVotes = useMemo(
@@ -1076,16 +1141,30 @@ export function PollSummaryHeroPartiesChartPopup({
     [rows],
   )
 
-  const seatCounts = useMemo(() => seatCountsByParty(current), [current])
+  const seatCounts = useMemo(() => seatCountsByParty(chartPoll), [chartPoll])
 
-  const windowSuffix = t.pollSummaryHeroPartiesChartWindowSuffix.replace(
-    /\{n\}/g,
-    String(windowDays),
-  )
+  const blocCoalition = resultsMode ? OFFICIAL_RESULTS_POLL.coalitionTotal : avgCoalition
+  const blocOpposition = resultsMode ? OFFICIAL_RESULTS_POLL.oppositionTotal : avgOpposition
+  const blocArabs = resultsMode ? OFFICIAL_RESULTS_POLL.arabsTotal : avgArabs
+  const blocOppositionPlusArabs = resultsMode
+    ? OFFICIAL_RESULTS_POLL.oppositionTotal + OFFICIAL_RESULTS_POLL.arabsTotal
+    : avgOppositionPlusArabs
+  const blocHasPrior = !resultsMode && hasPrior
 
-  const chartTitle = heroChartCompact
-    ? t.pollSummaryHeroPartiesChartTitleCompact
-    : t.pollSummaryHeroPartiesChartTitle
+  const windowSuffix = resultsMode
+    ? ''
+    : t.pollSummaryHeroPartiesChartWindowSuffix.replace(
+        /\{n\}/g,
+        String(windowDays),
+      )
+
+  const chartTitle = resultsMode
+    ? heroChartCompact
+      ? t.heroChartResultsTitleCompact
+      : t.heroChartResultsTitle
+    : heroChartCompact
+      ? t.pollSummaryHeroPartiesChartTitleCompact
+      : t.pollSummaryHeroPartiesChartTitle
 
   if (!open) return null
 
@@ -1095,7 +1174,7 @@ export function PollSummaryHeroPartiesChartPopup({
         className="lpo-ps-hero-chart-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label={`${t.pollSummaryHeroPartiesChartTitle}${windowSuffix}`}
+        aria-label={`${chartTitle}${windowSuffix}`}
         dir={locale === 'he' ? 'rtl' : 'ltr'}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1107,9 +1186,13 @@ export function PollSummaryHeroPartiesChartPopup({
               <span className="lpo-ps-hero-chart-dialog-title-main">
                 {chartTitle}
               </span>
-              <span className="lpo-ps-hero-chart-dialog-title-window">{windowSuffix}</span>
+              <span
+                className={`lpo-ps-hero-chart-dialog-title-window${resultsMode ? ' lpo-ps-hero-chart-dialog-title-window--source' : ''}`}
+              >
+                {resultsMode ? t.actualResultsSource : windowSuffix}
+              </span>
             </h2>
-            {hasPrior && changedParties.length > 0 ? (
+            {!resultsMode && hasPrior && changedParties.length > 0 ? (
               <p
                 className="lpo-ps-hero-chip-outlet-legend lpo-ps-chip-delta-outlets lpo-ps-hero-chart-delta-legend"
                 dir={locale === 'he' ? 'rtl' : 'ltr'}
@@ -1123,7 +1206,7 @@ export function PollSummaryHeroPartiesChartPopup({
               className="lpo-ps-subtitle lpo-ps-subtitle--outlets-trend-hint lpo-ps-hero-chart-outlet-hint"
               dir={locale === 'he' ? 'rtl' : 'ltr'}
             >
-              {t.pollSummaryHeroPartiesChartOutletHint}
+              {resultsMode ? t.heroChartResultsOutletHint : t.pollSummaryHeroPartiesChartOutletHint}
             </p>
             <PollSummaryOutletFilterStrip
               allOutlets={allOutlets}
@@ -1133,19 +1216,22 @@ export function PollSummaryHeroPartiesChartPopup({
               onClearOutletFilter={onClearOutletFilter}
               displayMediaOutlet={displayMediaOutlet}
               t={t}
+              resultsMode={resultsMode}
+              onShowResults={() => setResultsMode(true)}
+              onShowPolls={() => setResultsMode(false)}
             />
             {!heroChartCompact ? (
               <HeroChartBlocSummary
                 t={t}
                 combineArabsWithOpposition={combineArabsWithOpposition}
-                hasPrior={hasPrior}
-                avgCoalition={avgCoalition}
-                avgOpposition={avgOpposition}
-                avgArabs={avgArabs}
-                avgOppositionPlusArabs={avgOppositionPlusArabs}
-                deltaCoalition={deltaCoalition}
-                deltaOpposition={deltaOpposition}
-                deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+                hasPrior={blocHasPrior}
+                avgCoalition={blocCoalition}
+                avgOpposition={blocOpposition}
+                avgArabs={blocArabs}
+                avgOppositionPlusArabs={blocOppositionPlusArabs}
+                deltaCoalition={resultsMode ? 0 : deltaCoalition}
+                deltaOpposition={resultsMode ? 0 : deltaOpposition}
+                deltaOppositionPlusArabs={resultsMode ? 0 : deltaOppositionPlusArabs}
                 focusedSegment={focusedSegment}
                 onToggleSegmentFocus={toggleSegmentFocus}
               />
@@ -1167,14 +1253,14 @@ export function PollSummaryHeroPartiesChartPopup({
               <HeroChartBlocSummary
                 t={t}
                 combineArabsWithOpposition={combineArabsWithOpposition}
-                hasPrior={hasPrior}
-                avgCoalition={avgCoalition}
-                avgOpposition={avgOpposition}
-                avgArabs={avgArabs}
-                avgOppositionPlusArabs={avgOppositionPlusArabs}
-                deltaCoalition={deltaCoalition}
-                deltaOpposition={deltaOpposition}
-                deltaOppositionPlusArabs={deltaOppositionPlusArabs}
+                hasPrior={blocHasPrior}
+                avgCoalition={blocCoalition}
+                avgOpposition={blocOpposition}
+                avgArabs={blocArabs}
+                avgOppositionPlusArabs={blocOppositionPlusArabs}
+                deltaCoalition={resultsMode ? 0 : deltaCoalition}
+                deltaOpposition={resultsMode ? 0 : deltaOpposition}
+                deltaOppositionPlusArabs={resultsMode ? 0 : deltaOppositionPlusArabs}
                 focusedSegment={focusedSegment}
                 onToggleSegmentFocus={toggleSegmentFocus}
               />
@@ -1192,7 +1278,7 @@ export function PollSummaryHeroPartiesChartPopup({
               />
             </div>
             <PollSummaryKnessetSeatMap
-              poll={current}
+              poll={chartPoll}
               displayParty={displayParty}
               locale={locale}
               t={t}
@@ -1209,7 +1295,7 @@ export function PollSummaryHeroPartiesChartPopup({
               const markColor = PARTY_COLOR_MAP[row.party] ?? barColor
               const cp = changedByParty.get(row.party)
               const delta =
-                hasPrior && cp && cp.delta !== 0 ? formatChipNum(Math.abs(cp.delta)) : null
+                !resultsMode && hasPrior && cp && cp.delta !== 0 ? formatChipNum(Math.abs(cp.delta)) : null
               const deltaDir = cp && cp.delta > 0 ? 'up' : 'down'
               const rowFocused = filtersInclude(mapFilters, {
                 kind: 'party',
@@ -1260,9 +1346,11 @@ export function PollSummaryHeroPartiesChartPopup({
                           {formatChipNum(row.votes)}
                         </strong>
                         <span className="lpo-ps-hero-chart-seats-line">
-                          <span className="lpo-ps-hero-chart-seats" title={t.knessetMapListRank.replace(/\{rank\}/g, '1').replace(/\{total\}/g, String(seatCounts.get(row.party) ?? 0))}>
-                            ({seatCounts.get(row.party) ?? 0})
-                          </span>
+                          {resultsMode ? null : (
+                            <span className="lpo-ps-hero-chart-seats" title={t.knessetMapListRank.replace(/\{rank\}/g, '1').replace(/\{total\}/g, String(seatCounts.get(row.party) ?? 0))}>
+                              ({seatCounts.get(row.party) ?? 0})
+                            </span>
+                          )}
                           <span className="lpo-ps-hero-chart-delta-unit" aria-hidden>
                             {t.seats}
                           </span>

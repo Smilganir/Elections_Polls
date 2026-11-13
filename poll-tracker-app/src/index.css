@@ -6415,6 +6415,14 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   color: #9fb3cc;
 }
 
+/* Official-results source note under the chart title: own line, wraps, never clipped. */
+.lpo-ps-hero-chart-dialog-title-window--source {
+  display: block;
+  margin-top: 0.12rem;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
 .lpo-ps-hero-chart-delta-legend {
   margin: -0.15rem 0 0;
   text-align: center;
@@ -6583,6 +6591,34 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 .lpo-ps-hero-chart-outlet-btn--excluded {
   opacity: 0.28;
   filter: grayscale(0.35);
+}
+
+/* Dimmed outlet icons while the chart shows official results (still clickable —
+   clicking any of them returns to the poll average). */
+.lpo-ps-hero-chart-outlet-btn--dimmed {
+  opacity: 0.28;
+  filter: grayscale(0.35);
+}
+
+/* Round "actual results" toggle in the outlet strip — same size as the media icons. */
+.lpo-ps-hero-chart-outlet-btn--results .lpo-ps-hero-chart-results-icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+  box-sizing: border-box;
+  padding: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(140, 195, 255, 0.45);
+  background: linear-gradient(165deg, rgba(26, 45, 74, 0.98) 0%, rgba(16, 28, 46, 0.98) 100%);
+  color: #cfd6e0;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lpo-ps-hero-chart-outlet-btn--results-on .lpo-ps-hero-chart-results-icon {
+  border-color: rgba(140, 195, 255, 0.95);
+  color: #ffffff;
+  background: linear-gradient(165deg, rgba(36, 64, 104, 0.98) 0%, rgba(22, 40, 66, 0.98) 100%);
+  box-shadow: 0 0 0 2px rgba(140, 195, 255, 0.3);
 }
 
 .lpo-ps-hero-chart-outlet-btn:hover:not(:disabled) {
@@ -9292,7 +9328,8 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
   }
 
   .lpo-ps-hero-chart-dialog-heading .lpo-ps-hero-chart-outlet-btn .mapped-icon,
-  .lpo-ps-hero-chart-dialog-heading .lpo-ps-hero-chart-outlet-btn .icon-fallback {
+  .lpo-ps-hero-chart-dialog-heading .lpo-ps-hero-chart-outlet-btn .icon-fallback,
+  .lpo-ps-hero-chart-dialog-heading .lpo-ps-hero-chart-outlet-btn .lpo-ps-hero-chart-results-icon {
     width: 100%;
     height: 100%;
     max-width: 100%;
@@ -10197,6 +10234,10 @@ html[lang='he'] .lpo-rotate-hint-title {
 }
 
 /* ── Actual election results (Knesset button + panel) ─────────────────────── */
+/* Source note under the chart title must wrap even in the compact (nowrap) title styles. */
+.lpo-ps-hero-chart-dialog-title-window--source {
+  white-space: normal;
+}
 .lpo-ps-hero-parties-outer {
   padding-inline-end: var(--lpo-ps-hero-chart-btn-pad-inline, 0.35rem);
 }

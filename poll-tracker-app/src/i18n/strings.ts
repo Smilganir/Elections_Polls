@@ -125,6 +125,16 @@ export type UiStrings = {
   pollSummaryHeroPartiesChartOutletTooltip: string
   /** Hint under chart popup title (outlet icon toggle) */
   pollSummaryHeroPartiesChartOutletHint: string
+  /** Round "actual results" toggle in the chart popup outlet strip */
+  heroChartResultsBtnAria: string
+  /** Tooltip for the round "actual results" toggle */
+  heroChartResultsBtnTooltip: string
+  /** Chart popup title while showing official results */
+  heroChartResultsTitle: string
+  /** Shorter results-mode title on compact (mobile) viewports */
+  heroChartResultsTitleCompact: string
+  /** Hint under chart popup title in results mode (how to return to polls) */
+  heroChartResultsOutletHint: string
   /** Hero chart dialog info button */
   pollSummaryHeroPartiesChartInfoAria: string
   pollSummaryHeroPartiesChartInfoTitle: string
@@ -393,6 +403,12 @@ export const UI: Record<AppLocale, UiStrings> = {
       'Click: exclude or include in the average. Long-press or Shift+click: show only this outlet',
     pollSummaryHeroPartiesChartOutletHint:
       'Click an outlet to exclude or include it in the average · Long-press to show only that outlet',
+    heroChartResultsBtnAria: 'Show the official election results in this chart',
+    heroChartResultsBtnTooltip:
+      'Actual results · click to show the official results; click an outlet to return to the polls',
+    heroChartResultsTitle: 'Actual results by party',
+    heroChartResultsTitleCompact: 'Actual results by party',
+    heroChartResultsOutletHint: 'Click an outlet icon to return to the poll average',
     pollSummaryHeroPartiesChartInfoAria: 'Methodology and how to use this chart',
     pollSummaryHeroPartiesChartInfoTitle: 'Methodology & how to read',
     pollSummaryHeroPartiesChartInfoBulletWindow:
@@ -646,6 +662,12 @@ export const UI: Record<AppLocale, UiStrings> = {
       'לחיצה: הוצאה או החזרה מהממוצע · לחיצה ארוכה או Shift+לחיצה: רק ערוץ זה',
     pollSummaryHeroPartiesChartOutletHint:
       'לחיצה על ערוץ מוציאה או מחזירה אותו מהממוצע · לחיצה ארוכה מציגה רק אותו',
+    heroChartResultsBtnAria: 'הצגת תוצאות האמת הרשמיות בגרף',
+    heroChartResultsBtnTooltip:
+      'תוצאות אמת · לחיצה מציגה את התוצאות הרשמיות; לחיצה על ערוץ חוזרת לסקרים',
+    heroChartResultsTitle: 'תוצאות אמת לפי מפלגה',
+    heroChartResultsTitleCompact: 'תוצאות אמת לפי מפלגה',
+    heroChartResultsOutletHint: 'לחיצה על אייקון ערוץ חוזרת לממוצע הסקרים',
     pollSummaryHeroPartiesChartInfoAria: 'מתודולוגיה והסבר על השימוש בגרף',
     pollSummaryHeroPartiesChartInfoTitle: 'מתודולוגיה ואיך לקרוא',
     pollSummaryHeroPartiesChartInfoBulletWindow:
