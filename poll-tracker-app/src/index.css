@@ -6601,6 +6601,14 @@ body.lpo-ps-hero-chart-open .lpo-ps-hero-chart-dialog {
 }
 
 /* Round "actual results" toggle in the outlet strip — same size as the media icons. */
+.lpo-ps-hero-chart-outlet-btn--results {
+  opacity: 0.45;
+}
+
+.lpo-ps-hero-chart-outlet-btn--results-on {
+  opacity: 1;
+}
+
 .lpo-ps-hero-chart-outlet-btn--results .lpo-ps-hero-chart-results-icon {
   width: 28px;
   height: 28px;
