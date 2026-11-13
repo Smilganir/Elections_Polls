@@ -213,10 +213,6 @@ export function AppFooter({
               dir={locale === 'he' ? 'rtl' : 'ltr'}
             >
               <CandidatesInfoButton leadingSep={false} locale={locale} t={t} />
-              <span className="app-footer-votesmart-asterisk"> * </span>
-              <span className="app-footer-votesmart-credit">
-                {t.footerVotesmartCredit}
-              </span>
             </span>
           </>
         ) : null}

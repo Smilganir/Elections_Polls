@@ -39,7 +39,6 @@ export type UiStrings = {
   footerCandidatesInfoMediaLabel: string
   footerCandidatesInfoMediaBody: string
   footerPhotoCreditsLink: string
-  footerVotesmartCredit: string
   /** Seat-map tooltip photo credit (neutral mode) */
   photoCreditNeutralLink: string
   /** Seat-map tooltip photo credit prefix */
@@ -331,8 +330,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     footerCandidatesInfoMediaBody:
       'mivzaklive, Channel 7, Knesset Channel, News 10, ynet, Kikar Hashabbat, i24, mako, Now 14, Kipa, Kan 11, JDN, Ice, Maariv',
     footerPhotoCreditsLink: 'Photo credits',
-    footerVotesmartCredit:
-      'An earlier version used data from “Bochrim Hachamim (VoteSmart)”.',
     photoCreditNeutralLink: 'Image source & license details',
     photoCreditImageLabel: 'Photo:',
     localeToggleAria: 'Interface language',
@@ -590,8 +587,6 @@ export const UI: Record<AppLocale, UiStrings> = {
     footerCandidatesInfoMediaBody:
       'mivzaklive, ערוץ 7, ערוץ הכנסת, חדשות 10, ynet, כיכר השבת, i24, mako, עכשיו 14, כיפה, כאן 11, JDN, אייס, מעריב',
     footerPhotoCreditsLink: 'קרדיטי תמונות',
-    footerVotesmartCredit:
-      'בגרסה הקודמת נעשה שימוש בנתוני ״בוחרים ח״כם (VoteSmart)״.',
     photoCreditNeutralLink: 'מקור התמונה ופרטי רישיון',
     photoCreditImageLabel: 'תמונה:',
     localeToggleAria: 'שפת הממשק',

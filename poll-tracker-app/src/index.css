@@ -162,14 +162,6 @@ body {
   white-space: nowrap;
 }
 
-.app-footer-votesmart-asterisk {
-  display: inline;
-}
-
-.app-footer-votesmart-credit {
-  display: inline;
-}
-
 .app-footer-candidates-info {
   position: relative;
   display: inline;
